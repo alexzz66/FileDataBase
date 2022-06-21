@@ -1,6 +1,6 @@
 @echo off
 cd /d %~d0%~p0
-start /b /high java alexnick.filedatabase.FileDataBase -p:finalPause;temp;tempYes;bigSize42;plCrcNo42;plCrcYes;plOneFolderYes;  %*
+start /b /high java alexnick.filedatabase.FileDataBase -p:finalPause;temp;tempYes;bigSize;plCrcYes;plOneFolderYes;  %*
 :pause
 
 :java -cp %~d0%~p0  >> set '-cp %~d0%~p0' on error reading files of "FileDataBase"
@@ -15,7 +15,6 @@ start /b /high java alexnick.filedatabase.FileDataBase -p:finalPause;temp;tempYe
 :"bigSize;" for textFields, if defined, fields in several windows, will be increased on the 30%
 
 :FOR -1 >>
-:все, что относится к PathsListTable;
 :"modeOnePlYes;" will be open 'PathsListTable' without confirmation; else need select: 'save to file' or 'PathsListTable'
 
 :FOR -4: ('CompareFolders' call also from 'ViewTable', but without copying) >>
