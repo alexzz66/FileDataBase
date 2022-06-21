@@ -218,15 +218,15 @@ public final class ExtensionFrame extends JDialog implements Callable<List<Strin
 		Properties propertyGroups = new Properties();
 		Path pathGroups = FileDataBase.getPathInPropertyFolder(false, Const.groupsProperty);
 		if (!pathGroups.toFile().exists()) {
-			propertyGroups.put("audio", "");
-			propertyGroups.put("video", "");
-			propertyGroups.put("documents", "");
-			propertyGroups.put("archives", "");
-			propertyGroups.put("books", "");
-			propertyGroups.put("pictures", "");
-			propertyGroups.put("programm", "");
-			CommonLib.loadOrStoreProperties(true, "Extension groups. Separator ';' or ':'. All spaces will be removed", pathGroups, propertyGroups);
-			return hm;
+			propertyGroups.put("audio", "aac;amr;au;ape:flac;it:mid;mkv;mp3;ogg;wav;wma");
+			propertyGroups.put("video", "avi;flv;m4v;mov;mp4;mpeg:mpg;srt;swf:wmv");
+			propertyGroups.put("documents", "doc;docx:hlp;htm;html;maff;ppt;pptx;txt");
+			propertyGroups.put("archives", "7z;gz;iso;jar:nfo;nrg;rar;zip");
+			propertyGroups.put("books", "chm;djv;djvu;epub;fb2;mobi;pdf;rtf");
+			propertyGroups.put("pictures", "bmp;gif;jpe:jpeg;jpg;png;");
+			propertyGroups.put("programm", "exe");
+			CommonLib.loadOrStoreProperties(true, "Extension groups. Separator ';' or ':'. All spaces will be removed",
+					pathGroups, propertyGroups);
 		} else {
 			CommonLib.loadOrStoreProperties(false, null, pathGroups, propertyGroups);
 			if (propertyGroups.isEmpty()) {
