@@ -1,0 +1,64 @@
+Short help of 'FileDataBase':
+
+First argument must starts with '-', then symbol of 'mode'.
+If need parameters, next after 'mode' symbol must be ':' then options by separator ';'
+
+'Mode' may be -1..-4, -v, -p, -e, -a
+
+Modes -1, -2, -3 and -4 follow each other; means if defined '-3', first be start '-1', then '-2', then '-3'
+For this modes must be first parameter - exists directory, then be files search.
+Other parameters don't matter.
+
+Example command line:
+-4:finalPause D:/needFolder
+
+-------
+
+Mode '-1' do files search only. Program will ask, when be new files extension tosave them in settings.
+Note: if been set option 'TEMP', program be work with temporary repository and without load extensions settings,
+means will ask about ALL found extensions and result be saved to ~TMP~ repository
+
+---
+
+Mode '-2' get chosen files paths from '-1', then creates and saves '*.bin' file and '*.dat' file with service information
+Note: for new files in '*.bin' will be calculated 'CRC' and information about equals files be added to '*.dat' file
+
+---
+
+Mode '-3' get '*bin' from '-2', then shows window, where can choose and delete files with equal 'CRC'
+
+---
+Mode '-4' starts 'comparing folder',
+means you can choose either equal folder on OTHER disk; or any folder on your operating system ('Windows')
+
+-------
+
+Mode '-p' need to Rename, Delete, Copy/Move files, or save information of files/folders. Will be showed window with table.
+Example command line:
+-p:finalPause D:/anyFolder C:/anyFolder2 D:/anyFile.txt C:/folder/anyFile2.doc [and so on...]
+
+If first parameter is file and one parameter only, will be offer to load paths from this file,
+it must be text file in Unicode, one string = one path
+Note: information in end each string after restricted symbols  '*', '?', '"', '<', '>', '|' will be removed
+
+If first parameter is folder and one parameter only, will be offer search if this folder,
+then show 'Paths list table'. Analog mode '-1' with set option 'modeOnePlYes'
+
+This mode has many settings, see 'help.txt'
+
+-------
+
+Mode '-v' shows window with all created '*.bin' files.
+You can search by file names even without connecting disks, from where been created '*.bin'
+
+-------
+
+Mode '-e' just saves to text file information about folders/files command line and shows this file
+
+-------
+
+Mode '-a', '-auto'. Selects mode as: no parameters: '-v'; one parameter: file '-p', folder '-4'.
+More parameters: '-e' or '-p', if defined option 'autoNoExtract'
+
+-------
+
