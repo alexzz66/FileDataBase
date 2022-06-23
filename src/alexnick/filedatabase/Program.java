@@ -232,7 +232,7 @@ public class Program {
 		addLog("", true, binInf);
 		binInf.add("<bin>");
 		addLog(Const.ALIAS_DATE, false, binInf);
-		addLog("%date%", true, binInf);
+		addLog(ADDLOG_DATE, true, binInf);
 		addLog(Const.ALIAS_START_SEARCH, false, binInf);
 		addLog(startFolderFile.toString(), true, binInf);
 
@@ -278,14 +278,14 @@ public class Program {
 		if (!hmExtsInfoIncluded.isEmpty()) {
 			ArrayList<Map.Entry<String, FileCntSize>> sortedHmExtsList = FileDataBase
 					.getSortedHmExt(hmExtsInfoIncluded);
-			addLog("%sep%", true, binInf);
+			addLog(ADDLOG_SEP, true, binInf);
 			addBinInfFromHmExtsList("Found", Const.ALIAS_FOUND_FILES, sortedHmExtsList, binInf);
 		}
 
 		if (!hmExtsInfoExcluded.isEmpty()) {
 			ArrayList<Map.Entry<String, FileCntSize>> sortedHmExtsList = FileDataBase
 					.getSortedHmExt(hmExtsInfoExcluded);
-			addLog("%sep%", true, binInf);
+			addLog(ADDLOG_SEP, true, binInf);
 			addBinInfFromHmExtsList("Excluded", "Total excluded files:", sortedHmExtsList, binInf);
 		}
 
@@ -343,7 +343,7 @@ public class Program {
 			int deletedCount = ShowDuplicatesFrame(groupsCountForReturn[0], FileDataBase.getTempPath(name),
 					duplicatesBeans);
 			if (deletedCount > 0) { // need update *.bin
-				addLog("%sep%", true, null);
+				addLog(ADDLOG_SEP, true, null);
 				System.out.println("updating *.bin after delete files...");
 				createBin(0, Const.MODE_STOP_TWO, startFolderFile.toString(), null);
 			}
@@ -353,7 +353,7 @@ public class Program {
 			return resultSavingBin;
 		}
 
-		addLog("%sep%", true, null);
+		addLog(ADDLOG_SEP, true, null);
 
 //for '4' comparing with the same 'startpath.bin', but created on other disk		
 		System.out.println("Choose variant of 'comparing mode'." + NEW_LINE_UNIX
@@ -747,10 +747,10 @@ public class Program {
 
 		list.clear();
 		startPath = nullEmptyString(startPath) ? "" : fileSeparatorAddIfNeed(false, true, startPath);
-		addLog("%date%", false, list);
+		addLog(ADDLOG_DATE, false, list);
 		addLog("Start path: " + startPath, false, list);
 		addLog("Size row / result lists: " + listPathsToEndBin.size() + " / " + listFullPaths.size(), false, list);
-		addLog("%sep%", false, list);
+		addLog(ADDLOG_SEP, false, list);
 		boolean needListPathsToEndBin = confirm == 0 || confirm == 2;
 		boolean needListFullPaths = confirm == 1 || confirm == 2;
 
@@ -760,7 +760,7 @@ public class Program {
 
 		if (needListFullPaths) {
 			if (needListPathsToEndBin) {
-				addLog("%sep%", false, list);
+				addLog(ADDLOG_SEP, false, list);
 			}
 			for (var path : listFullPaths) {
 				if (path != null) {
@@ -955,13 +955,13 @@ public class Program {
 			return;
 		}
 		List<String> result = new ArrayList<String>();
-		addLog("%date%", false, result);
+		addLog(ADDLOG_DATE, false, result);
 		addListToResult(false, "Folders", folders, result);
 		addListToResult(true, "Files", files, result);
-		addLog("%sep%", true, result);
+		addLog(ADDLOG_SEP, true, result);
 		addLog("total paths: " + totalCount, true, result);
 		if (!errorList.isEmpty()) {
-			addLog("%sep%", false, result);
+			addLog(ADDLOG_SEP, false, result);
 			addLog("=== Error information ===", false, result);
 			result.addAll(errorList);
 		}
@@ -975,7 +975,7 @@ public class Program {
 		if (nullEmptySet(paths)) {
 			return;
 		}
-		addLog("%sep%", false, result);
+		addLog(ADDLOG_SEP, false, result);
 		addLog("=== " + caption + ", size: " + paths.size() + " ===", false, result);
 		for (var file : paths) {
 			result.add(file.toString());
@@ -1100,7 +1100,7 @@ public class Program {
 // take existing folder and returns full exists path to *.bin (updated if need);
 // returns null if error
 	synchronized File getUpdatedBinFile(boolean tryCreateBin, File file) throws Exception {
-		addLog("%sep%", true, null);
+		addLog(ADDLOG_SEP, true, null);
 		System.out.println("start update '*.bin file'... " + file);
 		File[] pathForReturn = new File[1];
 		Arrays.fill(pathForReturn, null);
@@ -1151,9 +1151,9 @@ public class Program {
 		}
 
 		List<String> logList = new ArrayList<String>();
-		addLog("%date%", true, logList);
+		addLog(ADDLOG_DATE, true, logList);
 		addLog("Start copy filelist '" + listWithFilesPath + "' to folder: " + destFolder, true, logList);
-		addLog("%sep%", false, logList);
+		addLog(ADDLOG_SEP, false, logList);
 
 		System.out.println("reading list of files to copying... " + listWithFilesPath);
 		var listWithFiles = readFile(2, 0, listWithFilesPath);
@@ -1199,7 +1199,7 @@ public class Program {
 				+ destFolder, false, logList);
 		addLog("*.bin this folder contains files: " + binFileListDestFolder.size() + "; original files: "
 				+ hashFilesOfBin.size(), false, logList);
-		addLog("%sep%", false, logList);
+		addLog(ADDLOG_SEP, false, logList);
 
 		List<Path> sourcePathListOtherDisk = new ArrayList<>();
 		List<Path> sourcePathListSameDisk = new ArrayList<>();
@@ -1213,7 +1213,7 @@ public class Program {
 			return false;
 		}
 
-		addLog("%sep%", true, logList);
+		addLog(ADDLOG_SEP, true, logList);
 		var sb = new StringBuilder();
 		sb.append("Files for copy/move:" + NEW_LINE_UNIX);
 

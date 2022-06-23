@@ -40,6 +40,8 @@ public class CommonLib {
 	public static final int SIGN_FILE_OR_FOLDER = 0;
 
 	public static final String PRINTDELIMITER = "-------";
+	public static final String ADDLOG_SEP = "%sep%";
+	public static final String ADDLOG_DATE = "%date%";
 	public static final SimpleDateFormat formatter = new SimpleDateFormat("yyyy.MM.dd_HH:mm:ss (E)");
 
 	private static SimpleDateFormat formatterFileName = null;// uses in 'getFormatDateForFileName' only
@@ -56,7 +58,7 @@ public class CommonLib {
 	 */
 	synchronized public static void finalProgramExit(int exitCode, boolean finalPause) {
 		if (finalPause) {
-			addLog("%sep%", true, null);
+			addLog(ADDLOG_SEP, true, null);
 			pause("FINAL PAUSE");
 		}
 		System.out.println("Programm's finished");
@@ -330,7 +332,7 @@ public class CommonLib {
 		if (needSortList && list.size() > 1) {
 			list.sort(null);
 		}
-		addLog("%sep%", true, log);
+		addLog(ADDLOG_SEP, true, log);
 		var t = (totalSize > 0) ? " ; total size: " + bytesToKBMB(false, 0, totalSize) : "";
 		var t2 = caption + " size: " + list.size() + t;
 
@@ -362,15 +364,17 @@ public class CommonLib {
 				}
 			}
 		}
-		addLog("%sep%", true, log);
+		addLog(ADDLOG_SEP, true, log);
 		return sizeForReturn;
 	}
 
 	/**
 	 * 
-	 * @param s              string for adding to 'log'; may be '%date%' - add
-	 *                       current date to 'log'; may be '%sep%' - be added
-	 *                       'separator string' to 'log'
+	 * @param s              string for adding to 'log';<br>
+	 *                       case CommonLib.ADDLOG_DATE - add current date to
+	 *                       'log';<br>
+	 *                       case CommonLib.ADDLOG_SEP - add 'separator string' to
+	 *                       'log'
 	 * @param writeOnConsole if true, 's' be wrote on console
 	 * @param log            list of string; if null - string 's' will not be added
 	 */
@@ -378,11 +382,11 @@ public class CommonLib {
 		String res = "";
 		boolean bAddedInLog = false;
 		try {
-			if (s.equals("%date%")) {
+			if (s.equals(ADDLOG_DATE)) {
 				res = formatter.format(new Date());// "Date: " no need;writes in table
 				return;
 			}
-			if (s.equals("%sep%")) {
+			if (s.equals(ADDLOG_SEP)) {
 				res = NEW_LINE_UNIX + PRINTDELIMITER + NEW_LINE_UNIX;
 				bAddedInLog = true;
 				if (log != null) { // need for correct size of 'log
@@ -1088,9 +1092,9 @@ public class CommonLib {
 		if (log == null) {
 			log = new ArrayList<String>();
 		} else if (!log.isEmpty()) {
-			addLog("%sep%", true, log);
+			addLog(ADDLOG_SEP, true, log);
 		}
-		addLog("%date%", false, log);
+		addLog(ADDLOG_DATE, false, log);
 		addLog("Will be DELETED, found in 'list', count: " + fileList.size(), true, log);
 		System.out.println();
 		for (var s : fileList) {
@@ -1098,7 +1102,7 @@ public class CommonLib {
 		}
 
 		String queryResult = "";
-		addLog("%sep%", true, log);
+		addLog(ADDLOG_SEP, true, log);
 		addLog("start deleting..." + NEW_LINE_UNIX, true, log);
 
 		CopyMove.setQueryCopyMove(CopyMove.QUERY_CONFIRM_LIST);
@@ -1135,19 +1139,19 @@ public class CommonLib {
 			addLog("=>result: " + deleted, true, log);
 		}
 
-		addLog("%sep%", true, log);
+		addLog(ADDLOG_SEP, true, log);
 		addLog("Delete files result: " + deletedCount + " of " + fileList.size() + ", total size of deleted: "
 				+ bytesToKBMB(false, 0, deletedTotalSize), true, log);
 
 		if (deletedCount < fileList.size()) {
-			addLog("%sep%", false, log);
+			addLog(ADDLOG_SEP, false, log);
 			addLog(">>> NO DELETED FILES: " + (fileList.size() - deletedCount), false, log);
 			for (int i = 0; i < fileList.size(); i++) {
 				if (!deletedNumbers.contains(i)) {
 					addLog(fileList.get(i).toString(), false, log);
 				}
 			}
-			addLog("%sep%", false, log);
+			addLog(ADDLOG_SEP, false, log);
 		}
 
 		if (saveResultTo != null) {
@@ -1320,7 +1324,7 @@ public class CommonLib {
 
 	private static void addDelimiters(int betweenStringDelimeters, List<String> log) {
 		if (betweenStringDelimeters == 2) {
-			addLog("%sep%", true, log);
+			addLog(ADDLOG_SEP, true, log);
 		} else if (betweenStringDelimeters == 1) {
 			addLog("", true, log);
 		}

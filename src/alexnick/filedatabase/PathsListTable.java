@@ -19,7 +19,6 @@ import java.io.File;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -740,7 +739,7 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 
 	private void increaseRenameNumber(boolean undo) {
 		renameNumber++;
-		CommonLib.addLog("%sep%", false, renameLog);
+		CommonLib.addLog(CommonLib.ADDLOG_SEP, false, renameLog);
 		var s = undo ? " UNDO" : "";
 		CommonLib.addLog(CommonLib.formatInt(renameNumber, 3, "<rename" + s + " operation number: ", ">"), false,
 				renameLog);
@@ -764,8 +763,7 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 
 		var b = beans.get(foundNumber);
 		var sb = new StringBuilder();
-		sb.append(Const.BRACE_START).append(CommonLib.formatInt(
-				b.serviceIntTwo, 3, null, null))
+		sb.append(Const.BRACE_START).append(CommonLib.formatInt(b.serviceIntTwo, 3, null, null))
 				.append(Const.BRACE_END_WITH_SPACE).append(Const.BRACE_START).append("REN-")
 				.append(CommonLib.formatInt(renameNumber, 3, null, null)).append(res ? ":OK" : ":Error")
 				.append(Const.BRACE_END_WITH_SPACE);

@@ -501,7 +501,7 @@ public class CopyMove {
 			}
 
 			if (CommonLib.notNullEmptyList(log)) {
-				CommonLib.addLog("%sep%", false, log);
+				CommonLib.addLog(CommonLib.ADDLOG_SEP, false, log);
 			}
 
 			CommonLib.addLog(caption + " ===>> start copy/move, count: " + sourceList.size(), true, log);
@@ -519,12 +519,12 @@ public class CopyMove {
 			if (writeSourceListBeforeCopying > 0) {
 				var onConsole = writeSourceListBeforeCopying != 2;
 				var tmpLog = writeSourceListBeforeCopying > 1 ? log : null;
-				CommonLib.addLog("%sep%", onConsole, tmpLog);
+				CommonLib.addLog(CommonLib.ADDLOG_SEP, onConsole, tmpLog);
 				CommonLib.addLog("Files in path list:" + CommonLib.NEW_LINE_UNIX, onConsole, tmpLog);
 				for (var path : sourceList) {
 					CommonLib.addLog(path.toString(), onConsole, tmpLog);
 				}
-				CommonLib.addLog("%sep%", onConsole, tmpLog);
+				CommonLib.addLog(CommonLib.ADDLOG_SEP, onConsole, tmpLog);
 			}
 
 			String equalReplaceLowerCase = destFolderString.substring(rootDestFolderUpperCase.length()).toLowerCase();
@@ -602,7 +602,7 @@ public class CopyMove {
 		} catch (Exception e) {
 			CommonLib.addLog("ERROR of BackUp Copying method: " + e.getMessage(), true, log);
 		}
-		CommonLib.addLog("%sep%", true, log);
+		CommonLib.addLog(CommonLib.ADDLOG_SEP, true, log);
 		CommonLib.addLog("Result: " + copyCount + " of " + sourceList.size() + ", total size: "
 				+ CommonLib.bytesToKBMB(false, 0, copyTotalSize), true, log);
 		return copyCount;

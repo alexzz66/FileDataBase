@@ -49,10 +49,12 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 	private JLabel checkInfo;
 	private JButton butMark = null;
 	volatile private int lastSortType = SortBeans.sortNoDefined;
-	private final String caption;
+	private final String captionPrefix;
+	private String caption = "";
+	private int sizeInCaption = 0;
 
-	public ViewTable(Program program, String caption, List<MyBean> beans0) {
-		this.caption = caption;
+	public ViewTable(Program program, String captionPrefix, List<MyBean> beans0) {
+		this.captionPrefix = captionPrefix;
 		this.program = program;
 
 		viewNoId3 = program.getOptions().contains(Const.OPTIONS_VIEW_NO_ID3);
@@ -361,7 +363,11 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 	}
 
 	private void setStandardTitle() {
-		setNewTitle(caption + " (" + beans.size() + ")");
+		if (beans.size() != sizeInCaption) {
+			sizeInCaption = beans.size();
+			caption = captionPrefix + " (" + beans.size() + ")";
+		}
+		setNewTitle(caption);
 	}
 
 	private void deleteBinFile(BeansFourTableDefault myTable) {

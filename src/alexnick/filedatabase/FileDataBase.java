@@ -81,11 +81,11 @@ public class FileDataBase {
 		int mode = Const.MODE_NO_DEFINED;
 		try {
 			System.out.print(NEW_LINE_UNIX + "Start FileDataBase, ");
-			addLog("%date%", true, null);
+			addLog(ADDLOG_DATE, true, null);
 			System.out.println("Folder: " + Path.of("").toAbsolutePath());
 			System.out.println("Command line:");
 			System.out.println(Arrays.toString(args));
-			addLog("%sep%", true, null);
+			addLog(ADDLOG_SEP, true, null);
 
 //'mode','options' init						
 			mode = initModeOptions(args, sbOptions);
@@ -112,8 +112,8 @@ public class FileDataBase {
 
 			sizeTextField = sbOptions.toString().contains(Const.OPTIONS_BIG_SIZE_TEXTFIELD) ? Const.textFieldBigSize
 					: Const.textFieldStardardSize;
-			
-	new Program(mode, sbOptions.toString(), parameters);
+
+			new Program(mode, sbOptions.toString(), parameters);
 		} catch (Exception e) {
 			if (e.getMessage().equals("exit")) {
 				sbOptions = new StringBuilder(); // to avoid 'final pause'
@@ -126,7 +126,7 @@ public class FileDataBase {
 	}
 
 	private static int usage(boolean appendConfirmViewMode) {
-		addLog("%sep%", true, null);
+		addLog(ADDLOG_SEP, true, null);
 		System.out.println("error of program parameters initialization; choose:");
 		List<String> list = new ArrayList<String>();
 		list.add("show console 'help'"); // 0
@@ -184,7 +184,7 @@ public class FileDataBase {
 	}
 
 	private static void showConsoleHelp() {
-		addLog("%sep%", true, null);
+		addLog(ADDLOG_SEP, true, null);
 		console("Short help of 'FileDataBase':");
 		console("");
 		console("First argument must starts with '-', then symbol of 'mode'.");
@@ -195,7 +195,7 @@ public class FileDataBase {
 		console("");
 		console("Example command line:");
 		console("-4:finalPause D:/needFolder");
-		addLog("%sep%", true, null);
+		addLog(ADDLOG_SEP, true, null);
 		console("Mode '-1' do files search only. Program will ask, when be new files extension to save them in settings.");
 		console("Note: if been set option 'TEMP', program be work with temporary repository and without load extensions settings, means will ask about ALL found extensions and result be saved to ~TMP~ repository");
 		console("---");
@@ -205,7 +205,7 @@ public class FileDataBase {
 		console("Mode '-3' get '*bin' from '-2', then shows window, where can choose and delete files with equal 'CRC'");
 		console("---");
 		console("Mode '-4' starts 'comparing folder', means you can choose either equal folder on OTHER disk; or any folder on your operating system ('Windows')");
-		addLog("%sep%", true, null);
+		addLog(ADDLOG_SEP, true, null);
 		console("Mode '-p' need to Rename, Delete, Copy/Move files, or save information of files/folders. Will be showed window with table.");
 		console("Example command line:");
 		console("-p:finalPause D:/anyFolder C:/anyFolder2 D:/anyFile.txt C:/folder/anyFile2.doc [and so on...]");
@@ -216,11 +216,11 @@ public class FileDataBase {
 		console("If first parameter is folder and one parameter only, will be offer search if this folder, then show 'Paths list table'. Analog mode '-1' with set option 'modeOnePlYes'");
 		console("");
 		console("This mode has many settings, see 'help.txt'");
-		addLog("%sep%", true, null);
+		addLog(ADDLOG_SEP, true, null);
 		console("Mode '-v' shows window with all created '*.bin' files. You can search by file names even without connecting disks, from where been created '*.bin'");
-		addLog("%sep%", true, null);
+		addLog(ADDLOG_SEP, true, null);
 		console("Mode '-e' just saves to text file information about folders/files command line and shows this file");
-		addLog("%sep%", true, null);
+		addLog(ADDLOG_SEP, true, null);
 		console("Mode '-a', '-auto'. Selects mode as: no parameters: '-v'; one parameter: file '-p', folder '-4'. More parameters: '-e' or '-p', if defined option 'autoNoExtract'");
 		console("");
 	}

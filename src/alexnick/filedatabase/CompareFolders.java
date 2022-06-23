@@ -127,7 +127,7 @@ public class CompareFolders {
 				}
 			}
 			// !!! adding to 'compareLog': without '\n', need for correct line in 'contents'
-			CommonLib.addLog("%date%", false, compareLog);
+			CommonLib.addLog(CommonLib.ADDLOG_DATE, false, compareLog);
 			CommonLib.addLog("Sourse info, folder: " + sourceStartPath + "; bin: " + sourceBinPath, false, compareLog);
 			CommonLib.addLog("Destination info, folder: " + destStartPath + "; bin: " + destBinPath, false, compareLog);
 			String type = copyMode == 3 ? "exchange" : copyMode == 0 ? "no copy" : "backUpCopy"; // for 1,2
@@ -156,7 +156,7 @@ public class CompareFolders {
 
 			if (!divideTwoBinOnSix(startSource, startDest, newList, newerList, oldList, olderList, equalList,
 					equalSignList)) {
-				CommonLib.addLog("%sep%", true, compareLog);
+				CommonLib.addLog(CommonLib.ADDLOG_SEP, true, compareLog);
 				CommonLib.addLog("error dividing *.bin lists ", true, compareLog);
 				return;
 			}
@@ -244,10 +244,10 @@ public class CompareFolders {
 			}
 
 			if (compareLog != null && pathLog != null) {
-				CommonLib.addLog("%sep%", false, compareLog);
+				CommonLib.addLog(CommonLib.ADDLOG_SEP, false, compareLog);
 				compareLog.add("Contents [list : string number in this file]:" + CommonLib.NEW_LINE_UNIX);
 				compareLog.addAll(contents);
-				CommonLib.addLog("%sep%", false, compareLog);
+				CommonLib.addLog(CommonLib.ADDLOG_SEP, false, compareLog);
 				CommonLib.addLog(CommonLib.NEW_LINE_UNIX + "comparing folders's finished", true, compareLog);
 
 				// first parameter do 'true', to '.bak' create; copying's strange sometimes
