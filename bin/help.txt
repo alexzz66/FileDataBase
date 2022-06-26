@@ -1,6 +1,7 @@
 Short help of 'FileDataBase':
 
 
+
 First argument must starts with '-', then symbol of 'mode'.
 If need parameters, next after 'mode' symbol must be ':' then options by separator ';'
 
