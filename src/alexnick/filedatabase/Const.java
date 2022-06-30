@@ -44,6 +44,7 @@ public class Const {
 
 	static final String OPTIONS_EXTRACT_SAVE_YES = ";extractsaveyes;";
 	static final String OPTIONS_AUTO_NO_EXTRACT = ";autonoextract;";
+	static final String OPTIONS_DOUBLE_REPO = ";doublerepo;";
 
 	static final String OPTIONS_COMPARETWOBIN_NOFULLPATHS = ";comparetwobinnofullpaths;";
 

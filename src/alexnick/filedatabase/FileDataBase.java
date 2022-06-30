@@ -42,6 +42,7 @@ public class FileDataBase {
 	static String repositoryPathStandard = null; // full path to repository, init on start
 	static String repositoryPathCurrent = null; // if isTEMP, repository set in 'repositoryPathStandard'
 	static String diskMain = null;
+	static String repositoryPathStandardDouble = null;
 
 // 'true' by default; if true - files with '0' length, be skipped, while creating '*.bin';'true' recommended
 	static final boolean skipEmpty = true;
@@ -50,11 +51,21 @@ public class FileDataBase {
 	static boolean isTEMP = false;
 	static int sizeTextField = Const.textFieldStardardSize;
 
-	static Path getPathInRepo(boolean repoCurrent, String fileName) {
+// 'tryDoubleRepo' if true, return null for 'TEMP' or 'repositoryPathStandardDouble'== null
+	static Path getPathInRepo(boolean repoCurrent, String fileName, boolean tryDoubleRepo) {
+		if (tryDoubleRepo) {
+			return ((repoCurrent && isTEMP) || repositoryPathStandardDouble == null) ? null
+					: Path.of(repositoryPathStandardDouble, fileName);
+		}
 		return Path.of(repoCurrent ? repositoryPathCurrent : repositoryPathStandard, fileName);
 	}
 
-	static Path getPathInPropertyFolder(boolean repoCurrent, String fileName) {
+// 'tryDoubleRepo' if true, return null for 'TEMP' or 'repositoryPathStandardDouble'== null
+	static Path getPathInPropertyFolder(boolean repoCurrent, String fileName, boolean tryDoubleRepo) {
+		if (tryDoubleRepo) {
+			return ((repoCurrent && isTEMP) || repositoryPathStandardDouble == null) ? null
+					: Path.of(repositoryPathStandardDouble, Const.FOLDER_NAME_PROPERTY, fileName);
+		}
 		return Path.of(repoCurrent ? repositoryPathCurrent : repositoryPathStandard, Const.FOLDER_NAME_PROPERTY,
 				fileName);
 	}
@@ -63,12 +74,12 @@ public class FileDataBase {
 		return Path.of(isTEMP ? repositoryPathCurrent : repositoryPathStandard, "TEMP", fileName);
 	}
 
-	static Path getPathPropertyExtsNeed() {
-		return getPathInPropertyFolder(isTEMP, Const.propertyExtsNeed);
+	static Path getPathPropertyExtsNeed(boolean tryDoubleRepo) {
+		return getPathInPropertyFolder(isTEMP, Const.propertyExtsNeed, tryDoubleRepo);
 	}
 
-	static Path getPathPropertyExtsNoNeed() {
-		return getPathInPropertyFolder(isTEMP, Const.propertyExtsNoNeed);
+	static Path getPathPropertyExtsNoNeed(boolean tryDoubleRepo) {
+		return getPathInPropertyFolder(isTEMP, Const.propertyExtsNoNeed, tryDoubleRepo);
 	}
 
 	static Path getTempPathForCopyMove() {
@@ -427,7 +438,7 @@ public class FileDataBase {
 		sortFillingList(sortType, "NO FOUND DISK OR START PATH", listNoFoundDiskOrStartPath, listExists);
 
 		listExists.add(0, formatter.format(new Date()));
-		if (saveToFile(true, 0, CopyMove.DeleteIfExists_OLD_DELETE, null, resPath, listExists)) {
+		if (saveToFile(true, 0, CopyMove.DeleteIfExists_OLD_DELETE, resPath, null, listExists)) {
 			startProcess(false, resPath);
 		}
 	}
@@ -509,7 +520,8 @@ public class FileDataBase {
 		}
 		prop = bIsMarkProp ? markIsProperty : id3IsProperty;
 		// !!! properties in standard folder only
-		loadOrStoreProperties(false, "", getPathInPropertyFolder(false, fileName), prop);
+		loadOrStoreProperties(false, "", getPathInPropertyFolder(false, fileName, false),
+				getPathInPropertyFolder(false, fileName, true), prop);
 		return prop != null;
 	}
 
@@ -519,7 +531,8 @@ public class FileDataBase {
 		Properties prop = bIsMarkProp ? markIsProperty : id3IsProperty;
 		try {
 			if (prop != null && valueOfPropertyChanged) {
-				loadOrStoreProperties(true, caption, getPathInPropertyFolder(false, fileName), prop);
+				loadOrStoreProperties(true, caption, getPathInPropertyFolder(false, fileName, false),
+						getPathInPropertyFolder(false, fileName, true), prop);
 			}
 		} finally { // prop = null; not work so...
 			if (bIsMarkProp) {

@@ -331,7 +331,7 @@ public class BeanViewTable extends JDialog {
 				}
 
 				var tempPath = FileDataBase.getTempPathForCopyMove();
-				if (!CommonLib.saveToFile(true, 1, CopyMove.DeleteIfExists_OLD_RENAME_TO_BAK, null, tempPath,
+				if (!CommonLib.saveToFile(true, 1, CopyMove.DeleteIfExists_OLD_RENAME_TO_BAK, tempPath, null,
 						copyFilesList)) {
 					JOptionPane.showMessageDialog(null, "error of saving path list to " + tempPath);
 					return;

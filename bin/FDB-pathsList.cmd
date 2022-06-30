@@ -13,6 +13,8 @@ start /b /high java alexnick.filedatabase.FileDataBase -p:finalPause;temp;tempYe
 :"id3Confirm;" select on console id3New/id3All/id3No
 :"id3No;" if not defined 'id3Confirm', set 'id3No'. NB: by default, set 'id3New'
 :"bigSize;" for textFields, if defined, fields in several windows, will be increased on the 30%
+:"doubleRepo;" if defined, the drive must be specified when starting the program for files .properties; .bin; .dat. This is where copies of these files will be saved.
+:NB: 'doubleRepo' for standard repository only
 
 :FOR -1 >>
 :"modeOnePlYes;" will be open 'PathsListTable' without confirmation; else need select: 'save to file' or 'PathsListTable'

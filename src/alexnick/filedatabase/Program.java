@@ -25,6 +25,7 @@ public class Program {
 	private String options;
 	Set<String> extsNeedListSet = new HashSet<String>();
 	Set<String> extsNoNeedListSet = new HashSet<String>();
+	// private String
 
 	/**
 	 * @param mode       must be defined as 'Const.MODE_ ...'
@@ -49,7 +50,7 @@ public class Program {
 		this.options = options;
 		int needCalcID3 = readGlobalOptions(mode == Const.MODE_EXTRACT);
 
-		if (!checkRepositoryPath(mode == Const.MODE_VIEW)) {
+		if (!checkRepositoryPath(mode == Const.MODE_VIEW, this.options.contains(Const.OPTIONS_DOUBLE_REPO))) {
 			errorArgument("Error checking repository and options directory on disk " + FileDataBase.diskMain);
 		}
 
@@ -59,8 +60,8 @@ public class Program {
 		}
 
 		if (!FileDataBase.isTEMP) {
-			fillPropertyList(FileDataBase.getPathPropertyExtsNeed(), extsNeedListSet);
-			fillPropertyList(FileDataBase.getPathPropertyExtsNoNeed(), extsNoNeedListSet);
+			fillPropertyList(FileDataBase.getPathPropertyExtsNeed(false), extsNeedListSet);
+			fillPropertyList(FileDataBase.getPathPropertyExtsNoNeed(false), extsNoNeedListSet);
 		}
 
 		if (mode == Const.MODE_PATHSLIST) {
@@ -98,7 +99,7 @@ public class Program {
 			if (root == null) {
 				return null;
 			}
-			String disk = root.toString();
+			final String disk = root.toString();
 			if (disk.isEmpty()) { // may be?
 				return null;
 			}
@@ -212,7 +213,8 @@ public class Program {
 
 		String binDisk = arrDiskAndBinFolder[0];
 		String binFolder = arrDiskAndBinFolder[1];
-		var binFolderPathToString = FileDataBase.getPathInRepo(true, binFolder).toString();
+		var binFolderPathToString = FileDataBase.getPathInRepo(true, binFolder, false).toString();
+		var binFolderPathDouble = FileDataBase.getPathInRepo(true, binFolder, true);
 
 		// 'nameForResultFiles' creates from start searching path, uses 'dirSeparator'
 		var nameForResultFiles = getResultName(startFolderFile.toPath(), binFolder, binFolderPathToString);
@@ -252,11 +254,18 @@ public class Program {
 			pathForReturn[0] = binPath.toFile();
 		}
 
+		Path binPathDouble = (binFolderPathDouble == null) ? null : Path.of(binFolderPathDouble.toString(), name);
+
 		if (listPathsToEndBin.isEmpty()) { // not early this check -> need 'pathForReturn' init
 			System.out.println("error: NO FOUND FILES in " + startFolderFile);
 			if (binPath.toFile().exists()) {
 				Files.delete(binPath);
 			}
+
+			if (binPathDouble != null && binPathDouble.toFile().exists()) {
+				Files.delete(binPathDouble);
+			}
+
 			return false;
 		}
 
@@ -313,7 +322,7 @@ public class Program {
 		binList.sort(null);
 		if (noFoundNewFiles == 0) {
 			System.out.println("saving...");
-			resultSavingBin = saveToFile(true, 1, DeleteIfExists_OLD_DELETE, null, binPath, binList);
+			resultSavingBin = saveToFile(true, 1, DeleteIfExists_OLD_DELETE, binPath, binPathDouble, binList);
 		}
 
 		System.out.println("adding duplicates bin...");
@@ -327,8 +336,10 @@ public class Program {
 
 		name = nameForResultFiles.concat(Const.extensionBinData);
 		Path binInfPath = Path.of(binFolderPathToString, name);
+		Path binInfPathDouble = (binFolderPathDouble == null) ? null : Path.of(binFolderPathDouble.toString(), name);
+
 		if (noFoundNewFiles == 0 || !binInfPath.toFile().exists()) {
-			saveToFile(true, 0, CopyMove.DeleteIfExists_OLD_DELETE, null, binInfPath, binInf);
+			saveToFile(true, 0, CopyMove.DeleteIfExists_OLD_DELETE, binInfPath, binInfPathDouble, binInf);
 		}
 // ==============BIN END==================
 
@@ -1012,7 +1023,7 @@ public class Program {
 		return pos < 0 ? name : name.substring(0, pos);
 	}
 
-	private boolean checkRepositoryPath(boolean viewMode) {
+	private boolean checkRepositoryPath(boolean viewMode, boolean needInitDoubleRepo) {
 		try {
 			Path path = Path.of(FileDataBase.diskMain, Const.binFolderRepositorySignature);
 
@@ -1025,6 +1036,21 @@ public class Program {
 
 			if (FileDataBase.repositoryPathStandard == null) {
 				FileDataBase.repositoryPathStandard = path.toString();
+
+				String diskDoubleRepo = needInitDoubleRepo ? initDiskMainDoubleOrNull(FileDataBase.diskMain) : null;
+
+				if (diskDoubleRepo != null) {
+					Path doubleRepoPath = Path.of(diskDoubleRepo, Const.binFolderRepositorySignature);
+					if (!doubleRepoPath.toFile().exists()) {
+						try {
+							Files.createDirectory(doubleRepoPath);
+						} catch (Exception e) {
+						}
+					}
+					if (doubleRepoPath.toFile().isDirectory()) {
+						FileDataBase.repositoryPathStandardDouble = doubleRepoPath.toString();
+					}
+				}
 			}
 
 			Path pathTmp = null;
@@ -1046,6 +1072,36 @@ public class Program {
 		} catch (Exception e) {
 		}
 		return false;
+	}
+
+	// finds disk for dublicate repository, confirm about, that must not be
+	// 'diskMain'
+	private String initDiskMainDoubleOrNull(String diskMain) {
+		try {
+			var disks = getEqualFoldersOnOtherDisks(true, diskMain, null);
+			if (nullEmptyList(disks)) {
+				return null;
+			}
+			List<String> list = new ArrayList<String>();
+			for (var s : disks) {
+				Path path = Path.of(s, Const.binFolderRepositorySignature);
+				String exist = path.toFile().isDirectory() ? " exists: " + Const.binFolderRepositorySignature : "";
+				list.add(s + exist);
+			}
+
+			if (list.size() != disks.size()) {
+				return null;
+			}
+			System.out.println("Choose disk for DOUBLE REPO:");
+			var confirm = pauseQueryList(list, null);
+			if (confirm < 0) {
+				return null;
+			}
+
+			return disks.get(confirm);
+		} catch (Exception e) {
+		}
+		return null;
 	}
 
 	private int readGlobalOptions(boolean extractMode) {// for 'extractMode' all without confirm
@@ -1113,7 +1169,7 @@ public class Program {
 		}
 
 		if (tryCreateBin) {
-			saveToFile(true, 0, DeleteIfExists_OLD_DELETE, null, pathForReturn[0].toPath(), null);
+			saveToFile(true, 0, DeleteIfExists_OLD_DELETE, pathForReturn[0].toPath(), null, null);
 			if (pathForReturn[0].exists()) {
 				return pathForReturn[0];
 			}
@@ -1241,7 +1297,7 @@ public class Program {
 				sourcePathListOtherDisk, sourcePathListSameDisk, logList);
 
 		String res = listWithFilesPath.toString().concat(Const.COPY_NEW_RESULT_POSTFIX);
-		saveToFile(true, 0, DeleteIfExists_OLD_DELETE, null, Path.of(res), logList);
+		saveToFile(true, 0, DeleteIfExists_OLD_DELETE, Path.of(res), null, logList);
 		if (countCopyTotal > 0) { // updating .*bin
 			createBin(Const.ID3_EXTRACT_NO, Const.MODE_STOP_TWO, destFolder.toString(), null);
 		}

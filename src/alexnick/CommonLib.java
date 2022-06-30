@@ -448,20 +448,29 @@ public class CommonLib {
 	}
 
 	/**
-	 * @param bStore          if true - saving; if false - load properties
-	 * @param commentForStore need for 'bStore' == true; otherwise may be 'null'
-	 * @param path            Path of property file
-	 * @param prop            must be created for store or saving, be returned
-	 *                        filling for 'bStore' == false
+	 * @param bStore              if true - saving; if false - load properties
+	 * @param commentForStore     need for 'bStore' == true; otherwise may be 'null'
+	 * @param path                Path of property file
+	 * @param prop                must be created for store or saving, be returned
+	 *                            filling for 'bStore' == false
+	 * @param pathDoubleForSaving if not null, for 'bStore' be saved copy of
+	 *                            properties
 	 * @return result of operation 'Properties -> store/load'
 	 */
 	synchronized public static void loadOrStoreProperties(boolean bStore, String commentForStore, Path path,
-			Properties prop) {
+			Path pathDoubleForSaving, Properties prop) {
 		try {
+			CreateDirectoriesIfNeed(path);
 			if (bStore) {
 				var stream = new FileOutputStream(path.toString());
 				prop.store(stream, commentForStore);
 				stream.close();
+				if (pathDoubleForSaving != null) {
+					CreateDirectoriesIfNeed(pathDoubleForSaving);
+					stream = new FileOutputStream(pathDoubleForSaving.toString());
+					prop.store(stream, commentForStore);
+					stream.close();
+				}
 			} else {
 				var stream = new FileInputStream(path.toString());
 				if (path.toFile().exists()) {
@@ -604,33 +613,34 @@ public class CommonLib {
 	/**
 	 * Saves 'list' to 'path'; if 'list' is null/empty, be created empty file
 	 * 
-	 * @param writeConsole       writes result of saving on console
-	 * @param skipEmpty          0 (by default) save all lines; 1: empty lines be
-	 *                           skipped; 2: TRIMMED empty lines be skipped
-	 * @param deleteIfExistsMode if 'path' file is exists:
-	 *                           <p>
+	 * @param writeConsole        writes result of saving on console
+	 * @param skipEmpty           0 (by default) save all lines; 1: empty lines be
+	 *                            skipped; 2: TRIMMED empty lines be skipped
+	 * @param deleteIfExistsMode  if 'path' file is exists:
+	 *                            <p>
 	 * 
-	 *                           DeleteIfExists_ERROR (by default):error operation;
-	 *                           <p>
+	 *                            DeleteIfExists_ERROR (by default):error operation;
+	 *                            <p>
 	 * 
-	 *                           DeleteIfExists_OLD_DELETE:deletes 'path' file
-	 *                           before operation;
-	 *                           <p>
+	 *                            DeleteIfExists_OLD_DELETE:deletes 'path' file
+	 *                            before operation;
+	 *                            <p>
 	 * 
-	 *                           DeleteIfExists_OLD_RENAME_TO_BAK:old file of 'path'
-	 *                           be renamed with add '.bak'; WARNING:be error if
-	 *                           'path' ends on'.bak';
-	 * @param savingCopyPath     if not null, in start this method, be called one
-	 *                           recursive, with 'path' as 'savingCopyPath'
-	 * @param path               full path, to saving 'list'
-	 * @param list               String list for saving to 'path'; if 'list' is
-	 *                           null, be saved empty file
+	 *                            DeleteIfExists_OLD_RENAME_TO_BAK:old file of
+	 *                            'path' be renamed with add '.bak'; WARNING:be
+	 *                            error if 'path' ends on'.bak';
+	 * 
+	 * @param path                full path, to saving 'list'
+	 * @param pathDoubleForSaving if not null, in start this method, be called one
+	 *                            recursive, with 'path' as 'pathDoubleForSaving'
+	 * @param list                String list for saving to 'path'; if 'list' is
+	 *                            null, be saved empty file
 	 * @return saving result for 'path' in 'list'
 	 */
 	synchronized public static boolean saveToFile(boolean writeConsole, int skipEmpty, int deleteIfExistsMode,
-			Path savingCopy, Path path, List<String> list) {
-		if (savingCopy != null) {
-			saveToFile(writeConsole, skipEmpty, deleteIfExistsMode, null, savingCopy, list);
+			Path path, Path pathDoubleForSaving, List<String> list) {
+		if (pathDoubleForSaving != null) {
+			saveToFile(writeConsole, skipEmpty, deleteIfExistsMode, pathDoubleForSaving, null, list);
 		}
 		if (skipEmpty < 0 || skipEmpty > 2) {
 			skipEmpty = 0;
@@ -1023,7 +1033,7 @@ public class CommonLib {
 		}
 		int deleteIfExistsMode = doBackIfExists ? CopyMove.DeleteIfExists_OLD_RENAME_TO_BAK
 				: CopyMove.DeleteIfExists_OLD_DELETE;
-		if (!saveToFile(true, 0, deleteIfExistsMode, null, path, list)) {
+		if (!saveToFile(true, 0, deleteIfExistsMode, path, null, list)) {
 			return;
 		}
 

@@ -216,7 +216,7 @@ public final class ExtensionFrame extends JDialog implements Callable<List<Strin
 
 		Map<String, String> hm = new HashMap<>();
 		Properties propertyGroups = new Properties();
-		Path pathGroups = FileDataBase.getPathInPropertyFolder(false, Const.groupsProperty);
+		Path pathGroups = FileDataBase.getPathInPropertyFolder(false, Const.groupsProperty, false);
 		if (!pathGroups.toFile().exists()) {
 			propertyGroups.put("audio", "aac;amr;au;ape:flac;it:mid;mkv;mp3;ogg;wav;wma");
 			propertyGroups.put("video", "avi;flv;m4v;mov;mp4;mpeg:mpg;srt;swf:wmv");
@@ -226,9 +226,9 @@ public final class ExtensionFrame extends JDialog implements Callable<List<Strin
 			propertyGroups.put("pictures", "bmp;gif;jpe:jpeg;jpg;png;");
 			propertyGroups.put("programm", "exe");
 			CommonLib.loadOrStoreProperties(true, "Extension groups. Separator ';' or ':'. All spaces will be removed",
-					pathGroups, propertyGroups);
+					pathGroups, null, propertyGroups);
 		} else {
-			CommonLib.loadOrStoreProperties(false, null, pathGroups, propertyGroups);
+			CommonLib.loadOrStoreProperties(false, null, pathGroups, null, propertyGroups);
 			if (propertyGroups.isEmpty()) {
 				return hm;
 			}
@@ -302,13 +302,15 @@ public final class ExtensionFrame extends JDialog implements Callable<List<Strin
 		}
 
 		if (addedNewNeed) {
-			CommonLib.saveToFile(false, 0, CopyMove.DeleteIfExists_OLD_DELETE, null,
-					FileDataBase.getPathPropertyExtsNeed(), CommonLib.getListFromSet(1, extsNeedListSet));
+			CommonLib.saveToFile(false, 0, CopyMove.DeleteIfExists_OLD_DELETE,
+					FileDataBase.getPathPropertyExtsNeed(false), FileDataBase.getPathPropertyExtsNeed(true),
+					CommonLib.getListFromSet(1, extsNeedListSet));
 		}
 
 		if (addedNewNoNeed) {
-			CommonLib.saveToFile(false, 0, CopyMove.DeleteIfExists_OLD_DELETE, null,
-					FileDataBase.getPathPropertyExtsNoNeed(), CommonLib.getListFromSet(1, extsNoNeedListSet));
+			CommonLib.saveToFile(false, 0, CopyMove.DeleteIfExists_OLD_DELETE,
+					FileDataBase.getPathPropertyExtsNoNeed(false), FileDataBase.getPathPropertyExtsNoNeed(true),
+					CommonLib.getListFromSet(1, extsNoNeedListSet));
 		}
 	}
 
