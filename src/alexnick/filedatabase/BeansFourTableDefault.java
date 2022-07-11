@@ -13,17 +13,17 @@ public class BeansFourTableDefault extends JTable {
 	 * Model of table with 4 columns
 	 * 
 	 * @param selectionMode          0 (by
-	 *                               default):ListSelectionModel.SINGLE_SELECTION;
-	 *                               1:ListSelectionModel.SINGLE_INTERVAL_SELECTION;
+	 *                               default):ListSelectionModel.SINGLE_SELECTION;<br>
+	 *                               1:ListSelectionModel.SINGLE_INTERVAL_SELECTION;<br>
 	 *                               2:ListSelectionModel.MULTIPLE_INTERVAL_SELECTION
-	 * @param setOneColumnMaxWidth
-	 * @param setTwoColumnMaxWidth
-	 * @param setThreeColumnMaxWidth
-	 * @param oneCapt
-	 * @param twoCapt
-	 * @param threeCapt
-	 * @param fourCapt
-	 * @param beans
+	 * @param setOneColumnMaxWidth   if 'true', will be max width = 500
+	 * @param setTwoColumnMaxWidth   if 'true', will be max width = 280
+	 * @param setThreeColumnMaxWidth if 'true', will be max width = 200
+	 * @param oneCapt                not null, column caption
+	 * @param twoCapt                not null, column caption
+	 * @param threeCapt              not null, column caption
+	 * @param fourCapt               not null, column caption
+	 * @param beans                  not null, items in table
 	 */
 	public BeansFourTableDefault(int selectionMode, boolean setOneColumnMaxWidth, boolean setTwoColumnMaxWidth,
 			boolean setThreeColumnMaxWidth, String oneCapt, String twoCapt, String threeCapt, String fourCapt,
@@ -41,7 +41,7 @@ public class BeansFourTableDefault extends JTable {
 		if (setOneColumnMaxWidth) {
 			getColumnModel().getColumn(1).setMaxWidth(500);
 		}
-		getColumnModel().getColumn(1).setMinWidth(100);
+		getColumnModel().getColumn(1).setMinWidth(150);
 
 		if (setTwoColumnMaxWidth) {
 			getColumnModel().getColumn(2).setMaxWidth(280);

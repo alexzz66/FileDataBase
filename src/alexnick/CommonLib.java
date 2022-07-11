@@ -56,7 +56,7 @@ public class CommonLib {
 	 * @param finalPause if 'true' will first be written on console 'FINAL PAUSE'
 	 *                   and wait for key press
 	 */
-	synchronized public static void finalProgramExit(int exitCode, boolean finalPause) {
+	public static void finalProgramExit(int exitCode, boolean finalPause) {
 		if (finalPause) {
 			addLog(ADDLOG_SEP, true, null);
 			pause("FINAL PAUSE");
@@ -461,6 +461,7 @@ public class CommonLib {
 			Path pathDoubleForSaving, Properties prop) {
 		try {
 			CreateDirectoriesIfNeed(path);
+
 			if (bStore) {
 				var stream = new FileOutputStream(path.toString());
 				prop.store(stream, commentForStore);
@@ -472,6 +473,9 @@ public class CommonLib {
 					stream.close();
 				}
 			} else {
+				if (!path.toFile().exists()) {
+					return;
+				}
 				var stream = new FileInputStream(path.toString());
 				if (path.toFile().exists()) {
 					prop.load(stream);
@@ -1786,6 +1790,39 @@ public class CommonLib {
 		} catch (Exception e) {
 		}
 		return null;
+	}
+
+	/**
+	 * Add "item" to "list" if "item" is not equal to adjacent
+	 * 
+	 * @param toEnd if 'true' - try add to end; if 'false' - to start
+	 * @param item
+	 * @param list
+	 * @return add result
+	 */
+	synchronized public static boolean addItemtoList(boolean toEnd, String item, List<String> list) {
+		if (list == null || item == null) {
+			return false;
+		}
+
+		if (list.isEmpty()) {
+			list.add(item);
+			return true;
+		}
+
+		var index = toEnd ? list.size() - 1 : 0;
+		if (item.equals(list.get(index))) {
+			return false;
+		}
+
+		if (toEnd) {
+			list.add(item);
+		} else {
+			list.add(0, item);
+		}
+
+		return true;
+
 	}
 
 }

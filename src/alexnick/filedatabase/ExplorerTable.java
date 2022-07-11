@@ -1,0 +1,561 @@
+package alexnick.filedatabase;
+
+import java.awt.BorderLayout;
+import java.awt.FlowLayout;
+import java.awt.Toolkit;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Callable;
+
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
+import javax.swing.ScrollPaneConstants;
+
+import alexnick.CommonLib;
+
+public class ExplorerTable extends JDialog implements Callable<Integer> {
+	private static final long serialVersionUID = 1L;
+	private static String[] columns;
+	private int isCheckResult = Const.MR_NO_CHOOSED;
+
+	private List<MyBean> beans = null;
+	private BeansFourTableDefault myTable;
+
+	final private Path binPath;
+	final private String pathForBeansRoot; // no lower case, with file separator
+	Map<String, DirInfo> folderMap = null;
+
+	private String pathForBeans = "";
+	private JButton butUp = null;
+	private JButton butPrevious = null;
+	private JButton butNext = null;
+	private JTextField tfPathForBeans = null;
+	final private String standardTitle;
+	volatile private int lastSortType = SortBeans.sortNoDefined;
+	private List<String> previousKeys = null;// keys in lower case
+	private List<String> nextKeys = null;// keys in lower case
+	private boolean filesCanExist;
+
+	/**
+	 * @param frame           may be 'null' or 'this' in case calling from some
+	 *                        Frame
+	 * @param viewNoMark      if 'false' -> for files, into column 'info' be append
+	 *                        'Mark'
+	 * @param filesCanExist   if 'true', on double click in table with files, will
+	 *                        be try opening parent folder / file (if Shift pressed)
+	 * @param startPathString path before each path in '*.bin', must be correct path
+	 *                        of folder; MUST NOT BE null/empty
+	 * @param binPath         path to exist '.bin' file
+	 * @param initialPath     if not null/empty, the table will be showed from this
+	 *                        path
+	 * @throws IOException
+	 */
+	public ExplorerTable(JFrame frame, boolean viewNoMark, boolean filesCanExist, String startPathString, Path binPath,
+			String initialPath) throws IOException {
+		super(frame, true);
+		if (binPath == null || !binPath.toFile().exists() || binPath.toFile().isDirectory()) {
+			startPathString = "";
+		}
+
+		columns = new String[] { "Type / Size", "Name",
+				"Extensions info / Crc,modified" + (viewNoMark ? "" : " **mark"), "Full path" };
+		// 'startFolderFile' must be null or correct path
+		File startFolderFile = CommonLib.nullEmptyString(startPathString) ? null : Path.of(startPathString).toFile();
+
+		this.binPath = binPath;
+		this.filesCanExist = filesCanExist;
+		pathForBeansRoot = startFolderFile == null ? ""
+				: CommonLib.fileSeparatorAddIfNeed(false, true, startFolderFile.toString());
+		standardTitle = "Explorer table (files can " + (filesCanExist ? "" : "not ") + "exist)";
+
+		if (startFolderFile == null) {
+			CommonLib.errorArgument("not correct *.bin path: " + binPath);
+			return;
+		}
+
+		initFolderMap(viewNoMark);
+		if (CommonLib.nullEmptyMap(folderMap)) {
+			CommonLib.errorArgument("no found items for explorer table");
+			return;
+		}
+
+		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosed(WindowEvent e) {
+				if (isCheckResult == Const.MR_NO_CHOOSED) {
+					isCheckResult = Const.MR_CANCEL;
+				}
+			}
+		});
+
+		beans = new ArrayList<MyBean>();
+		var s2 = CommonLib.nullEmptyString(initialPath) ? startFolderFile.toString() : initialPath;
+
+		var path = Path.of(s2);
+		if (path == null) {
+			s2 = "";
+		} else {
+			s2 = path.toString();// no 'lower case', no add 'file separator' -> later it
+		}
+
+		previousKeys = new ArrayList<String>();
+		nextKeys = new ArrayList<String>();
+
+		myTable = new BeansFourTableDefault(ListSelectionModel.SINGLE_SELECTION, true, false, false, columns[0],
+				columns[1], columns[2], columns[3], beans);
+		initTable();
+
+//'initBeans()' after 'initTable()'
+		initBeans(false, false, s2.isEmpty() ? pathForBeansRoot : s2);
+		setStandardTitle();
+		var t = Toolkit.getDefaultToolkit().getScreenSize();
+		this.setBounds(0, 0, t.width - 120, t.height - 80);
+
+		setLocationRelativeTo(null);
+		setVisible(true);
+	}
+
+	private void initTable() { // on constructor
+		Box contents = new Box(BoxLayout.Y_AXIS);
+
+//FILL JPANEL		
+		JPanel buttons = new JPanel();
+
+		butUp = new JButton("Up");
+		butUp.setToolTipText("Shift + click: open root folder");
+		butUp.addActionListener(e -> initBeans(true, true, getUpPathForBeansOrEmpty(FileDataBase.isShiftDown)));
+
+		butPrevious = new JButton("<=");
+		butPrevious.setEnabled(false);
+		butPrevious.addActionListener(e -> previousNext(false));
+
+		butNext = new JButton("=>");
+		butNext.addActionListener(e -> previousNext(true));
+		butNext.setEnabled(false);
+
+		tfPathForBeans = new JTextField(64);
+		tfPathForBeans.setEditable(false);
+
+//MY_TABLE INIT			
+		myTable.getTableHeader().addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if (e.getClickCount() == 1 && e.getButton() == 1) {
+					sorting(myTable.convertColumnIndexToModel(myTable.columnAtPoint(e.getPoint())));
+				}
+			}
+		});
+
+		myTable.addMouseListener(new MouseListener() {
+			@Override
+			public void mouseReleased(MouseEvent e) {
+			}
+
+			@Override
+			public void mousePressed(MouseEvent e) {
+			}
+
+			@Override
+			public void mouseExited(MouseEvent e) {
+			}
+
+			@Override
+			public void mouseEntered(MouseEvent e) {
+			}
+
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if (e.getButton() != 1) {
+					return;
+				}
+				if (myTable.getSelectedColumn() == 0) {
+					return;
+				}
+				if (e.getClickCount() == 2) {
+					doMyTableDoubleClick();
+				}
+			}
+		});
+
+//SHIFT DOWN
+		myTable.addKeyListener(FileDataBase.keyListenerShiftDown);
+		butUp.addKeyListener(FileDataBase.keyListenerShiftDown);
+		butPrevious.addKeyListener(FileDataBase.keyListenerShiftDown);
+		butNext.addKeyListener(FileDataBase.keyListenerShiftDown);
+
+		tfPathForBeans.addKeyListener(FileDataBase.keyListenerShiftDown);
+
+//ADDING		
+		buttons.add(butUp);
+		buttons.add(butPrevious);
+		buttons.add(butNext);
+
+		buttons.add(tfPathForBeans);
+		JTextArea area = new JTextArea(3, 0); // add 'buttons' height
+		area.setBackground(buttons.getBackground());
+		area.setEditable(false);
+		buttons.add(area);
+		buttons.setLayout(new FlowLayout(FlowLayout.LEADING));
+
+		contents.add(new JScrollPane(myTable));
+		getContentPane().add(contents, BorderLayout.CENTER);
+
+		var scrollPan = new JScrollPane(buttons, ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER,
+				ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+		getContentPane().add(scrollPan, BorderLayout.SOUTH);
+	}
+
+	private void previousNext(boolean next) {
+		List<String> list = next ? nextKeys : previousKeys;
+		if (list.isEmpty()) {
+			return;
+		}
+
+		var s = list.remove(list.size() - 1);
+
+		if (next) {
+			if (list.isEmpty()) {
+				butNext.setEnabled(false);
+			}
+			previousKeys.add(pathForBeans.toLowerCase());
+			butPrevious.setEnabled(true);
+		} else {
+			if (list.isEmpty()) {
+				butPrevious.setEnabled(false);
+			}
+			nextKeys.add(pathForBeans.toLowerCase());
+			butNext.setEnabled(true);
+		}
+
+		initBeans(false, false, s);
+	}
+
+	private String getUpPathForBeansOrEmpty(boolean needRoot) {
+		if (CommonLib.nullEmptyString(pathForBeans) || !pathForBeans.endsWith(File.separator)) {
+			return "";
+		}
+
+		if (needRoot) {
+			return pathForBeansRoot;
+		}
+
+		var s = pathForBeans.toLowerCase(); // will be with file separator on end
+		if (!canUp(s)) {
+			return "";
+		}
+
+		s = s.substring(0, pathForBeans.length() - 1);
+
+		var pos = s.lastIndexOf(File.separator);
+		return pos < 0 ? "" : s.substring(0, pos + 1);
+	}
+
+// for 'folder' - try open that; for 'file' and 'filesCanExist' open in OS Windows explorer
+	private void doMyTableDoubleClick() {
+		int y = checkAndGetSelected();
+		if (y < 0) {
+			return;
+		}
+
+		if (beans.get(y).serviceIntOne == CommonLib.SIGN_FOLDER) {
+			initBeans(true, true, pathForBeans.concat(beans.get(y).getTwo()));
+			return;
+		}
+
+		if (filesCanExist) {
+			FileDataBase.openDirectory(FileDataBase.isShiftDown, myTable, beans);
+		}
+	}
+
+	/**
+	 * @return number of selected (must be one); or '-1' if error
+	 */
+	private int checkAndGetSelected() {
+		if (myTable.getSelectedRowCount() != 1) {
+			return -1;
+		}
+		int y = myTable.getSelectedRow();
+		if (y < 0) {
+			return -1;
+		}
+		return y;
+	}
+
+	private void updating() {
+		setStandardTitle();
+		lastSortType = SortBeans.sortNoDefined;
+		myTable.updateUI();
+	}
+
+	private void setNewTitle(String s) {
+		if (!getTitle().equals(s)) {
+			setTitle(s);
+		}
+	}
+
+	private void setStandardTitle() {
+		setNewTitle(standardTitle);
+	}
+
+	private void sorting(int columnIndex) {
+		if (columnIndex < 0 || beans.size() < 2) {
+			return;
+		}
+
+		int sortType = SortBeans.sortNoDefined;
+		String sortCaption = "";
+		boolean noDubleSort = false;// columns 0,4 and if's shift: always sort
+
+//columns = { "Type / Size", "Name", "Extensions info / Crc,modified", "Full path" };
+		final String column = (columnIndex >= 1 && columnIndex <= 3) ? columns[columnIndex - 1] : columns[3];
+
+		if (columnIndex == 0) {
+			sortType = SortBeans.sortCheck_ThenFour;
+			sortCaption = "Checked -> " + column;
+		} else if (columnIndex == 1) {
+			sortType = SortBeans.sortOne;
+			sortCaption = column;
+			noDubleSort = true;
+		} else if (columnIndex == 2) {
+			if (lastSortType == SortBeans.sortTwoLowerCase) {
+				sortType = SortBeans.sortTwoNamesByExtension;
+				sortCaption = "Name's extensions";
+			} else {
+				sortType = SortBeans.sortTwoLowerCase;
+				sortCaption = column;
+			}
+
+			noDubleSort = true;
+		} else if (columnIndex == 3) {
+			sortType = SortBeans.sortThree;
+			sortCaption = column;
+			noDubleSort = true;
+		} else {
+			sortType = SortBeans.sortFourLowerCase;
+			sortCaption = column;
+			noDubleSort = true;
+		}
+
+		if (sortType == lastSortType && noDubleSort) {
+			return;
+		}
+
+		lastSortType = sortType;
+		setStandardTitle();
+		var sortBeans = new SortBeans(sortType, sortCaption, beans);
+		setNewTitle(standardTitle.concat(sortBeans.getAppendCaption()));
+	}
+
+	/**
+	 * @param addToPreviousKeys add current folder ('pathForBeans') to
+	 *                          'previousKeys'
+	 * @param clearNextKeys
+	 * @param keyFolderMap      will set to lower case and add file separator on
+	 *                          end, if need
+	 */
+	private void initBeans(boolean addToPreviousKeys, boolean clearNextKeys, String keyFolderMap) {
+		if (CommonLib.nullEmptyString(keyFolderMap)) {
+			return;
+		}
+
+		keyFolderMap = CommonLib.fileSeparatorAddIfNeed(false, true, keyFolderMap.toLowerCase());
+		butUp.setEnabled(canUp(keyFolderMap));
+		var dirInfo = folderMap.get(keyFolderMap);
+		if (dirInfo == null) {
+			return;
+		}
+
+		if (addToPreviousKeys && CommonLib.notNullEmptyString(pathForBeans)
+				&& CommonLib.addItemtoList(true, pathForBeans.toLowerCase(), previousKeys)) {
+			butPrevious.setEnabled(true);
+		}
+
+		if (clearNextKeys) {
+			nextKeys.clear();
+			butNext.setEnabled(false);
+		}
+
+		pathForBeans = dirInfo.fullPathCanonical;
+		beans.clear();
+		tfPathForBeans.setText(pathForBeans);
+
+		var mapFolders = dirInfo.transitFoldersNames;
+
+//FOLDERS		
+		for (var folderName : mapFolders) {
+			var subKeyFolderMap = keyFolderMap.concat(folderName.toLowerCase()) + File.separator;
+			var subDirInfo = folderMap.get(subKeyFolderMap);
+
+			String one = "<dir> ";
+			String two = folderName;
+			var sbThree = new StringBuilder();
+
+			if (subDirInfo != null) {
+				one += subDirInfo.countTotalFiles + "; " + CommonLib.bytesToKBMB(false, 0, subDirInfo.sizeTotalFiles);
+
+				sbThree.append("[");
+				for (var ext : subDirInfo.extsInfoMap.keySet()) {
+					sbThree.append(ext).append(":").append(subDirInfo.extsInfoMap.get(ext)).append("; ");
+				}
+				sbThree.append("]");
+			}
+
+			String four = pathForBeans + folderName;
+
+			var bean = new MyBean(one, two, sbThree.toString(), four, "");
+			bean.serviceIntOne = CommonLib.SIGN_FOLDER;
+			bean.serviceString = "";
+			beans.add(bean);
+		}
+
+//FILES
+		var mapFiles = dirInfo.filesMap;
+		for (var fileName : mapFiles.keySet()) {
+			var fileInfo = mapFiles.get(fileName);
+			String one = CommonLib.bytesToKBMB(false, 0, fileInfo.getSize());
+			String two = fileName;
+			String three = fileInfo.getCrc() + ", " + CommonLib.dateModifiedToString(fileInfo.getDate())
+					+ fileInfo.getMark();
+			String four = pathForBeans + fileName;
+
+			var bean = new MyBean(one, two, three, four, "");
+			bean.serviceIntOne = CommonLib.SIGN_FILE;
+			bean.serviceString = fileInfo.getExtForFourApp();
+			beans.add(bean);
+		}
+
+		updating();
+
+	}
+
+	private boolean canUp(String key) {
+//commented, because -> must not be null or empty!!! if (pathForBeansRootLowerCase.isEmpty()) {return !key.isEmpty();}		
+
+		return key.startsWith(pathForBeansRoot.toLowerCase()) && !key.equalsIgnoreCase(pathForBeansRoot);
+	}
+
+	private void initFolderMap(boolean viewNoMark) { // on constructor
+		var list = CommonLib.readFile(1, 0, binPath);
+		if (list.isEmpty()) {
+			return;
+		}
+
+		folderMap = new HashMap<String, DirInfo>();
+//INIT MARK PROPERTY
+		if (!viewNoMark && (!FileDataBase.initMarkIsProperty() || FileDataBase.markPropertySet.isEmpty())) {
+			viewNoMark = true;
+		}
+
+//for FileInfo: (long)date,size,crc; 
+		for (var s : list) {
+			Path path = ConverterBinFunc.getPathFromBinItemOrNull(pathForBeansRoot, s);
+			if (path == null) {
+				continue;
+			}
+
+			var ar = ConverterBinFunc.dividePathToAll_Ext(0, path.toString());
+			if (ar[0] == null) {
+				continue;
+			}
+
+			long[] arrInf = ConverterBinFunc.getDecodeDateSizeCrc(s);
+			if (arrInf[0] == 0) {
+				continue;
+			}
+
+			String fileName = path.toFile().getName();
+			Path folder = path.getParent();
+			if (fileName.isEmpty() || folder == null) {
+				continue;
+			}
+
+			String mark = viewNoMark ? "" : getMarkOrEmpty(s);
+			FileInfo fileInfo = new FileInfo(arrInf[0], arrInf[1], arrInf[2], ar[2], mark);
+			fillDirInfo(folder, ar[0], fileName, fileInfo); // for current file and all parents
+		}
+	}
+
+	private String getMarkOrEmpty(String s) {
+		String signature = ConverterBinFunc.getSignatureOrEmpty(s);
+		if (signature.isEmpty()) {
+			return "";
+		}
+
+		var mark = FileDataBase.getMarkFromPropertiesOrEmpty(signature);
+		if (mark.isEmpty() || !FileDataBase.markPropertySet.contains(mark)) {
+			return "";
+		}
+
+		return " " + FileDataBase.formatMark(mark, true);
+	}
+
+	/**
+	 * All parameters must be created
+	 * 
+	 * @param fileName
+	 * @param parentDir
+	 * @param fileInfo
+	 */
+	private void fillDirInfo(Path folder, String extLowerCase, String fileName, FileInfo fileInfo) { // on constructor
+		String transitFolderName = "";
+		while (folder != null) {
+			var dirString = CommonLib.fileSeparatorAddIfNeed(false, true, folder.toString());
+			var dirStringLowerCase = dirString.toLowerCase(); // key in 'folderMap'
+			if (!dirStringLowerCase.startsWith(pathForBeansRoot.toLowerCase())) {
+				break;
+			}
+
+			DirInfo dirInfo = folderMap.containsKey(dirStringLowerCase) ? folderMap.get(dirStringLowerCase)
+					: new DirInfo(dirString);
+
+			if (!fileName.isEmpty()) {
+				dirInfo.filesMap.put(fileName, fileInfo);
+			}
+
+			fileName = ""; // for parent initializations, no need current 'fileInfo' and 'fileName'
+
+			if (fileInfo.getSize() >= 0) {
+				dirInfo.countTotalFiles++;
+				dirInfo.sizeTotalFiles += fileInfo.getSize();
+			}
+
+			if (CommonLib.notNullEmptyString(transitFolderName)) {
+				dirInfo.transitFoldersNames.add(transitFolderName);
+			}
+
+			dirInfo.extsInfoMap.compute(extLowerCase, (k, v) -> v == null ? 1 : ++v);
+			folderMap.put(dirStringLowerCase, dirInfo);
+
+			transitFolderName = folder.toFile().getName();
+			folder = folder.getParent();
+		}
+	}
+
+	@Override
+	public Integer call() throws Exception {
+		while (isCheckResult == Const.MR_NO_CHOOSED) {
+			Thread.sleep(1024);
+		}
+		return isCheckResult;
+	}
+
+}

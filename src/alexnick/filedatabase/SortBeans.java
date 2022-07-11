@@ -19,6 +19,7 @@ public class SortBeans {
 	final static int sortTwo_Shift_CheckOnly = -2;
 
 	final static int sortTwoLowerCase = 20;
+	final static int sortTwoNamesByExtension = 200;
 	final static int sortTwoNumber = 2000;
 
 	final static int sortThree = 3; // modified
@@ -52,6 +53,7 @@ public class SortBeans {
 		case sortOneLowerCase -> sortOneLowerCase(beans);
 		case sortTwo -> sortTwo(beans);
 		case sortTwoLowerCase -> sortTwoLowerCase(beans);
+		case sortTwoNamesByExtension -> sortTwoNamesByExtension(beans); // by 'serviceString'
 		case sortTwoNumber -> sortTwoNumber(beans); // by 'serviceIntOne'
 
 		case sortThree -> sortThree(beans);
@@ -230,6 +232,21 @@ public class SortBeans {
 				return s1.compareTo(s2);
 			}
 		});
+	}
+
+	private void sortTwoNamesByExtension(List<MyBean> beans) {
+		beans.sort(new Comparator<MyBean>() {
+			@Override
+			public int compare(MyBean o1, MyBean o2) {
+				var s1 = o1.serviceString;
+				var s2 = o2.serviceString;
+				if (s1.equals(s2)) {
+					return defaultCompare(o1, o2);
+				}
+				return s1.compareTo(s2);
+			}
+		});
+
 	}
 
 	private void sortTwo_Shift_CheckOnly(List<MyBean> beans) {

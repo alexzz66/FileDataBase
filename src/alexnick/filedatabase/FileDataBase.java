@@ -124,7 +124,11 @@ public class FileDataBase {
 			sizeTextField = sbOptions.toString().contains(Const.OPTIONS_BIG_SIZE_TEXTFIELD) ? Const.textFieldBigSize
 					: Const.textFieldStardardSize;
 
-			new Program(mode, sbOptions.toString(), parameters);
+			if (sbOptions.toString().contains(Const.OPTIONS_TEST_FDB)) { // test methods
+				System.out.println("start 'test_fdb' mode...");
+			} else { // normal program start
+				new Program(mode, sbOptions.toString(), parameters);
+			}
 		} catch (Exception e) {
 			if (e.getMessage().equals("exit")) {
 				sbOptions = new StringBuilder(); // to avoid 'final pause'

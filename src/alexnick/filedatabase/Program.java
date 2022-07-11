@@ -262,9 +262,9 @@ public class Program {
 				Files.delete(binPath);
 			}
 
-			if (binPathDouble != null && binPathDouble.toFile().exists()) {
-				Files.delete(binPathDouble);
-			}
+//need this?  if (binPathDouble != null && binPathDouble.toFile().exists()) {
+//				Files.delete(binPathDouble);
+//			  }
 
 			return false;
 		}

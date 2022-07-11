@@ -240,9 +240,11 @@ public class ConverterBinFunc {
 	 * @param lengthStartPath length of 'start path', must be 0; but must not be
 	 *                        more 'path' length
 	 * @param pathString      string, be divided
-	 * @return array[3] 0: extension ('EXTEMPTY' if empty); 1:substring without
-	 *         'dot' and 'extension'; 3: extension without 'dot' ("" if empty); if
-	 *         error, arrays be filled with null; checks array[0] == null
+	 * @return array[3] 0: extension without 'dot' in lower case ('EXTEMPTY' if
+	 *         empty);<br>
+	 *         1:substring without 'dot' and 'extension'; <br>
+	 *         2: the same as 'array[0], but "" if empty;<br>
+	 *         if error, arrays be filled with null; checks array[0] == null
 	 */
 	synchronized static String[] dividePathToAll_Ext(int lengthStartPath, String pathString) {
 		String[] ar = new String[3];
@@ -260,7 +262,7 @@ public class ConverterBinFunc {
 			ar[1] = s;
 			ar[2] = "";
 		} else {
-			ar[0] = s.substring(pos + 1).toLowerCase();// extension
+			ar[0] = s.substring(pos + 1).toLowerCase();// extension without dot
 			ar[1] = s.substring(0, pos);
 			ar[2] = ar[0];
 		}
@@ -268,7 +270,7 @@ public class ConverterBinFunc {
 	}
 
 	// takes string of kind "00000000(0)17d1dcdd58e"
-	// returns decoded size and date modified, of empty
+	// returns decoded size and date modified, or empty
 	synchronized private static String getAppendInf(String s) {
 		long[] arrInf = getDecodeDateSizeCrc(s);
 		return (arrInf[0] == 0) ? "" : getFileInf(true, arrInf[0], arrInf[1]);
@@ -278,7 +280,7 @@ public class ConverterBinFunc {
 	 * @param needWriteSize append inform about file size
 	 * @param lastModified  file date modified
 	 * @param size          file length
-	 * @return formatted string in '< />' or only '</>' if error
+	 * @return formatted string in braces '<' and '/> ' or only this braces if error
 	 */
 	synchronized static String getFileInf(boolean needWriteSize, long lastModified, long size) {
 		String sInf;

@@ -119,7 +119,7 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 				if (e.getClickCount() != 2 || myTable.getSelectedRowCount() != 1) {
 					return;
 				}
-				deleteBinFile(myTable);
+				showExplorerTableOrDeleteBin();
 			}
 		});
 
@@ -221,6 +221,7 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 
 		getContentPane().add(contents);
 		getContentPane().add(buttons, "South");
+
 		setPreferredSize(new Dimension(1024, 600));
 		pack();
 		setLocationRelativeTo(null);
@@ -370,25 +371,39 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 		setNewTitle(caption);
 	}
 
-	private void deleteBinFile(BeansFourTableDefault myTable) {
-		var y = myTable.getSelectedRow();
-		if (y < 0) {
+	private void showExplorerTableOrDeleteBin() {
+		final int row = myTable.getSelectedRow();
+		if (row < 0) {
 			return;
 		}
-		var b = beans.get(y);
-		var z = b.getTwo();
-		if (!z.startsWith(Const.NO_FOUND_PLUS)) {
-			return;
-		}
-
-		if (y < 0 || y >= beans.size()) {
-			return;
-		}
+		final MyBean b = beans.get(row);
 
 		if (b.binPath == null || !b.binPath.toFile().exists()) {
 			return;
 		}
 
+		var message = CommonLib.formatConfirmYesNoMessage("Show Explorer table", "with 'Mark'", "without 'Mark",
+				(b.getTwo().startsWith(Const.NO_FOUND_PLUS)) ? "<Cancel> delete bin file" : "");
+
+		var confirm = JOptionPane.showConfirmDialog(null, message, "Explorer table", JOptionPane.YES_NO_CANCEL_OPTION);
+
+		if (confirm == JOptionPane.YES_OPTION || confirm == JOptionPane.NO_OPTION) {
+			String startPath = getStartPathFromBTwo(false, b.getTwo());
+			try {
+				new ExplorerTable(this, confirm == JOptionPane.NO_OPTION, !b.getTwo().startsWith(Const.BRACE_START),
+						startPath, b.binPath, null);
+			} catch (Exception e) {
+				JOptionPane.showMessageDialog(this, "Error show Explorer table: " + e);
+			}
+			return;
+		}
+
+		if (b.getTwo().startsWith(Const.NO_FOUND_PLUS)) {
+			deleteBinFile(row, b);
+		}
+	}
+
+	private void deleteBinFile(int row, MyBean b) { // call from 'showExplorerTableOrDeleteBin'
 		var sDat = CommonLib.changeEndOfStringOrEmpty(b.binPath.toString(), Const.extensionBinList,
 				Const.extensionBinData);
 		if (sDat.isEmpty()) {
@@ -399,8 +414,8 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 			return;
 		}
 
-		var confirm = JOptionPane.showConfirmDialog(null,
-				"Delete selected item (number: " + y + ")?" + CommonLib.NEW_LINE_UNIX + "Be DELETED files:"
+		var confirm = JOptionPane.showConfirmDialog(this,
+				"Delete selected item (number: " + row + ")?" + CommonLib.NEW_LINE_UNIX + "Will be DELETED files:"
 						+ CommonLib.NEW_LINE_UNIX + b.binPath + CommonLib.NEW_LINE_UNIX + sDat,
 				"Delete files", JOptionPane.YES_NO_OPTION);
 		if (confirm != JOptionPane.YES_OPTION) {
@@ -412,7 +427,7 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 		} catch (Exception e) {
 			System.out.println("error deleting file: " + e);
 		}
-		beans.remove(y);
+		beans.remove(row);
 		fillMarkMaps();
 		updating(true);
 	}
