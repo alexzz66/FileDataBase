@@ -17,6 +17,7 @@ public class MyBean {
 	Boolean check;
 	int serviceIntOne;
 	int serviceIntTwo;
+	long serviceLong;
 	String serviceString;
 
 	Path binPath;
@@ -43,6 +44,7 @@ public class MyBean {
 		this.check = false;
 		this.serviceIntOne = 0;
 		this.serviceIntTwo = 0;
+		this.serviceLong = 0;
 		this.serviceString = null;
 
 		this.binPath = null;

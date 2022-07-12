@@ -19,13 +19,9 @@ public class SortBeans {
 	final static int sortTwo_Shift_CheckOnly = -2;
 
 	final static int sortTwoLowerCase = 20;
-	final static int sortTwoNamesByExtension = 200;
-	final static int sortTwoNumber = 2000;
 
 	final static int sortThree = 3; // modified
 	final static int sortThree_Shift_CheckOnly = -3;
-
-	final static int sortThreeNumber = 3000;
 
 	final static int sortFourLowerCase = 40; // path
 	final static int sortFourLowerCase_Shift_CheckOnly = -40;
@@ -34,6 +30,11 @@ public class SortBeans {
 	final static int sortFourNameLowerCase_Shift_CheckOnly = -400;
 
 	final static int sortFourStartNumber = 4000;
+
+	final static int sortServiceLong = 5000;
+	final static int sortServiceIntOne = 5001;
+	final static int sortServiceIntTwo = 5002;
+	final static int sortServiceString = 5010;
 
 	private final static String initAppendCaption = ", sorted by ";
 
@@ -53,11 +54,8 @@ public class SortBeans {
 		case sortOneLowerCase -> sortOneLowerCase(beans);
 		case sortTwo -> sortTwo(beans);
 		case sortTwoLowerCase -> sortTwoLowerCase(beans);
-		case sortTwoNamesByExtension -> sortTwoNamesByExtension(beans); // by 'serviceString'
-		case sortTwoNumber -> sortTwoNumber(beans); // by 'serviceIntOne'
 
 		case sortThree -> sortThree(beans);
-		case sortThreeNumber -> sortThreeNumber(beans); // by 'serviceIntTwo'
 
 		case sortFourLowerCase -> sortFourLowerCase(beans);
 		case sortFourNameLowerCase -> sortFourNameLowerCase(beans);
@@ -70,6 +68,11 @@ public class SortBeans {
 		case sortThree_Shift_CheckOnly -> sortThree_Shift_CheckOnly(beans);
 		case sortFourLowerCase_Shift_CheckOnly -> sortFourLowerCase_Shift_CheckOnly(beans);
 		case sortFourNameLowerCase_Shift_CheckOnly -> sortFourNameLowerCase_Shift_CheckOnly(beans);
+
+		case sortServiceIntOne -> sortServiceIntOne(beans);
+		case sortServiceIntTwo -> sortServiceIntTwo(beans);
+		case sortServiceLong -> sortServiceLong(beans);
+		case sortServiceString -> sortServiceString(beans);
 		default -> isSortType = false;
 		}
 		;
@@ -208,18 +211,6 @@ public class SortBeans {
 		});
 	}
 
-	private void sortTwoNumber(List<MyBean> beans) {
-		beans.sort(new Comparator<MyBean>() {
-			@Override
-			public int compare(MyBean o1, MyBean o2) {
-				if (o1.serviceIntOne == o2.serviceIntOne) {
-					return defaultCompare(o1, o2);
-				}
-				return o1.serviceIntOne - o2.serviceIntOne;
-			}
-		});
-	}
-
 	private void sortTwoLowerCase(List<MyBean> beans) {
 		beans.sort(new Comparator<MyBean>() {
 			@Override
@@ -232,21 +223,6 @@ public class SortBeans {
 				return s1.compareTo(s2);
 			}
 		});
-	}
-
-	private void sortTwoNamesByExtension(List<MyBean> beans) {
-		beans.sort(new Comparator<MyBean>() {
-			@Override
-			public int compare(MyBean o1, MyBean o2) {
-				var s1 = o1.serviceString;
-				var s2 = o2.serviceString;
-				if (s1.equals(s2)) {
-					return defaultCompare(o1, o2);
-				}
-				return s1.compareTo(s2);
-			}
-		});
-
 	}
 
 	private void sortTwo_Shift_CheckOnly(List<MyBean> beans) {
@@ -281,18 +257,6 @@ public class SortBeans {
 					return defaultCompare(o1, o2);
 				}
 				return s1.compareTo(s2);
-			}
-		});
-	}
-
-	private void sortThreeNumber(List<MyBean> beans) {
-		beans.sort(new Comparator<MyBean>() {
-			@Override
-			public int compare(MyBean o1, MyBean o2) {
-				if (o1.serviceIntTwo == o2.serviceIntTwo) {
-					return defaultCompare(o1, o2);
-				}
-				return o1.serviceIntTwo - o2.serviceIntTwo;
 			}
 		});
 	}
@@ -375,6 +339,57 @@ public class SortBeans {
 
 	String getAppendCaption() {
 		return appendCaption.equals(initAppendCaption) ? "" : appendCaption;
+	}
+
+//SERVICE SORT	
+	private void sortServiceIntOne(List<MyBean> beans) {
+		beans.sort(new Comparator<MyBean>() {
+			@Override
+			public int compare(MyBean o1, MyBean o2) {
+				if (o1.serviceIntOne == o2.serviceIntOne) {
+					return defaultCompare(o1, o2);
+				}
+				return o1.serviceIntOne - o2.serviceIntOne;
+			}
+		});
+	}
+
+	private void sortServiceIntTwo(List<MyBean> beans) {
+		beans.sort(new Comparator<MyBean>() {
+			@Override
+			public int compare(MyBean o1, MyBean o2) {
+				if (o1.serviceIntTwo == o2.serviceIntTwo) {
+					return defaultCompare(o1, o2);
+				}
+				return o1.serviceIntTwo - o2.serviceIntTwo;
+			}
+		});
+	}
+
+	private void sortServiceLong(List<MyBean> beans) {
+		beans.sort(new Comparator<MyBean>() {
+			@Override
+			public int compare(MyBean o1, MyBean o2) {
+				if (o1.serviceLong == o2.serviceLong) {
+					return defaultCompare(o1, o2);
+				}
+				return o1.serviceLong > o2.serviceLong ? 1 : -1;
+			}
+		});
+	}
+
+	private void sortServiceString(List<MyBean> beans) {
+		beans.sort(new Comparator<MyBean>() {
+			@Override
+			public int compare(MyBean o1, MyBean o2) {
+				var s1 = o1.serviceString;
+				var s2 = o2.serviceString;
+				if (s1.equals(s2)) {
+					return defaultCompare(o1, o2);
+				}
+				return s1.compareTo(s2);
+			}
+		});
 	}
 
 }

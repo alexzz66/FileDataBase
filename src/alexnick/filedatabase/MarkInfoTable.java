@@ -256,11 +256,11 @@ public class MarkInfoTable extends JDialog {
 			sortCaption = column;
 			noDubleSort = true;
 		} else if (columnIndex == 2) {
-			sortType = SortBeans.sortTwoNumber;
+			sortType = SortBeans.sortServiceIntOne;
 			sortCaption = column;
 			noDubleSort = true;
 		} else if (columnIndex == 3) {
-			sortType = SortBeans.sortThreeNumber;
+			sortType = SortBeans.sortServiceIntTwo;
 			sortCaption = column;
 			noDubleSort = true;
 		} else {

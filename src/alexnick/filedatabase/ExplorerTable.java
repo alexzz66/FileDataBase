@@ -337,7 +337,7 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 			noDubleSort = true;
 		} else if (columnIndex == 2) {
 			if (lastSortType == SortBeans.sortTwoLowerCase) {
-				sortType = SortBeans.sortTwoNamesByExtension;
+				sortType = SortBeans.sortServiceString;
 				sortCaption = "Name's extensions";
 			} else {
 				sortType = SortBeans.sortTwoLowerCase;
@@ -346,8 +346,13 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 
 			noDubleSort = true;
 		} else if (columnIndex == 3) {
-			sortType = SortBeans.sortThree;
-			sortCaption = column;
+			if (lastSortType == SortBeans.sortThree) {
+				sortType = SortBeans.sortServiceLong;
+				sortCaption = "Modified";
+			} else {
+				sortType = SortBeans.sortThree;
+				sortCaption = column;
+			}
 			noDubleSort = true;
 		} else {
 			sortType = SortBeans.sortFourLowerCase;
@@ -405,12 +410,13 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 			var subKeyFolderMap = keyFolderMap.concat(folderName.toLowerCase()) + File.separator;
 			var subDirInfo = folderMap.get(subKeyFolderMap);
 
-			String one = "<dir> ";
+			String one = "$<dir> ";
 			String two = folderName;
 			var sbThree = new StringBuilder();
 
 			if (subDirInfo != null) {
-				one += subDirInfo.countTotalFiles + "; " + CommonLib.bytesToKBMB(false, 0, subDirInfo.sizeTotalFiles);
+				one += CommonLib.bytesToKBMB(false, 4, subDirInfo.sizeTotalFiles) + "; files: "
+						+ subDirInfo.countTotalFiles;
 
 				sbThree.append("[");
 				for (var ext : subDirInfo.extsInfoMap.keySet()) {
@@ -424,6 +430,7 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 			var bean = new MyBean(one, two, sbThree.toString(), four, "");
 			bean.serviceIntOne = CommonLib.SIGN_FOLDER;
 			bean.serviceString = "";
+			bean.serviceLong = Long.MAX_VALUE - subDirInfo.sizeTotalFiles >>> 6;
 			beans.add(bean);
 		}
 
@@ -431,7 +438,7 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 		var mapFiles = dirInfo.filesMap;
 		for (var fileName : mapFiles.keySet()) {
 			var fileInfo = mapFiles.get(fileName);
-			String one = CommonLib.bytesToKBMB(false, 0, fileInfo.getSize());
+			String one = CommonLib.bytesToKBMB(false, 4, fileInfo.getSize());
 			String two = fileName;
 			String three = fileInfo.getCrc() + ", " + CommonLib.dateModifiedToString(fileInfo.getDate())
 					+ fileInfo.getMark();
@@ -440,6 +447,7 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 			var bean = new MyBean(one, two, three, four, "");
 			bean.serviceIntOne = CommonLib.SIGN_FILE;
 			bean.serviceString = fileInfo.getExtForFourApp();
+			bean.serviceLong = fileInfo.getDate();
 			beans.add(bean);
 		}
 

@@ -394,9 +394,8 @@ public class Program {
 	private int ShowDuplicatesFrame(int groupsCount, Path saveResultTo, List<MyBean> duplicatesBeans) {
 		int deletedCount = 0;
 		FileDataBase.showFrameInfo("Duplicate table");
-		var ft = new FutureTask<>(new DuplicateTable(null,
-				"Checking items be deleted. Groups count: " + groupsCount + "; total count: " + duplicatesBeans.size(),
-				duplicatesBeans));
+		var ft = new FutureTask<>(new DuplicateTable(null, "Checking items will be deleted. Groups count: "
+				+ groupsCount + "; total count: " + duplicatesBeans.size(), duplicatesBeans));
 		new Thread(ft).start();
 		ArrayList<String> delList = new ArrayList<String>();
 		try {

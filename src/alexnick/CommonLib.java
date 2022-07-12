@@ -413,7 +413,9 @@ public class CommonLib {
 	 *                   0 (by default): full format, size in bytes + short1, '1025
 	 *                   (KB: 1,00)';<br>
 	 *                   1: short1 only, 'KB: 1,00';<br>
-	 *                   2: short2, '1,0kb'
+	 *                   2: short2, '1,0kb' <br>
+	 *                   3: full, swap => KB: 1,00 (1025) <br>
+	 *                   4: the same as '3', with append spaces, KB:___1,00 (1025)
 	 * @param size       long size (example of file)
 	 * @return formatted string from @param sz, rounded to near bytes,KB,MB,GB (div
 	 *         1024, not 1000)
@@ -421,10 +423,15 @@ public class CommonLib {
 	synchronized public static String bytesToKBMB(boolean needSpaces, int shortType, long size) {
 		final String[] ar = { "bytes", "KB", "MB", "GB" };
 		final String[] arSpaces = { "", "   ", "   ", "   " };
-		if (shortType < 0 || shortType > 2) {
+		if (shortType < 0 || shortType > 4) {
 			shortType = 0;
 		}
-		String formatLength = shortType == 2 ? "%.1f" : "%.2f";
+		String formatLength = shortType == 2 ? "%.1f" : shortType == 4 ? "%6.2f" : "%.2f";
+
+		if (shortType == 4) {
+			shortType = 3; // for return result
+		}
+
 		long sz = size;
 		long x = 1 << 10;
 		String res = "", tmp;
@@ -444,7 +451,7 @@ public class CommonLib {
 		if (res.isEmpty()) {// sz <= 0
 			res = ar[0] + ": " + arSpaces[0] + 0;
 		}
-		return shortType == 0 ? size + " (" + res + ")" : res;
+		return shortType == 3 ? res + " (" + size + ")" : shortType == 0 ? size + " (" + res + ")" : res;
 	}
 
 	/**

@@ -21,6 +21,7 @@ public class FileInfo {
 	 * @param size          >=0
 	 * @param crc           >=0
 	 * @param extForFourApp if not null/empty, be added 'dot' before, if need
+	 * @param mark          if null, will be set as empty
 	 */
 	public FileInfo(long date, long size, long crc, String extForFourApp, String mark) {
 		this.date = date;
