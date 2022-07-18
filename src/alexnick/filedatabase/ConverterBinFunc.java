@@ -271,8 +271,8 @@ public class ConverterBinFunc {
 
 	// takes string of kind "00000000(0)17d1dcdd58e"
 	// returns decoded size and date modified, or empty
-	synchronized private static String getAppendInf(String s) {
-		long[] arrInf = getDecodeDateSizeCrc(s);
+	synchronized static String getAppendInf(String binItem) {
+		long[] arrInf = getDecodeDateSizeCrc(binItem);
 		return (arrInf[0] == 0) ? "" : getFileInf(true, arrInf[0], arrInf[1]);
 	}
 

@@ -145,7 +145,7 @@ public class BeanViewTable extends JDialog {
 					return;
 				}
 				if (e.getClickCount() == 2) {
-					FileDataBase.openDirectory(FileDataBase.isShiftDown, myTable, beans);
+					FileDataBase.openDirectory(false, FileDataBase.isShiftDown, myTable, beans);
 				}
 			}
 		});

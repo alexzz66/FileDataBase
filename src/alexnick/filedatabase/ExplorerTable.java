@@ -122,7 +122,7 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 
 		myTable = new BeansFourTableDefault(ListSelectionModel.SINGLE_SELECTION, true, false, false, columns[0],
 				columns[1], columns[2], columns[3], beans);
-		initTable();
+		initComponents();
 
 //'initBeans()' after 'initTable()'
 		initBeans(false, false, s2.isEmpty() ? pathForBeansRoot : s2);
@@ -134,7 +134,7 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 		setVisible(true);
 	}
 
-	private void initTable() { // on constructor
+	private void initComponents() { // on constructor
 		Box contents = new Box(BoxLayout.Y_AXIS);
 
 //FILL JPANEL		
@@ -282,7 +282,7 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 		}
 
 		if (filesCanExist) {
-			FileDataBase.openDirectory(FileDataBase.isShiftDown, myTable, beans);
+			FileDataBase.openDirectory(false, FileDataBase.isShiftDown, myTable, beans);
 		}
 	}
 

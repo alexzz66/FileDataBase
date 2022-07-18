@@ -529,7 +529,7 @@ public class Program {
 		}
 
 		if (!destStartPathString.isEmpty()) {
-			new CompareFolders(this, compareLogType, copyMode, startPath, binPath, destStartPathString, null);
+			new CompareFolders(this, compareLogType, copyMode, startPath, binPath, destStartPathString, null, false);
 		}
 	}
 

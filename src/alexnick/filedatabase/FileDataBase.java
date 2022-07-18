@@ -335,8 +335,16 @@ public class FileDataBase {
 		return sortedHmExtsList;
 	}
 
-	// isShiftDown - run file; if false - open parent directory
-	synchronized static void openDirectory(boolean isShiftDown, BeansFourTableDefault myTable, List<MyBean> beans) {
+	// isShiftDown -
+	/**
+	 * @param fromBinPath if 'true' path will be from 'binPath'; if 'false' from
+	 *                    'getFour'
+	 * @param isShiftDown if 'true' run file; if 'false' open parent directory
+	 * @param myTable     must not be null/empty
+	 * @param beans       must not be null/empty
+	 */
+	synchronized static void openDirectory(boolean fromBinPath, boolean isShiftDown, BeansFourTableDefault myTable,
+			List<MyBean> beans) {
 		if (myTable.getSelectedRowCount() != 1) {
 			return;
 		}
@@ -345,18 +353,21 @@ public class FileDataBase {
 			return;
 		}
 
-		if (beans.get(y).isFourPrefixNoExists()) {
+		var b = beans.get(y);
+
+		if (b.isFourPrefixNoExists()) {
 			return;
 		}
-		var z = beans.get(y).getFour(false, true);
 
-		Path path = Path.of(z);
+		Path path = fromBinPath ? b.binPath : Path.of(b.getFour(false, true));
+
+		if (path == null) {
+			return;
+		}
+
 		Path pathStart = isShiftDown ? path : path.getParent();
 
 		if (pathStart == null) { // example, getParent for 'C:/' be null
-			if (path == null) {
-				return;
-			}
 			pathStart = path;
 		}
 		if (pathStart.toFile().exists()) {
@@ -367,7 +378,7 @@ public class FileDataBase {
 	/**
 	 * @param sortType 0 (by default):no sort list; 1:sort; 2: sort ignore case
 	 * @param set      if null, to list be saved checked from 'beans'; else 'beans'
-	 *                 indexes be taken from 'set'
+	 *                 indexes will be taken from 'set'
 	 * @param beans
 	 */
 	synchronized static void beansToList(int sortType, Set<Integer> set, List<MyBean> beans) {

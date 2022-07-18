@@ -149,9 +149,7 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 				for (var b : beans) {
 					b.check = (checkNow <= 0) ? false
 							: (checkNow >= CHECK_NOW_MAX) ? true
-									: (checkNow == 2)
-											? (b.getOne().startsWith(Const.BRACE_START)
-													&& !b.getTwo().startsWith(Const.BRACE_START))
+									: (checkNow == 2) ? getStartPathExists(b, null)
 											: b.findInOneLowerCase(findBinFolder, Const.textFieldFindSeparator);// filter
 				}
 				updating(false);
@@ -386,26 +384,26 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 
 		var message = CommonLib.formatConfirmYesNoMessage(
 				"Select action for bin file:" + CommonLib.NEW_LINE_UNIX + b.binPath,
-				"show in Explorer Table (" + (viewNoMark ? "without" : "with")+ " mark)", "no action",
-				(b.getTwo().startsWith(Const.NO_FOUND_PLUS)) ? "<Cancel> delete bin file"
-						: "<Cancel> show in Windows Explorer");
+				"show in Explorer Table (" + (viewNoMark ? "without" : "with") + " mark)",
+				((b.getTwo().startsWith(Const.NO_FOUND_PLUS)) ? "delete bin file or " : "")
+						.concat("show in Windows Explorer"),
+				"<Cancel> no action");
 
-		var confirm = JOptionPane.showConfirmDialog(null, message, "Explorer table", JOptionPane.YES_NO_CANCEL_OPTION);
-		if (confirm == JOptionPane.NO_OPTION) {
-			return; // no actions
-		}
+		var confirm = JOptionPane.showConfirmDialog(this, message, "Explorer table", JOptionPane.YES_NO_CANCEL_OPTION);
 
 		if (confirm == JOptionPane.YES_OPTION) {
-			String startPath = getStartPathFromBTwo(false, b.getTwo());
+			String startPath = getStartPathFromBTwoOrEmpty(false, b.getTwo());
 			try {
-				new ExplorerTable(this, viewNoMark, !b.getTwo().startsWith(Const.BRACE_START), startPath, b.binPath, null);
+				new ExplorerTable(this, viewNoMark, getStartPathExists(b, startPath), startPath, b.binPath, null);
 			} catch (Exception e) {
 				JOptionPane.showMessageDialog(this, "Error show Explorer table: " + e);
 			}
 			return;
 		}
 
-		deleteOrShowExplorerBinFile(b.getTwo().startsWith(Const.NO_FOUND_PLUS), row, b);
+		if (confirm == JOptionPane.NO_OPTION) {
+			deleteOrShowExplorerBinFile(b.getTwo().startsWith(Const.NO_FOUND_PLUS), row, b);
+		}
 
 	}
 
@@ -434,13 +432,15 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 			return true;
 		}
 
-		var confirm = JOptionPane.showConfirmDialog(this,
+		var message = CommonLib.formatConfirmYesNoMessage(
 				"Delete selected item (number: " + row + ")?" + CommonLib.NEW_LINE_UNIX + "Will be DELETED files:"
-						+ CommonLib.NEW_LINE_UNIX + b.binPath + CommonLib.NEW_LINE_UNIX + sDat + CommonLib.NEW_LINE_UNIX
-						+ CommonLib.NEW_LINE_UNIX + "<Cancel> Show file in Windows Explorer",
-				"Delete files", JOptionPane.YES_NO_CANCEL_OPTION);
+						+ CommonLib.NEW_LINE_UNIX + b.binPath + CommonLib.NEW_LINE_UNIX + sDat,
+				"delete this files", "show in Windows Explorer", "<Cancel> no action");
+
+		var confirm = JOptionPane.showConfirmDialog(this, message, "Delete files", JOptionPane.YES_NO_CANCEL_OPTION);
+
 		if (confirm != JOptionPane.YES_OPTION) {
-			return confirm == JOptionPane.CANCEL_OPTION; // show in Windows Explorer for 'cancel'
+			return confirm == JOptionPane.NO_OPTION; // show in Windows Explorer
 		}
 
 		try {
@@ -457,7 +457,8 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 
 	private void compareTwoBin() {
 		String[] columnsForCompare = new String[2];
-		Path[] binPaths = getBinPathForCompareOrNull(columnsForCompare);
+		boolean[] existsStartPaths = new boolean[2];
+		Path[] binPaths = getBinPathForCompareOrNull(existsStartPaths, columnsForCompare);
 		if (binPaths == null) {
 			JOptionPane.showMessageDialog(this,
 					"For compare *.bin, check 2 items in table, they must be with correct 'StartPath' and 'BinPath'");
@@ -470,7 +471,8 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 		var confirm = JOptionPane.showConfirmDialog(this,
 				s.concat(CommonLib.NEW_LINE_UNIX + CommonLib.NEW_LINE_UNIX + "[No]: swap 'SOURCE' and 'DEST'"),
 				"Compare two *.bin", JOptionPane.YES_NO_CANCEL_OPTION);
-		if (confirm == JOptionPane.NO_OPTION) {
+
+		if (confirm == JOptionPane.NO_OPTION) { // SWAP
 			var path = binPaths[0];
 			binPaths[0] = binPaths[2];
 			binPaths[2] = path;
@@ -478,6 +480,10 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 			path = binPaths[1];
 			binPaths[1] = binPaths[3];
 			binPaths[3] = path;
+
+			var tmp = existsStartPaths[0];
+			existsStartPaths[0] = existsStartPaths[1];
+			existsStartPaths[1] = tmp;
 		} else if (confirm != JOptionPane.YES_OPTION) {
 			return;
 		}
@@ -489,7 +495,7 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 //!!! copyMode MUST BE '0', because comparing only, without checking start path exists	
 // binPaths: 0, 1: source: startPath,binPath; 2, 3: dest: startPath, binPath
 			new CompareFolders(program, compareLogType, 0, binPaths[0].toString(), binPaths[1], binPaths[2].toString(),
-					binPaths[3]);
+					binPaths[3], existsStartPaths[0]);
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(this, "Error: " + e);
 		}
@@ -497,7 +503,9 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 	}
 
 // 0, 1: source: startPath,binPath; 2, 3: dest: startPath, binPath; 'columnsForCompare' created and size == 2
-	private Path[] getBinPathForCompareOrNull(String[] columnsForCompare) {
+//'existsStartPaths' will be filling of start paths exist information, must be created and size == 2
+	private Path[] getBinPathForCompareOrNull(boolean[] existsStartPaths, String[] columnsForCompare) {
+
 		if (printCount(false, null) == null) { // null, if checked items no contains 'countBinItems' (serviceIntOne)
 			return null;
 		}
@@ -509,17 +517,17 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 				continue;
 			}
 			if (bp1 == null) {
-				bp1 = checkBinPathOrNull(b);
+				bp1 = checkBinPathOrNull(b, 0, existsStartPaths);
 				if (bp1 == null) {
 					return null;
 				}
-				columnsForCompare[0] = "\"" + b.getTwo() + "\" " + b.getOne(); // column as is, for confirmation
+				columnsForCompare[0] = formatColumnForCompare(b, existsStartPaths[0]);
 			} else if (bp2 == null) {
-				bp2 = checkBinPathOrNull(b);
+				bp2 = checkBinPathOrNull(b, 1, existsStartPaths);
 				if (bp2 == null) {
 					return null;
 				}
-				columnsForCompare[1] = "\"" + b.getTwo() + "\" " + b.getOne();
+				columnsForCompare[1] = formatColumnForCompare(b, existsStartPaths[1]);
 			} else { // more 2 items checked
 				return null;
 			}
@@ -535,19 +543,25 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 		return res;
 	}
 
-	// 'null' if error, or paths is correct
-	private Path[] checkBinPathOrNull(MyBean b) {
-		if (b.binPath == null || b.serviceIntOne <= 0) {
+	private String formatColumnForCompare(MyBean b, boolean exists) {
+		return (exists ? "(exists) " : "") + "\"" + b.getTwo() + "\" " + b.getOne(); // column as is, for confirmation;
+	}
+
+// 'null' if error, or paths is correct; 'existsStartPaths' must be created
+	private Path[] checkBinPathOrNull(MyBean b, int numberOfExistsStartPaths, boolean[] existsStartPaths) {
+		if (b.binPath == null || b.serviceIntOne <= 0) { // 'serviceIntOne' as countBinItems
 			return null;
 		}
 
 		if (b.binPath.toFile().exists()) {
-			String trimTwo = getStartPathFromBTwo(false, b.getTwo());
-			if (trimTwo.isEmpty()) {
+			String startPath = getStartPathFromBTwoOrEmpty(false, b.getTwo());// 'getTwo' is column 'StartPath'
+			if (startPath.isEmpty()) {
 				return null;
 			}
 			Path[] res = new Path[4];
-			res[0] = Path.of(trimTwo);
+			existsStartPaths[numberOfExistsStartPaths] = getStartPathExists(b, startPath);
+
+			res[0] = Path.of(startPath);
 			res[1] = b.binPath;
 			return res;
 		}
@@ -583,9 +597,9 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 				continue;
 			}
 
-			var startPath = getStartPathFromBTwo(true, b.getTwo());
-			if (!b.getOne().startsWith(Const.BRACE_START) || b.getTwo().startsWith(Const.BRACE_START)
-					|| !Path.of(startPath).toFile().exists()) {
+			var startPath = getStartPathFromBTwoOrEmpty(true, b.getTwo());
+
+			if (!getStartPathExists(b, startPath)) {
 				startPath = Const.prefixInTableForNoExists + startPath;
 			}
 			var bin = CommonLib.readFile(2, 0, b.binPath);
@@ -602,6 +616,14 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 			}
 		}
 		return beans0;
+	}
+
+//if 'startPath' == null, this parameters no checked; if empty - returns 'false'	
+	private boolean getStartPathExists(MyBean b, String startPath) {
+		boolean result = b.getOne().startsWith(Const.BRACE_START) && !b.getTwo().startsWith(Const.BRACE_START);
+
+		return startPath == null ? result
+				: startPath.isEmpty() ? false : result && Path.of(startPath).toFile().isDirectory();
 	}
 
 	private List<MyBean> getFillingBeanListOrNull(Set<String> set) {
@@ -632,11 +654,11 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 				continue;
 			}
 
-			var startPath = getStartPathFromBTwo(true, b.getTwo());
-			if (!b.getOne().startsWith(Const.BRACE_START) || b.getTwo().startsWith(Const.BRACE_START)
-					|| !Path.of(startPath).toFile().exists()) {
+			var startPath = getStartPathFromBTwoOrEmpty(true, b.getTwo());
+			if (!getStartPathExists(b, startPath)) {
 				startPath = Const.prefixInTableForNoExists + startPath;
 			}
+
 			var bin = CommonLib.readFile(2, 0, b.binPath);
 
 			for (var s : bin) {
@@ -650,7 +672,7 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 
 // return not empty string, startPath in '.dat' file or adapted, if exists on other disk;
 // return empty string, if error
-	private String getStartPathFromBTwo(boolean needCheckEndSeparator, String two) {
+	private String getStartPathFromBTwoOrEmpty(boolean needCheckEndSeparator, String two) {
 		if (two.isEmpty()) {
 			return ""; // not must be so
 		}

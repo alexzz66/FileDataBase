@@ -106,7 +106,7 @@ public class CommonLib {
 	}
 
 	/**
-	 * if 'string' not null, be trimmed, if defined, and appended to
+	 * if 'string' not null, will be trimmed, if defined, and appended to
 	 * StringBuilder;<br>
 	 * 'new line' types:<br>
 	 * 0 (or default): no append 'new line';<br>
@@ -116,7 +116,7 @@ public class CommonLib {
 	 * @param string           will be append to 'sb'; if 'string' is null - return
 	 *                         false; if 'string' is empty, be append 'newLines'
 	 *                         only, if defined
-	 * @param needTrim         if 'true', 'string' be trimmed
+	 * @param needTrim         if 'true', 'string' will be trimmed
 	 * @param addNewLineBefore 'new line' before
 	 * @param addNewLineAfter  'new line' after
 	 * @param sb               must not be null
@@ -408,7 +408,7 @@ public class CommonLib {
 	}
 
 	/**
-	 * @param needSpaces if 'true', be added three spaces before KB, MB, GB
+	 * @param needSpaces if 'true', will be added three spaces before KB, MB, GB
 	 * @param shortType  example for size 1025 bytes:<br>
 	 *                   0 (by default): full format, size in bytes + short1, '1025
 	 *                   (KB: 1,00)';<br>
@@ -499,8 +499,8 @@ public class CommonLib {
 	 * @param skipEmpty        0 (by default) read all lines;<br>
 	 *                         1: empty lines be skipped;<br>
 	 *                         2: TRIMMED empty lines be skipped
-	 * @param inLowerUpperCase if 1: each item be to lower case; 2: to UPPER CASE;
-	 *                         else (0) : no action
+	 * @param inLowerUpperCase if 1: each item will be set to lower case; 2: to
+	 *                         UPPER CASE; else (0) : no action
 	 * @param path             Path for file, where be read
 	 * @return created (not null) array list of String; in case error, list be empty
 	 */
@@ -553,7 +553,7 @@ public class CommonLib {
 
 	// where is 'scanner' - method starts with 'pause..' (recommended)
 	/**
-	 * @param caption if not empty, be written on console
+	 * @param caption if not empty, will be written on console
 	 * @return 'false' if user cancelled operation
 	 */
 	public static boolean pauseQueryOne(String caption) {
@@ -575,10 +575,11 @@ public class CommonLib {
 	}
 
 	/**
-	 * @param list created and no empty list of items, one be selected; Number of
-	 *             item method writes, as index that in list
+	 * @param list it's created and no empty list of items, one of them will be
+	 *             chosen;<br>
+	 *             Number of item method writes, as index that in list
 	 * @param log  may be null, otherwise be added to inform about working this
-	 *             method, in console be wrote obligatory
+	 *             method, in console will be wrote obligatory
 	 * @return correct number of list OR '-1'
 	 */
 	public static int pauseQueryList(List<String> list, List<String> log) {
@@ -622,11 +623,12 @@ public class CommonLib {
 	}
 
 	/**
-	 * Saves 'list' to 'path'; if 'list' is null/empty, be created empty file
+	 * Saves 'list' to 'path'; if 'list' is null/empty, will be created empty file
 	 * 
 	 * @param writeConsole        writes result of saving on console
-	 * @param skipEmpty           0 (by default) save all lines; 1: empty lines be
-	 *                            skipped; 2: TRIMMED empty lines be skipped
+	 * @param skipEmpty           0 (by default) save all lines;<br>
+	 *                            1: empty lines be skipped; <br>
+	 *                            2: TRIMMED empty lines be skipped
 	 * @param deleteIfExistsMode  if 'path' file is exists:
 	 *                            <p>
 	 * 
@@ -638,12 +640,13 @@ public class CommonLib {
 	 *                            <p>
 	 * 
 	 *                            DeleteIfExists_OLD_RENAME_TO_BAK:old file of
-	 *                            'path' be renamed with add '.bak'; WARNING:be
-	 *                            error if 'path' ends on'.bak';
+	 *                            'path' be renamed with add '.bak';<br>
+	 *                            WARNING:will be error if 'path' ends on'.bak';
 	 * 
 	 * @param path                full path, to saving 'list'
-	 * @param pathDoubleForSaving if not null, in start this method, be called one
-	 *                            recursive, with 'path' as 'pathDoubleForSaving'
+	 * @param pathDoubleForSaving if not null, in start this method, will be called
+	 *                            recursively, with 'path' as
+	 *                            'pathDoubleForSaving'<br>
 	 * @param list                String list for saving to 'path'; if 'list' is
 	 *                            null, be saved empty file
 	 * @return saving result for 'path' in 'list'
@@ -718,7 +721,23 @@ public class CommonLib {
 	}
 
 	/**
-	 * @param toLowerCase if 'true', each element in 'list' be set to result in
+	 * @param list if null/empty, return null
+	 * @return array of string, size equals list.size, filled by items from 'list'
+	 */
+	synchronized public static String[] getArrayFromListOrNull(List<String> list) {
+		if (nullEmptyList(list)) {
+			return null;
+		}
+
+		String[] result = new String[list.size()];
+		for (int i = 0; i < list.size(); i++) {
+			result[i] = list.get(i);
+		}
+		return result;
+	}
+
+	/**
+	 * @param toLowerCase if 'true', each element in 'list' will be set to result in
 	 *                    lowerCase
 	 * @param list        String list, not null, hash for empty items no created
 	 * @return hash set from 'list'
@@ -735,7 +754,8 @@ public class CommonLib {
 	}
 
 	/**
-	 * @param inLowerUpperCase if 1: each item be to lower case; 2: to UPPER CASE;
+	 * @param inLowerUpperCase if 1: each item will be set to lower case;<br>
+	 *                         2: to UPPER CASE;<br>
 	 *                         else (0) : no action
 	 * @param path             where strings will be read from
 	 * @return filling or empty (if error) set
@@ -811,10 +831,10 @@ public class CommonLib {
 	}
 
 	/**
-	 * Creates hash map from no empty items in 'list' , items be set to map in lower
-	 * case, if defined 'toLowerCase';
+	 * Creates hash map from no empty items in 'list' , items will be set to map in
+	 * lower case, if defined 'toLowerCase';
 	 * 
-	 * @param toLowerCase if 'true', items in map be in lower case
+	 * @param toLowerCase if 'true', items in map will be set to lower case
 	 * @param list        source string list, not null
 	 * @return map in format "original string, number string in 'list'(last number,
 	 *         if been several string)"
@@ -894,7 +914,7 @@ public class CommonLib {
 	}
 
 	/**
-	 * Added 'substr' to 's', IF NEED ONLY, that is, if is one, not be added;
+	 * Added 'substr' to 's', IF NEED ONLY, means, if is one, will not be added;
 	 * example: for 'toStart' and 'substr' == "a": "aAB" -> "aAB"; "AaB" -> "aAaB";
 	 * 
 	 * @param toStart -> added to start 's'
@@ -1024,13 +1044,17 @@ public class CommonLib {
 	/**
 	 * Saves 'list' and starts it in 'process', if 'needStartProcess' > 0;
 	 * 
-	 * @param doBackIfExists   if true and file of 'path' exists, old file be moved
-	 *                         with add '.bak'; if false, old file be replaced
-	 * @param needStartProcess 1:start, 2:start and wait press Enter; otherwise:no
-	 *                         action, saving only; 3: confirm at start this method,
-	 *                         may cancel saving and start; 0 (by default): save
-	 *                         'path' to 'list' only, with given 'doBackIfExists'
-	 * @param path             where be saving 'list', not must be null
+	 * @param doBackIfExists   if true and file of 'path' exists, old file will be
+	 *                         moved with add '.bak'; if false, old file will be
+	 *                         replaced
+	 * @param needStartProcess 1:start,<br>
+	 *                         2:start and wait press Enter; otherwise:no action,
+	 *                         saving only; <br>
+	 *                         3: confirm at start this method, may cancel saving
+	 *                         and start; <br>
+	 *                         0 (by default): save 'path' to 'list' only, with
+	 *                         given 'doBackIfExists'
+	 * @param path             where will be saved 'list', not must be null
 	 * @param list             for saving, must be not null
 	 */
 	synchronized public static void saveAndShowList(boolean doBackIfExists, int needStartProcess, Path path,
@@ -1093,12 +1117,13 @@ public class CommonLib {
 	}
 
 	/**
-	 * Each string from list, which length >= 3, be converted to Path, then deleted.
+	 * Each string from list, which length >= 3, will be converted to Path, then
+	 * deleted.
 	 * 
-	 * @param saveResultTo if null: no saving 'log'; else 'log' be trying save and
-	 *                     show result
-	 * @param list         paths of files, be deleted
-	 * @param log          filling by delete results; if null, be created
+	 * @param saveResultTo if null: no saving 'log'; else 'log' will be trying save
+	 *                     and show result
+	 * @param list         paths of files, will be deleted
+	 * @param log          filling by delete results; if null, will be created
 	 * @return deleted count
 	 */
 	synchronized public static int deleteFiles(Path saveResultTo, List<String> list, List<String> log) {
@@ -1183,7 +1208,7 @@ public class CommonLib {
 
 	/**
 	 * @param file there list of paths, for deleting
-	 * @param log  if not null, be filling; if null, be created
+	 * @param log  if not null, will be filling; if null, will be created
 	 * @return '-1' if error, otherwise count of deleted files
 	 */
 	synchronized public static int deleteFilesFromFile(File file, List<String> log) {
@@ -1214,11 +1239,12 @@ public class CommonLib {
 	/**
 	 * @param needCanonicalFile if 'true', result file try transform to 'canonical'
 	 *                          name, with correct symbols register
-	 * @param needFileDirectory MARK_FILE:must be file; MARK_FOLDER:must be
-	 *                          directory; else (MARK_FILE_OR_FOLDER):no matter
+	 * @param needFileDirectory MARK_FILE:must be file;<br>
+	 *                          MARK_FOLDER:must be directory;<br>
+	 *                          else (MARK_FILE_OR_FOLDER):no matter
 	 * @param list              if null/empty, returns 'null';<br>
-	 *                          from each string be removed symbols after "*", "?",
-	 *                          "\"", "<", ">", "|"; starts of string must be
+	 *                          from each string will be removed symbols after "*",
+	 *                          "?", "\"", "<", ">", "|"; starts of string must be
 	 *                          minimum 2 symbols, and will be attempt to convert to
 	 *                          file
 	 * @return list of existing file in absolute path
@@ -1240,12 +1266,12 @@ public class CommonLib {
 	 * @param needCanonicalFile   if 'true', result file try transform to
 	 *                            'canonical' name, with correct symbols register
 	 * @param minLengthFileString minimal length 'fileString' for create file; if
-	 *                            less than '1', be set as '1'; recommended '2',
-	 *                            example '/x' <br>
+	 *                            less than '1', will be set as '1'; recommended
+	 *                            '2', example '/x' <br>
 	 *                            or '4', example 'C:/x'
 	 * @param needFileDirectory   MARK_FILE:must be file; MARK_FOLDER:must be
 	 *                            directory; else (MARK_FILE_OR_FOLDER):no matter
-	 * @param fileString          string for create result file; not must be
+	 * @param fileString          string for create result file; must not be
 	 *                            null/empty
 	 * @return existing file path; or null
 	 */
@@ -1280,8 +1306,9 @@ public class CommonLib {
 	/**
 	 * @param needCanonicalFile  if 'true', result file try transform to 'canonical'
 	 *                           name, with correct symbols register
-	 * @param needFileDirectory: MARK_FILE:must be file; MARK_FOLDER:must be
-	 *                           directory; else (MARK_FILE_OR_FOLDER):no matter
+	 * @param needFileDirectory: MARK_FILE:must be file;<br>
+	 *                           MARK_FOLDER:must be directory; <br>
+	 *                           else (MARK_FILE_OR_FOLDER):no matter
 	 * @param file               must be existing file for reading path strings
 	 * @return created (but may be empty) list of existing path or null
 	 */
@@ -1295,12 +1322,13 @@ public class CommonLib {
 	}
 
 	/**
-	 * If 'source' ignore case ends on 'endSource', be removed it, and added
+	 * If 'source' ignore case ends on 'endSource', will be removed it, and added
 	 * 'endDest'; Method can use for change extension if file name
 	 * 
 	 * @param source    string for change
-	 * @param endSource 'source' must be ends on 'endSource', then it be removed
-	 * @param endDest   if removed 'endSource', be added it
+	 * @param endSource 'source' must be ends on 'endSource', then it will be
+	 *                  removed
+	 * @param endDest   if removed 'endSource', will be added it
 	 * @return 'source' with changed 'endSource' or empty if error
 	 */
 	synchronized public static String changeEndOfStringOrEmpty(String source, String endSource, String endDest) {
@@ -1321,13 +1349,15 @@ public class CommonLib {
 	 * 
 	 * @param betweenStringDelimeters 0(by default): no string delimiters before and
 	 *                                after info;<br>
-	 *                                1:be delimiters as empty string; <br>
-	 *                                2:be delimiters as PRINTDELIMITER, "-------"
-	 * @param first                   must be not null/empty
-	 * @param second                  if not null/empty, be added as format
+	 *                                1:will be set delimiters as empty string; <br>
+	 *                                2:will be set delimiters as PRINTDELIMITER,
+	 *                                "-------"
+	 * @param first                   must not be null/empty
+	 * @param second                  if not null/empty, will be added as format
 	 *                                ">>>_SET_'first'_:_'second'"
-	 * @param appendString            if not null/empty, be added at next string
-	 * @param log                     if not null, all inform be also added to
+	 * @param appendString            if not null/empty, will be added at next
+	 *                                string
+	 * @param log                     if not null, all inform will be also added to
 	 */
 	synchronized public static void setInfo(int betweenStringDelimeters, String first, String second,
 			String appendString, List<String> log) {
@@ -1355,10 +1385,10 @@ public class CommonLib {
 	 * Sort string list
 	 * 
 	 * @param sortType  0 (by default):no sort list; 1:sort; 2: sort ignore case
-	 * @param caption   if not null/empty, be added as first item of 'list', in
+	 * @param caption   if not null/empty, will be added as first item of 'list', in
 	 *                  format: "==='caption'_(listSize)==="
 	 * @param list      must not be null, be sorted
-	 * @param listTotal if not null or equal to 'list', be added 'list' to one
+	 * @param listTotal if not null or equal to 'list', will be added 'list' to one
 	 */
 	synchronized public static void sortFillingList(int sortType, String caption, List<String> list,
 			List<String> listTotal) {
@@ -1393,12 +1423,12 @@ public class CommonLib {
 	 * disks; if 'sourceFolder' defined, result list be filling that only
 	 * 'disks/folder', which be found
 	 * 
-	 * @param excludeSourceDisk if 'true', in result list not be added source
+	 * @param excludeSourceDisk if 'true', in result list will not be added source
 	 *                          disk/folder;<br>
-	 *                          if 'false', to start result list be added, if
+	 *                          if 'false', to start result list will be added, if
 	 *                          exists, source 'disk/folder';
 	 * @param sourceDisk        may be disk or any folder, starts with need disk
-	 * @param sourceFolder      if null/empty, result list be filling disks
+	 * @param sourceFolder      if null/empty, result list will be filling disks
 	 * @return not null string list of equal folders
 	 * @throws IOException
 	 */
@@ -1468,7 +1498,7 @@ public class CommonLib {
 	 *               found);
 	 *               <p>
 	 * 
-	 *               1: removing: be replaced all restricted symbols on "";
+	 *               1: removing: will be replaced all restricted symbols on "";
 	 *               <p>
 	 * 
 	 *               2: replacing that symbols on " ";
@@ -1542,16 +1572,16 @@ public class CommonLib {
 	}
 
 	/**
-	 * Method separates string from 'source' for creating Path; 'source' be trimmed,
-	 * then be found from start 'source', specific restricted file name symbols:
-	 * "*","?","\"","<",">","|"
+	 * Method separates string from 'source' for creating Path; 'source' will be
+	 * trimmed, then will be found from start 'source', specific restricted file
+	 * name symbols: "*","?","\"","<",">","|"
 	 * <p>
 	 * 
 	 * NB: symbols "/","\\",":" : no checked;
 	 * 
 	 * @param source string for creating Path, must contains after specific
 	 *               restricted symbol, append info, as "D:/1.txt <appInfo>", then
-	 *               that info be removed
+	 *               that info will be removed
 	 * @return trimmed 'source' with removed end after first found specific symbol
 	 */
 	synchronized public static String removeEndStringAfterSpecificRestrictedWindowsChars(String source) {
@@ -1579,12 +1609,12 @@ public class CommonLib {
 	/**
 	 * Creates list to string with specified format
 	 * 
-	 * @param limit     if less than 'list' size, be append '...and other: ' + count
-	 *                  not written 'list' items
+	 * @param limit     if less than 'list' size, will be append '...and other: ' +
+	 *                  count not written 'list' items
 	 * 
 	 * @param prefix    if not null/empty, writes in start result
 	 * @param postfix   if not null/empty, writes in end result
-	 * @param separator if null/empty, be ', '
+	 * @param separator if null/empty, will be set as ', '
 	 * @param list      string list to write
 	 * @return result string
 	 */
@@ -1743,16 +1773,18 @@ public class CommonLib {
 	}
 
 	/**
-	 * Creates 'number string' from 'value' with specified length; in result may be
+	 * Creates 'number string' from 'value' with specified length; to result may be
 	 * added prefix/postfix;
 	 * 
-	 * @param value   source integer, if less than 0, before 'number string' be
+	 * @param value   source integer, if less than 0, before 'number string' will be
 	 *                added '-'
-	 * @param length  required length (1..8) 'number string', if less than '1' be
-	 *                set as '1'; if more than '8' be set as '8'; for example:
-	 *                value=42 and length=5, result 'number string' will be '00042'
-	 * @param prefix  if not null/empty, be added before result
-	 * @param postfix if not null/empty, be added after result
+	 * @param length  required length (1..8) 'number string', if less than '1' will
+	 *                be set as '1';<br>
+	 *                if more than '8' will be set as '8';<br>
+	 *                for example: value=42 and length=5, result 'number string'
+	 *                will be '00042'
+	 * @param prefix  if not null/empty, will be added before result
+	 * @param postfix if not null/empty, will be added after result
 	 * @return formatted string
 	 */
 	synchronized public static String formatInt(int value, int length, String prefix, String postfix) {
@@ -1780,7 +1812,7 @@ public class CommonLib {
 	 * index 1: extension with a leading dot, or an empty string if the extension is
 	 * empty
 	 * 
-	 * @param file which name,extension will be extracted
+	 * @param file which name, extension will be extracted
 	 * @return null if error; else filling array, 2 elements
 	 */
 	synchronized public static String[] extractFileNameExtensionOrNull(File file) {

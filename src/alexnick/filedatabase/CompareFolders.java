@@ -7,7 +7,10 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.FutureTask;
+
+import javax.swing.JOptionPane;
 
 import alexnick.CommonLib;
 import alexnick.CopyMove;
@@ -29,6 +32,9 @@ public class CompareFolders {
 	private int compareLogType;
 
 	private boolean doBakToCopyMove;
+
+	private Map<String, SetStringClass> equalSignMap; // List<MyBean> equalSignBeans;
+	volatile private int equalSignId = 0;
 	private Program program;
 
 	/**
@@ -50,11 +56,16 @@ public class CompareFolders {
 	 * @param destStartPathString   must be from exists Path
 	 * @param destBinPathFile       if 'null', be updated '*.bin' file; else: must
 	 *                              be exists
+	 * @param sourceStartPathExists for 'copyMode' == 0 => if 'true' (call from
+	 *                              'CompareTwoBin' of ViewTable), and
+	 *                              'equalSignList' not empty, may be show EqualSign
+	 *                              Table for renaming
 	 * @throws Exception if any errors
 	 */
 //method called with  'copymode' > 0 -> for Const.MODE_STOP_FOUR (when 'bin created')
 	public CompareFolders(Program program, int compareLogType, int copyMode, String sourceStartPathString,
-			Path sourceBinPath, String destStartPathString, Path destBinPath) throws Exception {
+			Path sourceBinPath, String destStartPathString, Path destBinPath, boolean sourceStartPathExists)
+			throws Exception {
 		this.program = program;
 		this.copyMode = copyMode < 0 || copyMode > 4 ? 0 : copyMode;
 		this.compareLogType = compareLogType < 0 || compareLogType > 2 ? 0 : compareLogType;
@@ -74,6 +85,7 @@ public class CompareFolders {
 			CommonLib.setInfo(2, "option", "CompareTwoBin NO_FULL_PATHS", null, null);
 			bNeedFullPaths = false;
 		}
+		equalSignMap = copyMode == 0 && sourceStartPathExists ? new TreeMap<String, SetStringClass>() : null;
 		doCompareFolders(bNeedFullPaths);
 	}
 
@@ -253,11 +265,124 @@ public class CompareFolders {
 				// first parameter do 'true', to '.bak' create; copying's strange sometimes
 				CommonLib.saveAndShowList(true, copyMode > 0 ? 3 : 1, pathLog, compareLog);
 			}
-			return;
+
 		} catch (Exception e) {
 			System.out.println(CommonLib.NEW_LINE_UNIX + "Error of comparing folder: " + e);
 		}
-		return;
+
+		showEqualSignTable();
+	}
+
+	private void showEqualSignTable() {
+		var beans = initBeans();
+
+		if (CommonLib.nullEmptyList(beans)) {
+			return;
+		}
+
+		String standardTitle = "Equal signatures table, id count: " + equalSignId + ", items count: " + beans.size();
+		var confirm = JOptionPane.showConfirmDialog(null, "Do you want open for rename " + standardTitle + "?",
+				"Rename equal signatures", JOptionPane.YES_NO_OPTION);
+		if (confirm == JOptionPane.YES_OPTION) {
+			new EqualSignatureTable(null, equalSignId, standardTitle, beans);
+		}
+	}
+
+	private List<MyBean> initBeans() {
+		if (CommonLib.nullEmptyMap(equalSignMap)) {
+			return null;
+		}
+
+		List<MyBean> beans = new ArrayList<>();
+		equalSignId = 0;
+		for (var sign : equalSignMap.keySet()) {
+			fillBeansForSignature(sign, equalSignMap.get(sign), beans);
+		}
+		return beans;
+	}
+
+	private void fillBeansForSignature(String sign, SetStringClass set, List<MyBean> beans) {
+		int sourceSetSize = set.sourceSet.size();
+		int destSetSize = set.destSet.size();
+
+		if (sourceSetSize < 1 || destSetSize < 1) {
+			return;
+		}
+		// TODO
+		final String errorEmpty = "'Set' must not be empty";
+		final boolean bothSetContainsOneItem = sourceSetSize == 1 && destSetSize == 1;
+
+		for (var source : set.sourceSet) {
+			if (source.isEmpty()) {
+				CommonLib.errorArgument(errorEmpty);
+				continue;
+			}
+
+			try {
+				Path sourcePath = Path.of(source);
+				var sourceName = sourcePath.toFile().getName();
+				if (sourceName.isEmpty() || !sourcePath.toFile().exists()) {
+					continue;
+				}
+
+				int equalSignIdDestCount = 0;
+
+				for (var dest : set.destSet) {
+					if (dest.isEmpty()) {
+						CommonLib.errorArgument(errorEmpty);
+						continue;
+					}
+
+					Path destPath = Path.of(dest);
+					var destName = destPath.toFile().getName();
+					if (destName.isEmpty()) {
+						continue;
+					}
+
+					boolean equalNames = sourceName.equals(destName);
+					if (equalNames && bothSetContainsOneItem) {
+						break;
+					}
+
+//<001; aabbccdd(); equal> name -> name | fullSource | fullDest | result
+					var sb = new StringBuilder();
+
+					if (equalSignIdDestCount == 0) {
+						equalSignId++;
+					}
+
+					String id = CommonLib.formatInt(equalSignId, 3, null, null);
+
+					if (equalSignIdDestCount > 0) {
+						id += "--" + equalSignIdDestCount;
+					}
+
+					equalSignIdDestCount++;
+
+					sb.append(Const.BRACE_START).append(id);
+					sb.append("; ").append(sign);
+
+					String startIdSign = sb.toString();
+
+					if (equalNames) {
+						sb.append("; equals");
+					} else if (sourceName.equalsIgnoreCase(destName)) {
+						sb.append("; registerOnly");
+					}
+
+					sb.append(Const.BRACE_END_WITH_SPACE);
+
+					var b = new MyBean(sb.toString(), sourceName, destName, source.concat(" >> ").concat(dest), null);
+					b.check = bothSetContainsOneItem;
+					b.binPath = sourcePath;
+					b.serviceIntOne = destSetSize;
+					b.serviceIntTwo = equalSignIdDestCount; //from 1
+					b.serviceString = startIdSign;
+					beans.add(b);
+				}
+			} catch (Exception e) {
+			}
+		}
 	}
 
 	private String format(String caption, int sizeForReturn) {
@@ -462,30 +587,34 @@ public class CompareFolders {
 		var sign = "";
 		var isCaption = false;
 
+		if (equalSignMap != null) {
+			equalSignMap.clear();
+		}
+
 		for (int i = 0; i < fOld.size(); i++) {
-			var sOld = fOld.get(i);
+			String sOld = fOld.get(i);
 			var pos = sOld.indexOf(')'); // aabbccdd(0) - minim pos must be more (10 + 1)
 			if (pos <= 10) {
 				continue;
 			}
-
+//'new list' it is 'source'; 'old list' it is 'dest'
 			if (isCaption && sign.equals(sOld.substring(0, pos + 1))) {
-				equalSignList
-						.add(ConverterBinFunc.getPathStringFromBinItem(null, startDest, sOld, "1", null, null, null));
-				fOld.set(i, "");
+				extractToEqualSignMap(false, i, sign, startDest, sOld, fOld, equalSignList);
 				continue;
 			}
 
 			sign = sOld.substring(0, pos + 1);
 			isCaption = false;
+
 			for (int j = fNewCur; j < fNew.size(); j++) {
-				var sNew = fNew.get(j);
+				String sNew = fNew.get(j);
 				if (!sNew.startsWith(sign)) { // 'sign' not empty
 					if (isCaption) {
 						break;
 					}
 					continue;
 				}
+
 				if (!isCaption) { // service string must start in ' '
 					isCaption = true;
 					if (!equalSignList.isEmpty()) {
@@ -494,9 +623,8 @@ public class CompareFolders {
 					equalSignList.add(" ~signature: " + sign);
 					equalSignList.add(" ~new list:");
 				}
-				equalSignList
-						.add(ConverterBinFunc.getPathStringFromBinItem(null, startSource, sNew, "1", null, null, null));
-				fNew.set(j, "");
+
+				extractToEqualSignMap(true, j, sign, startSource, sNew, fNew, equalSignList);
 				fNewCur = j + 1;
 			}
 
@@ -506,9 +634,27 @@ public class CompareFolders {
 
 			equalSignList.add("");
 			equalSignList.add(" ~old list:");
-			equalSignList.add(ConverterBinFunc.getPathStringFromBinItem(null, startDest, sOld, "1", null, null, null));
-			fOld.set(i, "");
+			extractToEqualSignMap(false, i, sign, startDest, sOld, fOld, equalSignList);
 		}
+	}
+
+	private void extractToEqualSignMap(boolean source, int i, String sign, String startPath, String binItem,
+			List<String> binList, List<String> equalSignList) {
+		var s = ConverterBinFunc.getPathStringFromBinItem(null, startPath, binItem, "", null, null, null);
+		equalSignList.add(s + " " + ConverterBinFunc.getAppendInf(binItem));
+		binList.set(i, "");
+
+		if (equalSignMap == null || s.isEmpty()) {
+			return;
+		}
+
+		var entry = equalSignMap.containsKey(sign) ? equalSignMap.get(sign) : new SetStringClass();
+		if (source) {
+			entry.sourceSet.add(s);
+		} else {
+			entry.destSet.add(s);
+		}
+		equalSignMap.put(sign, entry);
 	}
 
 // returns sorted, only no-empty lines from list to result, 'arr' and 'list' must have the same size

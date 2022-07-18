@@ -190,7 +190,7 @@ public class RenameTable extends JDialog {
 					return;
 				}
 				if (e.getClickCount() == 2) {
-					FileDataBase.openDirectory(false, myTable, beans);
+					FileDataBase.openDirectory(false, false, myTable, beans);
 				}
 			}
 		});

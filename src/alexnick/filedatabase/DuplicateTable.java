@@ -85,7 +85,7 @@ public class DuplicateTable extends JDialog implements Callable<List<String>> {
 					return;
 				}
 				if (e.getClickCount() == 2) {
-					FileDataBase.openDirectory(FileDataBase.isShiftDown, myTable, beans);
+					FileDataBase.openDirectory(false, FileDataBase.isShiftDown, myTable, beans);
 				}
 			}
 		});

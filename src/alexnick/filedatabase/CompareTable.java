@@ -123,7 +123,7 @@ public class CompareTable extends JFrame implements Callable<Map<Path, Integer>>
 					return;
 				}
 				if (e.getClickCount() == 2) {
-					FileDataBase.openDirectory(FileDataBase.isShiftDown, myTable, beans);
+					FileDataBase.openDirectory(false, FileDataBase.isShiftDown, myTable, beans);
 				}
 			}
 		});
