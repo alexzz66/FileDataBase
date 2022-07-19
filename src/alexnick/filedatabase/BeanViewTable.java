@@ -345,7 +345,7 @@ public class BeanViewTable extends JDialog {
 		butToList.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				FileDataBase.beansToList(2, null, beans);
+				FileDataBase.beansToList(false, 2, null, beans);
 			}
 		});
 

@@ -70,7 +70,7 @@ public class Program {
 		}
 
 		if (mode == Const.MODE_VIEW) {
-			var showView = new ShowView(this);
+			var showView = new InitShowViewTable(this);
 			if (showView.getShowViewResult() == Const.MR_COPY_MOVE) {
 				doCopyMoveNew();
 			}

@@ -14,15 +14,16 @@ public class MyBean {
 	private String four;
 	private String fourApp;
 
-	Boolean check;
-	int serviceIntOne;
-	int serviceIntTwo;
-	long serviceLong;
-	String serviceString;
+	Boolean check = false;
+	int serviceIntOne = 0;
+	int serviceIntTwo = 0;
+	int serviceIntThree = 0;
+	long serviceLong = 0;
+	String serviceString = null;
 
-	Path binPath;
-	Map<String, Integer> mapCountExt;
-	Map<String, Set<String>> mapExtSignatures;
+	Path binPath = null;
+	Map<String, Integer> mapCountExt = null;
+	Map<String, Set<String>> mapExtSignatures = null;
 
 	/**
 	 * MyBean for table with 4 columns, all strings must not be 'null'<br>
@@ -40,16 +41,6 @@ public class MyBean {
 		this.three = three == null ? "" : three;
 		this.four = four == null ? "" : four;
 		this.fourApp = fourApp == null ? "" : fourApp;
-
-		this.check = false;
-		this.serviceIntOne = 0;
-		this.serviceIntTwo = 0;
-		this.serviceLong = 0;
-		this.serviceString = null;
-
-		this.binPath = null;
-		this.mapCountExt = null;
-		this.mapExtSignatures = null;
 	}
 
 	Boolean getCheck() {

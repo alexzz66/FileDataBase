@@ -5,8 +5,10 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.FutureTask;
 
@@ -301,37 +303,85 @@ public class CompareFolders {
 		return beans;
 	}
 
-	private void fillBeansForSignature(String sign, SetStringClass set, List<MyBean> beans) {
-		int sourceSetSize = set.sourceSet.size();
-		int destSetSize = set.destSet.size();
+	private void fillBeansForSignature(final String sign, SetStringClass set, List<MyBean> beans) {
+//with removing equals names
+
+		if (set.sourceSet.isEmpty() || set.destSet.isEmpty()) {
+			return;
+		}
+
+		Set<String> tmpDestSet = new HashSet<String>();
+		tmpDestSet.addAll(set.destSet);
+		Set<String> tmpDestNames = new HashSet<String>();
+
+		for (var dest : tmpDestSet) {
+			if (dest.isEmpty()) {
+				return;
+			}
+
+			Path destPath = Path.of(dest);
+			var destName = destPath.toFile().getName();
+			if (destName.isEmpty()) {
+				continue;
+			}
+
+			tmpDestNames.add(destName);
+		}
+
+		if (tmpDestNames.isEmpty()) {
+			return;
+		}
+
+		Set<String> tmpSourceSet = new HashSet<String>();
+
+		for (var source : set.sourceSet) {
+			if (source.isEmpty()) {
+				return;
+			}
+
+			File sourceFile = Path.of(source).toFile();
+			var sourceName = sourceFile.getName();
+			if (sourceName.isEmpty() || tmpDestNames.contains(sourceName) || !sourceFile.exists()) {
+				continue;
+			}
+			tmpSourceSet.add(source);
+		}
+
+		if (tmpSourceSet.isEmpty()) {
+			return;
+		}
+
+		fillBeansForSignature(sign, tmpSourceSet, tmpDestSet, beans);
+	}
+
+	private void fillBeansForSignature(final String sign, Set<String> tmpSourceSet, Set<String> tmpDestSet,
+			List<MyBean> beans) {
+//without removing equals names
+
+		int sourceSetSize = tmpSourceSet.size();
+		int destSetSize = tmpDestSet.size();
 
 		if (sourceSetSize < 1 || destSetSize < 1) {
 			return;
 		}
-		// TODO
-		final String errorEmpty = "'Set' must not be empty";
+
 		final boolean bothSetContainsOneItem = sourceSetSize == 1 && destSetSize == 1;
 
-		for (var source : set.sourceSet) {
-			if (source.isEmpty()) {
-				CommonLib.errorArgument(errorEmpty);
-				continue;
+		for (var source : tmpSourceSet) {
+			if (source.isEmpty()) { // must not be empty here
+				return;
 			}
 
 			try {
-				Path sourcePath = Path.of(source);
-				var sourceName = sourcePath.toFile().getName();
-				if (sourceName.isEmpty() || !sourcePath.toFile().exists()) {
+				File sourceFile = Path.of(source).toFile();
+				var sourceName = sourceFile.getName();
+				if (sourceName.isEmpty() || !sourceFile.exists()) {
 					continue;
 				}
 
 				int equalSignIdDestCount = 0;
 
-				for (var dest : set.destSet) {
-					if (dest.isEmpty()) {
-						CommonLib.errorArgument(errorEmpty);
-						continue;
-					}
+				for (var dest : tmpDestSet) {
 
 					Path destPath = Path.of(dest);
 					var destName = destPath.toFile().getName();
@@ -339,46 +389,28 @@ public class CompareFolders {
 						continue;
 					}
 
-					boolean equalNames = sourceName.equals(destName);
-					if (equalNames && bothSetContainsOneItem) {
+					if (sourceName.equals(destName) && bothSetContainsOneItem) {
 						break;
 					}
-
-//<001; aabbccdd(); equal> name -> name | fullSource | fullDest | result
-					var sb = new StringBuilder();
 
 					if (equalSignIdDestCount == 0) {
 						equalSignId++;
 					}
 
-					String id = CommonLib.formatInt(equalSignId, 3, null, null);
+					var b = new MyBean("", sourceName, destName, source.concat(" >> ").concat(dest), null);
+					b.check = bothSetContainsOneItem;
+					b.binPath = sourceFile.toPath();
+					b.serviceIntOne = destSetSize;
+					b.serviceIntTwo = equalSignIdDestCount; // from 0
+					b.serviceIntThree = equalSignId;
+					b.serviceLong = sourceFile.length();
+					b.serviceString = sign;
 
-					if (equalSignIdDestCount > 0) {
-						id += "--" + equalSignIdDestCount;
-					}
+					FileDataBase.formatBeanOneForEqualTable(null, b);
+
+					beans.add(b);
 
 					equalSignIdDestCount++;
-
-					sb.append(Const.BRACE_START).append(id);
-					sb.append("; ").append(sign);
-
-					String startIdSign = sb.toString();
-
-					if (equalNames) {
-						sb.append("; equals");
-					} else if (sourceName.equalsIgnoreCase(destName)) {
-						sb.append("; registerOnly");
-					}
-
-					sb.append(Const.BRACE_END_WITH_SPACE);
-
-					var b = new MyBean(sb.toString(), sourceName, destName, source.concat(" >> ").concat(dest), null);
-					b.check = bothSetContainsOneItem;
-					b.binPath = sourcePath;
-					b.serviceIntOne = destSetSize;
-					b.serviceIntTwo = equalSignIdDestCount; //from 1
-					b.serviceString = startIdSign;
-					beans.add(b);
 				}
 			} catch (Exception e) {
 			}

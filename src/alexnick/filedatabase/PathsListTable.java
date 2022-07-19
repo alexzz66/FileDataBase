@@ -450,7 +450,8 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 		}
 
 		if (index == 0) { // to list
-			FileDataBase.beansToList(2, setChecked, beans); // sort needed, because in 'set' no ordered as in table
+			FileDataBase.beansToList(false, 2, setChecked, beans); // sort needed, because in 'set' no ordered as in
+																	// table
 			setChecked.clear();
 			return;
 		}

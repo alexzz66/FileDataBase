@@ -376,12 +376,17 @@ public class FileDataBase {
 	}
 
 	/**
-	 * @param sortType 0 (by default):no sort list; 1:sort; 2: sort ignore case
-	 * @param set      if null, to list be saved checked from 'beans'; else 'beans'
-	 *                 indexes will be taken from 'set'
+	 * @param noCheckPathInFour if 'true', 'b.four' will means the same as prefix
+	 *                          'no exists'
+	 * @param sortType          0 (by default):no sort list; 1:sort; 2: sort ignore
+	 *                          case
+	 * @param set               if null, to list will be saved checked items from
+	 *                          'beans'; else 'beans' indexes will be taken from
+	 *                          'set'
 	 * @param beans
 	 */
-	synchronized static void beansToList(int sortType, Set<Integer> set, List<MyBean> beans) {
+	synchronized static void beansToList(boolean noCheckPathInFour, int sortType, Set<Integer> set,
+			List<MyBean> beans) {
 		if (nullEmptyList(beans)) {
 			return;
 		}
@@ -401,13 +406,13 @@ public class FileDataBase {
 					continue;
 				}
 				count++;
-				fillLists(b, listExists, listNoExists, listNoFoundDiskOrStartPath, listExistsFullInform,
-						listNoExistsFullInform, listNoFoundDiskOrStartPathFullInform);
+				fillLists(noCheckPathInFour, b, listExists, listNoExists, listNoFoundDiskOrStartPath,
+						listExistsFullInform, listNoExistsFullInform, listNoFoundDiskOrStartPathFullInform);
 			}
 		} else {
 			for (var i : set) {
-				fillLists(beans.get(i), listExists, listNoExists, listNoFoundDiskOrStartPath, listExistsFullInform,
-						listNoExistsFullInform, listNoFoundDiskOrStartPathFullInform);
+				fillLists(noCheckPathInFour, beans.get(i), listExists, listNoExists, listNoFoundDiskOrStartPath,
+						listExistsFullInform, listNoExistsFullInform, listNoFoundDiskOrStartPathFullInform);
 			}
 		}
 
@@ -428,8 +433,11 @@ public class FileDataBase {
 			sb.append("<NO EXISTS>: ").append(listNoExists.size()).append(NEW_LINE_UNIX);
 		}
 
+		final String listNoFoundCaption = noCheckPathInFour ? "WITHOUT CHECKING ON EXISTING PATHS"
+				: "NO FOUND DISK OR START PATH";
+
 		if (!listNoFoundDiskOrStartPath.isEmpty()) {
-			sb.append("<NO FOUND DISK OR START PATH>: ").append(listNoFoundDiskOrStartPath.size())
+			sb.append("<").append(listNoFoundCaption).append(">: ").append(listNoFoundDiskOrStartPath.size())
 					.append(NEW_LINE_UNIX);
 		}
 		if (sortType < 0 || sortType > 2) {
@@ -450,7 +458,7 @@ public class FileDataBase {
 
 		sortFillingList(sortType, "EXISTS", listExists, null);
 		sortFillingList(sortType, "NO EXISTS", listNoExists, listExists);
-		sortFillingList(sortType, "NO FOUND DISK OR START PATH", listNoFoundDiskOrStartPath, listExists);
+		sortFillingList(sortType, listNoFoundCaption, listNoFoundDiskOrStartPath, listExists);
 
 		listExists.add(0, formatter.format(new Date()));
 		if (saveToFile(true, 0, CopyMove.DeleteIfExists_OLD_DELETE, resPath, null, listExists)) {
@@ -458,10 +466,10 @@ public class FileDataBase {
 		}
 	}
 
-	private static void fillLists(MyBean b, List<String> listExists, List<String> listNoExists,
-			List<String> listNoFoundDiskOrStartPath, List<String> listExistsFullInform,
+	private static void fillLists(boolean noCheckPathInFour, MyBean b, List<String> listExists,
+			List<String> listNoExists, List<String> listNoFoundDiskOrStartPath, List<String> listExistsFullInform,
 			List<String> listNoExistsFullInform, List<String> listNoFoundDiskOrStartPathFullInform) {
-		var bIsPrefix = b.isFourPrefixNoExists();
+		var bIsPrefix = noCheckPathInFour || b.isFourPrefixNoExists();
 		var s = b.getFour(bIsPrefix, true);
 		if (bIsPrefix) {
 			listNoFoundDiskOrStartPath.add(s);
@@ -767,10 +775,35 @@ public class FileDataBase {
 	 * 
 	 * @param frameName will be showed in quotes
 	 */
-	public static void showFrameInfo(final String frameName) {
+	static void showFrameInfo(final String frameName) {
 		System.out.println("show '" + frameName + "'...");
 	}
-}
+
+	// finally init b.one; after all other parameters init
+	synchronized static void formatBeanOneForEqualTable(String prefix, MyBean b) {
+		StringBuilder sb = new StringBuilder();
+		CommonLib.appendNotNullEmpty(prefix, sb);
+
+		sb.append(Const.BRACE_START);
+
+		sb.append(CommonLib.formatInt(b.serviceIntThree, 3, null, null));
+		if (b.serviceIntTwo > 0) { // equalSignIdDestCount
+			sb.append("--" + b.serviceIntTwo);
+		}
+
+		sb.append("; ").append(b.serviceString);
+
+		if (b.getTwo().equals(b.getThree())) {// sourceName.equals(destName)
+			sb.append("; equals");
+		} else if (b.getTwo().equalsIgnoreCase(b.getThree())) {
+			sb.append("; registerOnly");
+		}
+
+		sb.append(Const.BRACE_END_WITH_SPACE).append(CommonLib.bytesToKBMB(false, 3, b.serviceLong));
+		b.setOne(sb.toString());
+	}
+
+} // of main class
 
 class InputTextGUI {
 	String result;

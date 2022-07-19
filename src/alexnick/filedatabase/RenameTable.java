@@ -278,7 +278,7 @@ public class RenameTable extends JDialog {
 
 		var confirm = JOptionPane.showConfirmDialog(this, message, "Rename", JOptionPane.YES_NO_CANCEL_OPTION);
 		if (confirm == JOptionPane.NO_OPTION) {
-			FileDataBase.beansToList(0, null, beans);
+			FileDataBase.beansToList(false, 0, null, beans);
 			return;
 		}
 		if (confirm == JOptionPane.YES_OPTION) {

@@ -14,10 +14,10 @@ import java.util.concurrent.FutureTask;
 
 import alexnick.CommonLib;
 
-public class ShowView {
+public class InitShowViewTable {
 	private int showViewResult = Const.MR_NO_CHOOSED;
 
-	public ShowView(Program program) {
+	public InitShowViewTable(Program program) {
 		List<MyBean> beans0 = findAllCorrectBin(program);
 		if (CommonLib.nullEmptyList(beans0)) {
 			System.out.println("No found corrected *.bin for view");

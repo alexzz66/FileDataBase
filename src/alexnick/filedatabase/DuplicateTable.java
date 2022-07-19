@@ -185,7 +185,7 @@ public class DuplicateTable extends JDialog implements Callable<List<String>> {
 		butToList.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				FileDataBase.beansToList(0, null, beans);
+				FileDataBase.beansToList(false, 0, null, beans);
 			}
 		});
 
