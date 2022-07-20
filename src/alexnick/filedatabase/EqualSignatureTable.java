@@ -3,6 +3,8 @@ package alexnick.filedatabase;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
@@ -17,6 +19,7 @@ import java.util.TreeSet;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
@@ -31,18 +34,22 @@ import alexnick.CommonLib;
 //!!! no sort table; no remove items from table
 public class EqualSignatureTable extends JDialog {
 	private static final long serialVersionUID = 1L;
-	final private static String[] columns = { "<id; signature> size", "Source name", "Dest (new) name",
+	final private static String[] columns = { "<id; signature> size", "Source name (for renaiming)", "Dest (new) name",
 			"Full path info (on show table)" };
+	private int isCheckResult = Const.MR_NO_CHOOSED;
+
+	public int getIsCheckResult() {
+		return isCheckResult;
+	}
 
 	private List<MyBean> beans;
 	final private String standardTitle;
-	private int isCheckResult = Const.MR_NO_CHOOSED;
+
 	private BeansFourTableDefault myTable;
 	private JLabel checkInfo;
 	private Set<Integer> lastRenamedSet = new HashSet<>();
-	private Set<Integer> previousLastRenamedSet = new HashSet<>();
-	private Set<Integer> lastUNDOSet = new HashSet<>();
-	boolean wasRenamedGlobal = false;
+	private Set<Integer> lastRenamedMinusOneSet = new HashSet<>();
+	private Set<Integer> lastRenamedMinusTwoSet = new HashSet<>();
 
 //CONSTRUCTOR	
 	public EqualSignatureTable(JFrame frame, int equalSignId, String standardTitle, List<MyBean> beans0) {
@@ -127,9 +134,9 @@ public class EqualSignatureTable extends JDialog {
 		list.add("no check"); // 2
 		list.add("invert check"); // 3
 		list.add("marked as renamed"); // 4
-		list.add("last renamed set");// 5
-		list.add("previous last renamed");// 6
-		list.add("last UNDO set");// 7
+		list.add("last renamed/undo set");// 5
+		list.add("last renamed/undo - 1");// 6
+		list.add("last renamed/undo - 2");// 7
 		// optionally, end on list
 		if (beans.size() - equalSignId > 0) { // is a several options
 			list.add("a few variants, each first"); // 8
@@ -140,16 +147,27 @@ public class EqualSignatureTable extends JDialog {
 		cmbCheckChoose.addActionListener(e -> checking(cmbCheckChoose.getSelectedIndex()));
 
 		checkInfo = new JLabel();
+		JCheckBox cbAny = new JCheckBox("any");
+		cbAny.setToolTipText("if checked, for renaming be chosen also marked '$'");
 
+		// 'rename' must be first, because 'cbAny' is enabled on start this window
 		JComboBox<String> cmbAction = new JComboBox<>(new String[] { "Rename", "Undo", "toList" });
+		cmbAction.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				cbAny.setEnabled(cmbAction.getSelectedIndex() == 0);
+			}
+		});
 
 		JButton butAction = new JButton(">>");
-		butAction.addActionListener(e -> doAction(cmbAction.getSelectedIndex()));
+		butAction.addActionListener(e -> doAction(!cbAny.isSelected(), cmbAction.getSelectedIndex()));
 
 //ADDING
 		buttons.add(cmbCheckChoose);
 		buttons.add(checkInfo);
 		buttons.add(cmbAction);
+		buttons.add(cbAny);
 		buttons.add(butAction);
 
 		buttons.setLayout(new FlowLayout(FlowLayout.LEADING));
@@ -162,6 +180,7 @@ public class EqualSignatureTable extends JDialog {
 		myTable.addKeyListener(FileDataBase.keyListenerShiftDown);
 		cmbCheckChoose.addKeyListener(FileDataBase.keyListenerShiftDown);
 		cmbAction.addKeyListener(FileDataBase.keyListenerShiftDown);
+		cbAny.addKeyListener(FileDataBase.keyListenerShiftDown);
 		butAction.addKeyListener(FileDataBase.keyListenerShiftDown);
 	}
 
@@ -178,36 +197,42 @@ public class EqualSignatureTable extends JDialog {
 		return checkCount;
 	}
 
-	private boolean isRenamed() {
-		for (var b : beans) {
-			if (markedRenamed(b)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
 //RENAMED MARK
-	private boolean markedRenamed(MyBean b) {
-		return b.getOne().startsWith("$");
+	/**
+	 * @param markType 0: any mark "$"; 1: rename mark "$REN"; 2: sibling renamed
+	 *                 mark "$R---"
+	 * @param b
+	 * @return true, if found renamed mark according 'markType'
+	 */
+	private boolean markedRenamed(int markType, MyBean b) {
+		if (markType == 1 || markType == 2) {
+			return b.getOne().startsWith(getRenamedMarkPrefix(markType == 1));
+		}
+		return markType == 0 ? b.getOne().startsWith("$") : false;
 	}
 
 	String getRenamedMarkPrefix(boolean mainChecked) {
-		return mainChecked ? "$REN " : "$R-- ";
+		return mainChecked ? "$REN " : "$R--- ";
 	}
 
-	// 0:rename; 1: undo; 2: toList
-	private void doAction(int index) { // TODO
+	// 0:rename; 1: undo; 2: toList; 'checkMarkRen' for 'rename', if false - no
+	// check '$'
+	private void doAction(boolean checkMarkRen, int index) {
 		int checkCount = printCount();
 		if (index < 0 || index > 2 || checkCount <= 0) {
 			return;
 		}
 		if (index == 2) { // toList
 			FileDataBase.beansToList(true, 0, null, beans);
+			return;
 		}
 
 		if (index == 1) {
 			doUndo();
+			return;
+		}
+
+		if (index != 0) {
 			return;
 		}
 
@@ -220,8 +245,12 @@ public class EqualSignatureTable extends JDialog {
 
 		for (int i = 0; i < beans.size(); i++) {
 			var b = beans.get(i);
-			if (!b.check || markedRenamed(b) || b.serviceIntOne < 1) {
+			if (!b.check || b.serviceIntOne < 1) {
 				continue; // 'b.serviceIntOne' must not be less than 1, but let be this check
+			}
+
+			if (checkMarkRen && markedRenamed(0, b)) {
+				continue;
 			}
 
 			int id = b.serviceIntThree;
@@ -244,17 +273,19 @@ public class EqualSignatureTable extends JDialog {
 				}
 			}
 		}
-		renaming(checkSet, errorIdSet);
+		renaming("", "renaming", checkSet, errorIdSet);
 	}
 
-	private void renaming(Set<Integer> checkSet, Set<Integer> errorIdSet) {
+//'startPrefix' and 'typeRenaming' may be empty, but must not be null
+	private void renaming(final String startErrorPrefix, final String typeRenaming, Set<Integer> checkSet,
+			Set<Integer> errorIdSet) {
 		if (CommonLib.nullEmptySet(checkSet)) {
-			JOptionPane.showMessageDialog(this, "No found items for renaming");
+			JOptionPane.showMessageDialog(this, "No found items for " + typeRenaming);
 			return;
 		}
 
 		var sb = new StringBuilder();
-		sb.append("Found items for renaming: ").append(checkSet.size());
+		sb.append("Found items for " + typeRenaming + ": ").append(checkSet.size());
 		if (CommonLib.notNullEmptySet(errorIdSet)) {
 			sb.append(CommonLib.NEW_LINE_UNIX).append("error id (").append(errorIdSet.size()).append(") [");
 			for (var i : errorIdSet) {
@@ -263,34 +294,43 @@ public class EqualSignatureTable extends JDialog {
 			sb.append("]");
 		}
 
-		sb.append(CommonLib.NEW_LINE_UNIX).append(CommonLib.NEW_LINE_UNIX).append("Rename files?");
+		sb.append(CommonLib.NEW_LINE_UNIX).append(CommonLib.NEW_LINE_UNIX).append("Start " + typeRenaming + " files?");
 
-		var confirm = JOptionPane.showConfirmDialog(this, sb.toString(), "Rename files", JOptionPane.YES_NO_OPTION);
+		var confirm = JOptionPane.showConfirmDialog(this, sb.toString(), typeRenaming, JOptionPane.YES_NO_OPTION);
 		if (confirm != JOptionPane.YES_OPTION) {
 			return;
 		}
 
+		if (!lastRenamedMinusOneSet.isEmpty()) {
+			lastRenamedMinusTwoSet.clear();
+			lastRenamedMinusTwoSet.addAll(lastRenamedMinusOneSet);
+			lastRenamedMinusOneSet.clear();
+		}
+
 		if (!lastRenamedSet.isEmpty()) {
-			previousLastRenamedSet.clear();
-			previousLastRenamedSet.addAll(lastRenamedSet);
+			lastRenamedMinusOneSet.clear();
+			lastRenamedMinusOneSet.addAll(lastRenamedSet);
 		}
 
 		lastRenamedSet.clear();
 		lastRenamedSet.addAll(checkSet);
 
-		boolean wasRenamed = false;
-		
+		int countRenamed = 0;
+
 		for (var i : checkSet) {
 			var b = beans.get(i);
 			Path oldPath = b.binPath;
 			String newName = b.getThree();
 			Path newPath = oldPath.resolveSibling(newName);
-			var res = oldPath.toFile().renameTo(newPath.toFile());
-			if (res && !wasRenamed) {
-				wasRenamed = true; // need for update base *.bin
-			}
 
-			String prefix = null;
+			String prefix = newPath.equals(oldPath) ? "path no changed"
+					: newPath.toFile().exists() ? "new path exists" : "";
+
+			var res = prefix.isEmpty() ? oldPath.toFile().renameTo(newPath.toFile()) : false;
+
+			if (res) {
+				countRenamed++;
+			}
 
 			if (res) {
 				b.binPath = newPath;
@@ -317,15 +357,21 @@ public class EqualSignatureTable extends JDialog {
 				}
 
 			} else {// not renamed
-				prefix = "<error rename> ";
+				if (prefix.isEmpty()) {
+					prefix = "no renamed";
+				}
+				prefix = startErrorPrefix + "<err:" + prefix + "> ";
 			}
+
 			FileDataBase.formatBeanOneForEqualTable(prefix, b);
 		}
-		
-		if (wasRenamed) {
-			wasRenamedGlobal = true;
-			myTable.updateUI();
+
+		if (countRenamed > 0 && isCheckResult != Const.MR_WAS_RENAMED) {
+			isCheckResult = Const.MR_WAS_RENAMED;
 		}
+		myTable.updateUI();
+		JOptionPane.showMessageDialog(this, "Renamed files: " + countRenamed + " from " + checkSet.size()
+				+ CommonLib.NEW_LINE_UNIX + "[after closing this window, source base will be updated]");
 
 	}
 
@@ -344,22 +390,30 @@ public class EqualSignatureTable extends JDialog {
 	}
 
 	private void doUndo() {
-		if (!isRenamed()) {
-			return; // TODO
+		Set<Integer> undoIndexesSet = new TreeSet<>();
+
+		for (var i = 0; i < beans.size(); i++) {
+			var b = beans.get(i);
+			if (!b.check || !markedRenamed(1, b)) {
+				continue;
+			}
+			undoIndexesSet.add(i);
 		}
 
+		final String startRen = getRenamedMarkPrefix(true);
+		renaming(startRen, "undo renaming, marked " + startRen, undoIndexesSet, null);
 	}
 
 //0: one; 1: all; 2: no; 3: invert;4:marked as renamed
-//5:last renamed set; 6:previous last renamed; 7:last UNDO set
+//5:last renamed set; 6:last renamed - 1; 7:last renamed - 2
 //optional: 8:a few, each first; 9:a few, each second 
-	private void checking(int index) { // TODO
+	private void checking(int index) {
 		if (index < 0 || index > 9) {
 			return;
 		}
 		var needUpdate = index == 3; // for 'invert' anyway
-		if ((index == 5 && lastRenamedSet.isEmpty()) || (index == 6 && previousLastRenamedSet.isEmpty())
-				|| (index == 7 && lastUNDOSet.isEmpty())) {
+		if ((index == 5 && lastRenamedSet.isEmpty()) || (index == 6 && lastRenamedMinusOneSet.isEmpty())
+				|| (index == 7 && lastRenamedMinusTwoSet.isEmpty())) {
 			index = 2; // no
 		}
 
@@ -379,24 +433,24 @@ public class EqualSignatureTable extends JDialog {
 			} else if (index == 5) {
 				ch = checkIndexInSet(i, lastRenamedSet);
 			} else if (index == 6) {
-				ch = checkIndexInSet(i, previousLastRenamedSet);
+				ch = checkIndexInSet(i, lastRenamedMinusOneSet);
 			} else if (index == 7) {
-				ch = checkIndexInSet(i, lastUNDOSet);
-			} else { // renamed; one; each first; each second
-				var renamed = markedRenamed(b);
+				ch = checkIndexInSet(i, lastRenamedMinusTwoSet);
+			} else { // 4,8,9 renamed; one; each first; each second
 				if (index == 4) {
-					ch = renamed;
+					ch = markedRenamed(1, b);
 				} else { // one; each first; each second
-					if (!renamed) {
+
+					if (!markedRenamed(0, b)) {
 						if (index == 0) { // one
 							ch = b.serviceIntOne == 1;// count of destSet
-						} else { // each first; each second
+						} else if (index == 8 || index == 9) { // each first; each second
 							if (b.serviceIntOne < 2) {
 								continue;
 							}
 							if (index == 8) {
 								ch = b.serviceIntTwo == 0;
-							} else if (index == 9) {
+							} else {
 								ch = b.serviceIntTwo == 1;
 							}
 						}

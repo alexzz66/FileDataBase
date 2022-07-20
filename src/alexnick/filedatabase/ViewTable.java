@@ -54,6 +54,11 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 	private final String captionPrefix;
 	private String caption = "";
 	private int sizeInCaption = 0;
+	private Path pathForUpdate = null;
+
+	public Path getPathForUpdate() {
+		return pathForUpdate;
+	}
 
 	public ViewTable(Program program, String captionPrefix, List<MyBean> beans0) {
 		this.captionPrefix = captionPrefix;
@@ -494,8 +499,13 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 
 //!!! copyMode MUST BE '0', because comparing only, without checking start path exists	
 // binPaths: 0, 1: source: startPath,binPath; 2, 3: dest: startPath, binPath
-			new CompareFolders(program, compareLogType, 0, binPaths[0].toString(), binPaths[1], binPaths[2].toString(),
-					binPaths[3], existsStartPaths[0]);
+			var cf = new CompareFolders(program, compareLogType, 0, binPaths[0].toString(), binPaths[1],
+					binPaths[2].toString(), binPaths[3], existsStartPaths[0]);
+			if (cf.getIsCheckResult() == Const.MR_WAS_RENAMED) {
+				isCheckResult = Const.MR_WAS_RENAMED;
+				pathForUpdate = binPaths[0];
+				dispose();
+			}
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(this, "Error: " + e);
 		}

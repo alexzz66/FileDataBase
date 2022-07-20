@@ -25,11 +25,17 @@ public class InitShowViewTable {
 		}
 		FileDataBase.showFrameInfo("View *.bin table");
 		String app = FileDataBase.isTEMP ? "[TEMP mode] " : "";
+
+//SHOW VIEWTABLE		
 		var viewTable = new ViewTable(program, app.concat("View all saved *.bin"), beans0);
 		var ft = new FutureTask<>(viewTable);
 		new Thread(ft).start();
 		try {
 			showViewResult = ft.get();
+			if (showViewResult == Const.MR_WAS_RENAMED) {
+				pathForUpdate = viewTable.getPathForUpdate();
+			}
+
 		} catch (Exception e) {
 			System.out.println("error of view...");
 		}
@@ -37,6 +43,12 @@ public class InitShowViewTable {
 
 	int getShowViewResult() {
 		return showViewResult;
+	}
+
+	private Path pathForUpdate = null;
+
+	public Path getPathForUpdate() {
+		return pathForUpdate;
 	}
 
 	private List<MyBean> findAllCorrectBin(Program program) {

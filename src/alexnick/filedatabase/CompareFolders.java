@@ -38,6 +38,11 @@ public class CompareFolders {
 	private Map<String, SetStringClass> equalSignMap; // List<MyBean> equalSignBeans;
 	volatile private int equalSignId = 0;
 	private Program program;
+	private int isCheckResult = Const.MR_NO_CHOOSED;
+
+	public int getIsCheckResult() {
+		return isCheckResult;
+	}
 
 	/**
 	 * @param program               class, not must be null
@@ -88,7 +93,7 @@ public class CompareFolders {
 			bNeedFullPaths = false;
 		}
 		equalSignMap = copyMode == 0 && sourceStartPathExists ? new TreeMap<String, SetStringClass>() : null;
-		doCompareFolders(bNeedFullPaths);
+		isCheckResult = doCompareFolders(bNeedFullPaths);
 	}
 
 	// !!! for 'copyMode' == 0 -> no check exist start path; 'binPath' check only
@@ -127,7 +132,8 @@ public class CompareFolders {
 		return paths;
 	}
 
-	private void doCompareFolders(boolean bNeedFullPaths) { // arg trimmed, lowercase
+	private int doCompareFolders(boolean bNeedFullPaths) { // arg trimmed, lowercase
+		var result = Const.MR_NO_CHOOSED;
 		try {
 			if (copyMode == 4) {
 				var confirmList = new ArrayList<String>();
@@ -172,7 +178,7 @@ public class CompareFolders {
 					equalSignList)) {
 				CommonLib.addLog(CommonLib.ADDLOG_SEP, true, compareLog);
 				CommonLib.addLog("error dividing *.bin lists ", true, compareLog);
-				return;
+				return result;
 			}
 
 			var limit = 100;
@@ -272,22 +278,26 @@ public class CompareFolders {
 			System.out.println(CommonLib.NEW_LINE_UNIX + "Error of comparing folder: " + e);
 		}
 
-		showEqualSignTable();
+		result = showEqualSignTable();
+		return result;
 	}
 
-	private void showEqualSignTable() {
+	private int showEqualSignTable() {
+		var result = Const.MR_NO_CHOOSED;
 		var beans = initBeans();
 
 		if (CommonLib.nullEmptyList(beans)) {
-			return;
+			return result;
 		}
 
 		String standardTitle = "Equal signatures table, id count: " + equalSignId + ", items count: " + beans.size();
 		var confirm = JOptionPane.showConfirmDialog(null, "Do you want open for rename " + standardTitle + "?",
 				"Rename equal signatures", JOptionPane.YES_NO_OPTION);
 		if (confirm == JOptionPane.YES_OPTION) {
-			new EqualSignatureTable(null, equalSignId, standardTitle, beans);
+			var table = new EqualSignatureTable(null, equalSignId, standardTitle, beans);
+			result = table.getIsCheckResult();
 		}
+		return result;
 	}
 
 	private List<MyBean> initBeans() {

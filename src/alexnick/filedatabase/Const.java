@@ -104,7 +104,8 @@ public class Const {
 	static final int MR_DELETE = 2048;
 	static final int MR_COPY_MOVE = 2049;
 	static final int MR_RENAME = 2050;
-
+	static final int MR_WAS_RENAMED = 2051;
+	
 	static final int ID3_EXTRACT_NO = 0;
 	static final int ID3_EXTRACT_NEW = 1; // by default
 	static final int ID3_EXTRACT_ALL = 2;

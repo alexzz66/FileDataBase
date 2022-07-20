@@ -71,8 +71,16 @@ public class Program {
 
 		if (mode == Const.MODE_VIEW) {
 			var showView = new InitShowViewTable(this);
-			if (showView.getShowViewResult() == Const.MR_COPY_MOVE) {
+			var result = showView.getShowViewResult();
+			if (result == Const.MR_COPY_MOVE) {
 				doCopyMoveNew();
+			} else if (result == Const.MR_WAS_RENAMED) {
+				Path path = showView.getPathForUpdate();
+				if (path == null) {
+					System.out.println("error of define path for update after renaming...");
+					return;
+				}
+				getUpdatedBinFile(false, path.toFile());
 			}
 			return;
 		}
