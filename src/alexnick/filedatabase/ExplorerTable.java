@@ -71,6 +71,8 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 	public ExplorerTable(JFrame frame, boolean viewNoMark, boolean filesCanExist, String startPathString, Path binPath,
 			String initialPath) throws IOException {
 		super(frame, true);
+		FileDataBase.isShiftDown = false;
+
 		if (binPath == null || !binPath.toFile().exists() || binPath.toFile().isDirectory()) {
 			startPathString = "";
 		}
@@ -282,7 +284,7 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 		}
 
 		if (filesCanExist) {
-			FileDataBase.openDirectory(false, FileDataBase.isShiftDown, myTable, beans);
+			FileDataBase.openDirectory(1, FileDataBase.isShiftDown, myTable, beans);
 		}
 	}
 

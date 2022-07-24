@@ -32,7 +32,7 @@ public class InitShowViewTable {
 		new Thread(ft).start();
 		try {
 			showViewResult = ft.get();
-			if (showViewResult == Const.MR_WAS_RENAMED) {
+			if (showViewResult == Const.MR_NEED_UPDATE_BASE) {
 				pathForUpdate = viewTable.getPathForUpdate();
 			}
 

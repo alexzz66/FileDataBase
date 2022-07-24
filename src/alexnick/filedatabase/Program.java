@@ -74,7 +74,7 @@ public class Program {
 			var result = showView.getShowViewResult();
 			if (result == Const.MR_COPY_MOVE) {
 				doCopyMoveNew();
-			} else if (result == Const.MR_WAS_RENAMED) {
+			} else if (result == Const.MR_NEED_UPDATE_BASE) {
 				Path path = showView.getPathForUpdate();
 				if (path == null) {
 					System.out.println("error of define path for update after renaming...");

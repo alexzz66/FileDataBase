@@ -1,6 +1,6 @@
 @echo off
 cd /d %~d0%~p0
-start /b /high java alexnick.filedatabase.FileDataBase -p:finalPause;temp;tempYes;bigSize;plCrcYes;plOneFolderYes;  %*
+start /b /high java alexnick.filedatabase.FileDataBase -p:finalPause;temp;tempYes;bigSize;plCrcNo;plOneFolderYes;  %*
 :pause
 
 :java -cp %~d0%~p0  >> set '-cp %~d0%~p0' on error reading files of "FileDataBase"

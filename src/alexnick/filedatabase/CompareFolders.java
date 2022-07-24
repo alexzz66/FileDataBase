@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -22,11 +23,11 @@ import static alexnick.CopyMove.*;
 
 public class CompareFolders {
 	private ArrayList<String> compareLog = new ArrayList<String>();
-	private String sourceStartPathString; // set with '\' on end
+	private final String sourceStartPathString; // set with '\' on end
 	private Path sourceBinPath;
 	private Path sourceStartPath;
 
-	private String destStartPathString; // set with '\' on end
+	private final String destStartPathString; // set with '\' on end
 	private Path destBinPath;
 	private Path destStartPath;
 
@@ -134,6 +135,7 @@ public class CompareFolders {
 
 	private int doCompareFolders(boolean bNeedFullPaths) { // arg trimmed, lowercase
 		var result = Const.MR_NO_CHOOSED;
+		Path pathLog = null;
 		try {
 			if (copyMode == 4) {
 				var confirmList = new ArrayList<String>();
@@ -249,7 +251,7 @@ public class CompareFolders {
 			contents.add(format(caption, sizeForReturn));
 
 			var name = CommonLib.removeRestrictedWindowsChars(3, sourceStartPath.toString()) + Const.extensionLog;
-			var pathLog = FileDataBase.getTempPath(name);
+			pathLog = FileDataBase.getTempPath(name);
 			if (pathLog == null) {
 				pathLog = FileDataBase.getTempPath("compareFolders" + Const.extensionLog);
 			}
@@ -277,56 +279,127 @@ public class CompareFolders {
 		} catch (Exception e) {
 			System.out.println(CommonLib.NEW_LINE_UNIX + "Error of comparing folder: " + e);
 		}
+		boolean needInitBeansForMove = (sourceStartPathString.length() >= 3 && destStartPathString.length() >= 3
+				&& sourceStartPathString.charAt(1) == ':'
+				&& sourceStartPathString.substring(1).equalsIgnoreCase(destStartPathString.substring(1)));
 
-		result = showEqualSignTable();
+		result = showEqualSignTable(needInitBeansForMove, pathLog);
 		return result;
 	}
 
-	private int showEqualSignTable() {
+	// 'pathLog' there will be append rename result
+	private int showEqualSignTable(boolean needInitBeansForMove, Path pathLog) {
 		var result = Const.MR_NO_CHOOSED;
-		var beans = initBeans();
 
-		if (CommonLib.nullEmptyList(beans)) {
+		List<MyBean> equalNamesBeans = needInitBeansForMove ? new ArrayList<MyBean>() : null;
+		var beans = initBeans(needInitBeansForMove, equalNamesBeans);
+
+		int countForRename = CommonLib.nullEmptyList(beans) ? 0 : beans.size();
+		int countForMove = CommonLib.nullEmptyList(equalNamesBeans) ? 0 : equalNamesBeans.size();
+
+		if (countForRename == 0 && countForMove == 0) {
 			return result;
 		}
+		CommonLib.addLog(CommonLib.ADDLOG_SEP, true, compareLog);
 
-		String standardTitle = "Equal signatures table, id count: " + equalSignId + ", items count: " + beans.size();
-		var confirm = JOptionPane.showConfirmDialog(null, "Do you want open for rename " + standardTitle + "?",
-				"Rename equal signatures", JOptionPane.YES_NO_OPTION);
+		String standardTitleForRename = "Equal signatures RENAME table, id count: " + equalSignId + ", items count: "
+				+ countForRename;
+		String standardTitleForMove = "Equal signatures MOVE table, count: " + countForMove;
+
+		var message = CommonLib.formatConfirmYesNoMessage("Choose action for Equal signatures lists:",
+				"open " + standardTitleForRename, "open " + standardTitleForMove, null);
+		var confirm = JOptionPane.showConfirmDialog(null, message, "Rename or Remove Table",
+				JOptionPane.YES_NO_CANCEL_OPTION);
+
+		List<String> resultList = null;
+
+//EqualSignatureRenameTable		
 		if (confirm == JOptionPane.YES_OPTION) {
-			var table = new EqualSignatureTable(null, equalSignId, standardTitle, beans);
+			if (countForRename == 0) {
+				return result;
+			}
+			FileDataBase.showFrameInfo("Equal Signature RENAME table");
+			var table = new EqualSignatureRenameTable(null, equalSignId, standardTitleForRename, beans);
 			result = table.getIsCheckResult();
+			if (result == Const.MR_NEED_UPDATE_BASE && compareLog != null && pathLog != null) {
+				resultList = table.getRenameLog();
+			}
 		}
+
+//EqualSignatureMoveTable
+		if (confirm == JOptionPane.NO_OPTION) {
+			if (countForMove == 0) {
+				return result;
+			}
+
+//FINAL INIT equalNamesBeans for moving
+			new SortBeans(SortBeans.sortThree, "", equalNamesBeans);
+			for (int i = 0; i < equalNamesBeans.size(); i++) {
+				var equalNamesBean = equalNamesBeans.get(i);
+				equalNamesBean.serviceIntThree = i + 1;
+				FileDataBase.formatBeanOneForEqualTable(null, equalNamesBean);
+			}
+
+			FileDataBase.showFrameInfo("Equal Signature MOVE table");
+			var table = new EqualSignatureMoveTable(null, standardTitleForMove, equalNamesBeans);
+			result = table.getIsCheckResult();
+			if (result == Const.MR_NEED_UPDATE_BASE && compareLog != null && pathLog != null) {
+				resultList = table.getMoveLog();
+			}
+		}
+
+//BOTH TABLES (Rename or Move)			
+		if (result == Const.MR_NEED_UPDATE_BASE && compareLog != null && pathLog != null
+				&& CommonLib.notNullEmptyList(resultList)) {
+			compareLog.addAll(resultList);
+			CommonLib.saveAndShowList(false, 1, pathLog, compareLog);
+		}
+
 		return result;
 	}
 
-	private List<MyBean> initBeans() {
+//'equalNamesBeans' must be created, for Equal Signature Move Table; if 'null' will not be filled
+	private List<MyBean> initBeans(boolean needInitBeansForMove, List<MyBean> equalNamesBeans) {
 		if (CommonLib.nullEmptyMap(equalSignMap)) {
 			return null;
+		}
+
+		if (equalNamesBeans != null) {
+			equalNamesBeans.clear();
 		}
 
 		List<MyBean> beans = new ArrayList<>();
 		equalSignId = 0;
 		for (var sign : equalSignMap.keySet()) {
-			fillBeansForSignature(sign, equalSignMap.get(sign), beans);
+			MyBean equalNamesBean = fillBeansForSignature(sign, needInitBeansForMove, equalSignMap.get(sign), beans);
+
+			if (equalNamesBeans != null && equalNamesBean != null) {
+				equalNamesBeans.add(equalNamesBean);
+			}
 		}
 		return beans;
 	}
 
-	private void fillBeansForSignature(final String sign, SetStringClass set, List<MyBean> beans) {
-//with removing equals names
+	// returns MyBean for moving table
+	private MyBean fillBeansForSignature(final String sign, boolean needInitEqualNamesBean, SetStringClass set,
+			List<MyBean> beans) {
+//with removing equals names and init result MyBean for move table
 
 		if (set.sourceSet.isEmpty() || set.destSet.isEmpty()) {
-			return;
+			return null;
 		}
 
 		Set<String> tmpDestSet = new HashSet<String>();
 		tmpDestSet.addAll(set.destSet);
-		Set<String> tmpDestNames = new HashSet<String>();
+		Map<String, Path> tmpDestNamesPathsMap = new HashMap<>();
+
+//0 - no found yet; 1 - found one equal names variant; 2 and more - error, return null
+		int wasInitEqualNamesBean = needInitEqualNamesBean ? 0 : 2; // for return MyBean for equal move table
+		MyBean equalNamesBean = null;
 
 		for (var dest : tmpDestSet) {
 			if (dest.isEmpty()) {
-				return;
+				return null;
 			}
 
 			Path destPath = Path.of(dest);
@@ -334,36 +407,70 @@ public class CompareFolders {
 			if (destName.isEmpty()) {
 				continue;
 			}
-
-			tmpDestNames.add(destName);
+			if (tmpDestNamesPathsMap.containsKey(destName)) {
+				wasInitEqualNamesBean = 2; // must be more than 1
+			} else {
+				tmpDestNamesPathsMap.put(destName, destPath);
+			}
 		}
 
-		if (tmpDestNames.isEmpty()) {
-			return;
+		if (tmpDestNamesPathsMap.isEmpty()) {
+			return null;
 		}
 
 		Set<String> tmpSourceSet = new HashSet<String>();
 
 		for (var source : set.sourceSet) {
 			if (source.isEmpty()) {
-				return;
+				return null;
 			}
 
 			File sourceFile = Path.of(source).toFile();
 			var sourceName = sourceFile.getName();
-			if (sourceName.isEmpty() || tmpDestNames.contains(sourceName) || !sourceFile.exists()) {
+			if (sourceName.isEmpty() || !sourceFile.exists()) {
 				continue;
 			}
+
+			if (tmpDestNamesPathsMap.containsKey(sourceName)) { // init move bean
+				wasInitEqualNamesBean++;
+				if (wasInitEqualNamesBean == 1) {
+					Path destPath = tmpDestNamesPathsMap.get(sourceName);
+					if (destPath == null) { // must not be so
+						wasInitEqualNamesBean = 2;
+					} else
+						try {
+							File canonicalSourceFile = sourceFile.getCanonicalFile();
+							if (canonicalSourceFile == null) {
+								CommonLib.errorArgument(sign);
+							}
+							String sourceFileString = canonicalSourceFile.toString();
+							String destPathString = sourceFileString.substring(0, 1) + destPath.toString().substring(1);
+							String two = Path.of(destPathString).toFile().exists() ? Const.ERROR_FILE_EXISTS : "";
+							equalNamesBean = new MyBean("", two, sourceFileString, destPathString, null);
+							equalNamesBean.check = two.isEmpty();
+							equalNamesBean.serviceIntTwo = 0;// for format 'one'; from 0; no need here, always '0'
+							equalNamesBean.serviceIntThree = 0; // for format 'one'; defined later, it is 'id'
+							equalNamesBean.serviceLong = sourceFile.length(); // for format 'one'
+							equalNamesBean.serviceString = sign; // for format 'one', it's signature
+
+							equalNamesBean.binPath = canonicalSourceFile.toPath(); // need for define move or undo_move
+						} catch (Exception e) {
+							wasInitEqualNamesBean = 2;
+						}
+				}
+				continue; // 'sourceName' will not be set to tmpSourceSet, that is to 'rename table'
+			}
+
 			tmpSourceSet.add(source);
 		}
 
-		if (tmpSourceSet.isEmpty()) {
-			return;
+		if (!tmpSourceSet.isEmpty()) {
+			fillBeansForSignature(sign, tmpSourceSet, tmpDestSet, beans);
 		}
-
-		fillBeansForSignature(sign, tmpSourceSet, tmpDestSet, beans);
+		return wasInitEqualNamesBean == 1 ? equalNamesBean : null;
 	}
 
+	// returns MyBean for moving table
 	private void fillBeansForSignature(final String sign, Set<String> tmpSourceSet, Set<String> tmpDestSet,
 			List<MyBean> beans) {
 //without removing equals names
@@ -399,8 +506,8 @@ public class CompareFolders {
 						continue;
 					}
 
-					if (sourceName.equals(destName) && bothSetContainsOneItem) {
-						break;
+					if (sourceName.equals(destName) && bothSetContainsOneItem) { // 'b' it's MyBean for moving table
+						return; // or continue? no matter
 					}
 
 					if (equalSignIdDestCount == 0) {
@@ -411,13 +518,12 @@ public class CompareFolders {
 					b.check = bothSetContainsOneItem;
 					b.binPath = sourceFile.toPath();
 					b.serviceIntOne = destSetSize;
-					b.serviceIntTwo = equalSignIdDestCount; // from 0
-					b.serviceIntThree = equalSignId;
-					b.serviceLong = sourceFile.length();
-					b.serviceString = sign;
+					b.serviceIntTwo = equalSignIdDestCount;// for format 'one'; from 0;
+					b.serviceIntThree = equalSignId; // for format 'one'
+					b.serviceLong = sourceFile.length(); // for format 'one'
+					b.serviceString = sign; // for format 'one'
 
 					FileDataBase.formatBeanOneForEqualTable(null, b);
-
 					beans.add(b);
 
 					equalSignIdDestCount++;
@@ -425,6 +531,7 @@ public class CompareFolders {
 			} catch (Exception e) {
 			}
 		}
+		return;
 	}
 
 	private String format(String caption, int sizeForReturn) {

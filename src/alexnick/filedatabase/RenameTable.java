@@ -190,7 +190,7 @@ public class RenameTable extends JDialog {
 					return;
 				}
 				if (e.getClickCount() == 2) {
-					FileDataBase.openDirectory(false, false, myTable, beans);
+					FileDataBase.openDirectory(1, false, myTable, beans);
 				}
 			}
 		});
@@ -811,7 +811,7 @@ public class RenameTable extends JDialog {
 			}
 		}
 		if (countError > 0 || beans.isEmpty()) {
-			String empty = !beans.isEmpty() ? "." + CommonLib.NEW_LINE_UNIX + "No files found, window will close" : "";
+			String empty = beans.isEmpty() ? "." + CommonLib.NEW_LINE_UNIX + "No files found, window will close" : "";
 			JOptionPane.showMessageDialog(null, "Excluded " + countError + " items" + empty);
 
 		}

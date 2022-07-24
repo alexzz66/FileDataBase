@@ -46,7 +46,7 @@ public class Const {
 	static final String OPTIONS_AUTO_NO_EXTRACT = ";autonoextract;";
 	static final String OPTIONS_DOUBLE_REPO = ";doublerepo;";
 	static final String OPTIONS_TEST_FDB = ";test_fdb;";
-	
+
 	static final String OPTIONS_COMPARETWOBIN_NOFULLPATHS = ";comparetwobinnofullpaths;";
 
 //when select 'replaceSourceDest...' for rename file, and no found 'source' in 'name', be set as rename error
@@ -104,8 +104,8 @@ public class Const {
 	static final int MR_DELETE = 2048;
 	static final int MR_COPY_MOVE = 2049;
 	static final int MR_RENAME = 2050;
-	static final int MR_WAS_RENAMED = 2051;
-	
+	static final int MR_NEED_UPDATE_BASE = 2051;
+
 	static final int ID3_EXTRACT_NO = 0;
 	static final int ID3_EXTRACT_NEW = 1; // by default
 	static final int ID3_EXTRACT_ALL = 2;
@@ -147,6 +147,14 @@ public class Const {
 	static final String ALIAS_START_SEARCH = "<startSearch>";
 	static final String ALIAS_FOUND_FILES = "Found files:";
 	static final String ALIAS_FOUND_EXT = "<ResultBinInfo>";
+
+	// for EqualSignatureMoveTable
+	static final String MOVE_PREFIX_FOR_COLUMN_RESULT = "$MOVED ";
+	static final String MOVE_PREFIX_FOR_COLUMN_GENERATED_PATH = "<MOVED_FROM> ";
+	
+	static final String ERROR_FILE_EXISTS_NO_BRACES = "dest file exists";
+	static final String ERROR_FILE_EXISTS = BRACE_START + "error:"+ERROR_FILE_EXISTS_NO_BRACES + BRACE_END_WITH_SPACE;
+	static final String ERROR_FILE_NOT_MOVED = BRACE_START + "error:file not moved" + BRACE_END_WITH_SPACE;
 
 	// contains ':' to have restricted symbols in file name OS (windows)
 	static final String EQUAL_SIZE = ":equal_size:";

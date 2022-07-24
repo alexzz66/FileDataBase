@@ -501,8 +501,8 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 // binPaths: 0, 1: source: startPath,binPath; 2, 3: dest: startPath, binPath
 			var cf = new CompareFolders(program, compareLogType, 0, binPaths[0].toString(), binPaths[1],
 					binPaths[2].toString(), binPaths[3], existsStartPaths[0]);
-			if (cf.getIsCheckResult() == Const.MR_WAS_RENAMED) {
-				isCheckResult = Const.MR_WAS_RENAMED;
+			if (cf.getIsCheckResult() == Const.MR_NEED_UPDATE_BASE) {
+				isCheckResult = Const.MR_NEED_UPDATE_BASE;
 				pathForUpdate = binPaths[0];
 				dispose();
 			}

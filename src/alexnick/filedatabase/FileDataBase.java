@@ -335,17 +335,18 @@ public class FileDataBase {
 		return sortedHmExtsList;
 	}
 
-	// isShiftDown -
 	/**
-	 * @param fromBinPath if 'true' path will be from 'binPath'; if 'false' from
-	 *                    'getFour'
+	 * @param whereIsPath if 0 path will be from 'binPath';<br>
+	 *                    if 1 from 'getFour' with 'fourApp'<br>
+	 *                    if 2 from 'getFour' withOut 'fourApp'<br>
+	 *                    if 3 from 'getThree'
 	 * @param isShiftDown if 'true' run file; if 'false' open parent directory
 	 * @param myTable     must not be null/empty
 	 * @param beans       must not be null/empty
 	 */
-	synchronized static void openDirectory(boolean fromBinPath, boolean isShiftDown, BeansFourTableDefault myTable,
+	synchronized static void openDirectory(int whereIsPath, boolean isShiftDown, BeansFourTableDefault myTable,
 			List<MyBean> beans) {
-		if (myTable.getSelectedRowCount() != 1) {
+		if (myTable.getSelectedRowCount() != 1 || whereIsPath < 0 || whereIsPath > 3) {
 			return;
 		}
 		var y = myTable.getSelectedRow();
@@ -359,7 +360,8 @@ public class FileDataBase {
 			return;
 		}
 
-		Path path = fromBinPath ? b.binPath : Path.of(b.getFour(false, true));
+		Path path = whereIsPath == 0 ? b.binPath
+				: whereIsPath == 3 ? Path.of(b.getThree()) : Path.of(b.getFour(false, whereIsPath == 1));
 
 		if (path == null) {
 			return;
@@ -367,7 +369,7 @@ public class FileDataBase {
 
 		Path pathStart = isShiftDown ? path : path.getParent();
 
-		if (pathStart == null) { // example, getParent for 'C:/' be null
+		if (pathStart == null) { // example, getParent for 'C:/' will be null
 			pathStart = path;
 		}
 		if (pathStart.toFile().exists()) {
@@ -490,13 +492,13 @@ public class FileDataBase {
 		var sb = new StringBuilder();
 		sb.append(s).append(Const.BRACE_START_FIRST_SPACE);
 		if (!b.getOne().isEmpty()) {
-			sb.append(b.getOne()).append("; ");
+			sb.append(" [ ").append(b.getOne()).append(" ] ");
 		}
 		if (!b.getTwo().isEmpty()) {
-			sb.append(b.getTwo()).append("; ");
+			sb.append(" [ ").append(b.getTwo()).append(" ] ");
 		}
 		if (!b.getThree().isEmpty()) {
-			sb.append(b.getThree());
+			sb.append(" [ ").append(b.getThree()).append(" ] ");
 		}
 		sb.append(Const.BRACE_END);
 		return sb.toString();
@@ -621,9 +623,9 @@ public class FileDataBase {
 	}
 
 	/**
-	 * Formats 'mark' according to the rules: result be trimmed and be in lower
-	 * case; and all '*' be replaced on ''; if result be empty, returns empty; max
-	 * length result no more 100 symbols
+	 * Formats 'mark' according to the rules: result will be trimmed and will be set
+	 * to lower case; and all '*' will be replaced on ''; if result empty, returns
+	 * empty; max length result no more 100 symbols
 	 * 
 	 * 
 	 * @param mark
@@ -809,14 +811,14 @@ class InputTextGUI {
 	String result;
 
 	/**
-	 * Result be in new 'class'.result <br>
-	 * If user choose 'OK' - be not null string from text field; else 'null'
+	 * Result will be in new 'class'.result <br>
+	 * If user choose 'OK' - will be not null string from text field; else 'null'
 	 * 
 	 * @param parentComponent   may be null or 'this' for calling from Frame or
 	 *                          Dialog
-	 * @param appIsInitialValue if 'true', 'app' be set to text field as 'initial
-	 *                          value'; if 'false', be written in caption dialog
-	 *                          window
+	 * @param appIsInitialValue if 'true', 'app' will be set to text field as
+	 *                          'initial value'; if 'false', be written in caption
+	 *                          dialog window
 	 * @param description       will be written above text field
 	 * @param app               if not null, will be set as empty string; can be
 	 *                          either 'caption' or initial value; depends on

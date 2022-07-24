@@ -21,6 +21,7 @@ public class SortBeans {
 	final static int sortTwoLowerCase = 20;
 
 	final static int sortThree = 3; // modified
+	final static int sortThreeLowerCase = 30;
 	final static int sortThree_Shift_CheckOnly = -3;
 
 	final static int sortFourLowerCase = 40; // path
@@ -56,6 +57,7 @@ public class SortBeans {
 		case sortTwoLowerCase -> sortTwoLowerCase(beans);
 
 		case sortThree -> sortThree(beans);
+		case sortThreeLowerCase -> sortThreeLowerCase(beans);
 
 		case sortFourLowerCase -> sortFourLowerCase(beans);
 		case sortFourNameLowerCase -> sortFourNameLowerCase(beans);
@@ -253,6 +255,20 @@ public class SortBeans {
 			public int compare(MyBean o1, MyBean o2) {
 				var s1 = o1.getThree();
 				var s2 = o2.getThree();
+				if (s1.equals(s2)) {
+					return defaultCompare(o1, o2);
+				}
+				return s1.compareTo(s2);
+			}
+		});
+	}
+
+	private void sortThreeLowerCase(List<MyBean> beans) {
+		beans.sort(new Comparator<MyBean>() {
+			@Override
+			public int compare(MyBean o1, MyBean o2) {
+				var s1 = o1.getThree().toLowerCase();
+				var s2 = o2.getThree().toLowerCase();
 				if (s1.equals(s2)) {
 					return defaultCompare(o1, o2);
 				}

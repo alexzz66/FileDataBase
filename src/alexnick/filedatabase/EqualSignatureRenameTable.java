@@ -32,11 +32,16 @@ import javax.swing.ListSelectionModel;
 import alexnick.CommonLib;
 
 //!!! no sort table; no remove items from table
-public class EqualSignatureTable extends JDialog {
+public class EqualSignatureRenameTable extends JDialog {
 	private static final long serialVersionUID = 1L;
 	final private static String[] columns = { "<id; signature> size", "Source name (for renaiming)", "Dest (new) name",
 			"Full path info (on show table)" };
 	private int isCheckResult = Const.MR_NO_CHOOSED;
+	private List<String> renameLog = new ArrayList<>();
+
+	public List<String> getRenameLog() {
+		return renameLog;
+	}
 
 	public int getIsCheckResult() {
 		return isCheckResult;
@@ -52,7 +57,7 @@ public class EqualSignatureTable extends JDialog {
 	private Set<Integer> lastRenamedMinusTwoSet = new HashSet<>();
 
 //CONSTRUCTOR	
-	public EqualSignatureTable(JFrame frame, int equalSignId, String standardTitle, List<MyBean> beans0) {
+	public EqualSignatureRenameTable(JFrame frame, int equalSignId, String standardTitle, List<MyBean> beans0) {
 		super(frame, true);
 		FileDataBase.isShiftDown = false;
 
@@ -81,6 +86,10 @@ public class EqualSignatureTable extends JDialog {
 		initComponents(equalSignId);
 
 		printCount();
+
+		CommonLib.addLog(CommonLib.ADDLOG_SEP, false, renameLog);
+		CommonLib.addLog("Was showed window Equal Signatures RENANE Table. Information about renaming files", false,
+				renameLog);
 
 		var t = Toolkit.getDefaultToolkit().getScreenSize();
 		this.setBounds(0, 0, t.width - 8, t.height - 40);
@@ -119,7 +128,7 @@ public class EqualSignatureTable extends JDialog {
 					return;
 				}
 				if (e.getClickCount() == 2) {
-					FileDataBase.openDirectory(true, FileDataBase.isShiftDown, myTable, beans);
+					FileDataBase.openDirectory(0, FileDataBase.isShiftDown, myTable, beans);
 				}
 			}
 		});
@@ -151,7 +160,7 @@ public class EqualSignatureTable extends JDialog {
 		cbAny.setToolTipText("if checked, for renaming be chosen also marked '$'");
 
 		// 'rename' must be first, because 'cbAny' is enabled on start this window
-		JComboBox<String> cmbAction = new JComboBox<>(new String[] { "Rename", "Undo", "toList" });
+		JComboBox<String> cmbAction = new JComboBox<>(new String[] { "Rename ", "Undo ", "toList " });
 		cmbAction.addActionListener(new ActionListener() {
 
 			@Override
@@ -316,6 +325,9 @@ public class EqualSignatureTable extends JDialog {
 		lastRenamedSet.addAll(checkSet);
 
 		int countRenamed = 0;
+		CommonLib.addLog(CommonLib.ADDLOG_SEP, false, renameLog);
+		CommonLib.addLog(CommonLib.ADDLOG_DATE, false, renameLog);
+		CommonLib.addLog("---", false, renameLog);
 
 		for (var i : checkSet) {
 			var b = beans.get(i);
@@ -363,11 +375,13 @@ public class EqualSignatureTable extends JDialog {
 				prefix = startErrorPrefix + "<err:" + prefix + "> ";
 			}
 
+			CommonLib.addLog(prefix.concat(oldPath.toString().concat(" >> ").concat(newPath.toString())), false,
+					renameLog);
 			FileDataBase.formatBeanOneForEqualTable(prefix, b);
 		}
 
-		if (countRenamed > 0 && isCheckResult != Const.MR_WAS_RENAMED) {
-			isCheckResult = Const.MR_WAS_RENAMED;
+		if (countRenamed > 0 && isCheckResult != Const.MR_NEED_UPDATE_BASE) {
+			isCheckResult = Const.MR_NEED_UPDATE_BASE;
 		}
 		myTable.updateUI();
 		JOptionPane.showMessageDialog(this, "Renamed files: " + countRenamed + " from " + checkSet.size()
