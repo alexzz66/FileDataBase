@@ -333,7 +333,7 @@ public class CompareFolders {
 			}
 
 //FINAL INIT equalNamesBeans for moving
-			new SortBeans(SortBeans.sortThree, "", equalNamesBeans);
+			new SortBeans(SortBeans.sortFourLowerCase, "", equalNamesBeans);
 			for (int i = 0; i < equalNamesBeans.size(); i++) {
 				var equalNamesBean = equalNamesBeans.get(i);
 				equalNamesBean.serviceIntThree = i + 1;
