@@ -584,11 +584,12 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 		}
 
 		ArrayList<MyBean> beans0 = new ArrayList<MyBean>();
+		Set<String> checkSetLowerCase = new HashSet<String>();
 
 		String[] columnBinFolderId3Mark = new String[3];
 		columnBinFolderId3Mark[1] = viewNoId3 ? "1" : ""; // '1' no matter -> empty or no defined
-		columnBinFolderId3Mark[2] = viewNoMark ? "1" : "";
-
+		columnBinFolderId3Mark[2] = viewNoMark ? "1" : "";		
+		
 		for (var b : beans) {
 //'b.getOne()' need not empty for filling beans0, because not empty in 'getPathStringFromBinItem' is sign for start filling myBean			
 			if (!b.check || b.binPath == null || b.getOne().isEmpty()) {
@@ -622,7 +623,7 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 
 				columnBinFolderId3Mark[0] = b.getOne();
 				ConverterBinFunc.getPathStringFromBinItem(columnBinFolderId3Mark, startPath, s, "", b.binPath, setExts,
-						beans0);
+						beans0,checkSetLowerCase);
 			}
 		}
 		return beans0;
@@ -640,12 +641,16 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 		if (set.isEmpty()) {
 			return null;
 		}
+		
+		
 
 		ArrayList<MyBean> beans0 = new ArrayList<MyBean>();
+		Set<String> checkSetLowerCase = new HashSet<String>();
+		
 		String[] columnBinFolderId3Mark = new String[3];
 		columnBinFolderId3Mark[1] = viewNoId3 ? "1" : ""; // '1' no matter -> empty or no defined
 		columnBinFolderId3Mark[2] = viewNoMark ? "1" : "";
-
+		
 		for (var b : beans) {
 //'b.getOne()' need not empty for filling beans0, because not empty in 'getPathStringFromBinItem' is sign for start filling myBean			
 			if (!b.check || b.binPath == null || b.getOne().isEmpty()) {
@@ -674,7 +679,7 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 			for (var s : bin) {
 				columnBinFolderId3Mark[0] = b.getOne();
 				ConverterBinFunc.getPathStringFromBinItem(columnBinFolderId3Mark, startPath, s, "", b.binPath, setExts,
-						beans0);
+						beans0, checkSetLowerCase);
 			}
 		}
 		return beans0;

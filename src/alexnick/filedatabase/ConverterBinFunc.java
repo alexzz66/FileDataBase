@@ -54,11 +54,17 @@ public class ConverterBinFunc {
 	 * @param setExts                initialized where need set extension only,
 	 *                               empty as Const.EXTEMPTY
 	 * @param beans                  if not null, be filling
+	 * @param checkSetLowerCase      if not null and beans not null, be checked, if
+	 *                               that set contains current path, it not be added
+	 *                               to beans; <br>
+	 *                               If set not contains current path, it will be
+	 *                               added to set
 	 * @return extracted path string from 'binItem', be added startPath, if no
 	 *         empty, and appendInf if not null/empty
 	 */
 	synchronized static String getPathStringFromBinItem(String[] columnBinFolderId3Mark, String startPath,
-			String binItem, String appendInf, Path binPath, Set<String> setExts, List<MyBean> beans) {
+			String binItem, String appendInf, Path binPath, Set<String> setExts, List<MyBean> beans,
+			Set<String> checkSetLowerCase) {
 		if (binItem.isEmpty()) {
 			return "";
 		}
@@ -89,15 +95,23 @@ public class ConverterBinFunc {
 		sbPathString.append((ext.isEmpty()) ? pathStringTmp.substring(0, posIndexOfExt)
 				: pathStringTmp.replace(Const.BRACE_END, "."));
 
+		boolean needFillBeans = beans != null;
+		if (needFillBeans && checkSetLowerCase != null) {
+			if (!checkSetLowerCase.add(sbPathString.toString().toLowerCase())) {
+				needFillBeans = false;
+			}
+		}
+
 		if (CommonLib.notNullEmptyString(appendInf)) {
 			fillSbPathString(appendInf, binItem, sbPathString);
 		}
 
-		if (beans != null) {
+		if (needFillBeans) {
 			var name = pathStringTmp.substring(0, posIndexOfExt);
 			if (CommonLib.notNullEmptyString(startPath)) {
 				name = startPath.concat(name);
 			}
+
 			fillBeans(name, binItem, columnBinFolderId3Mark, ext, binPath, beans);
 		}
 		return sbPathString.toString();
@@ -105,6 +119,7 @@ public class ConverterBinFunc {
 
 	private static void fillBeans(String name, String binItem, String[] columnBinFolderId3Mark, String ext,
 			Path binPath, List<MyBean> beans) {
+
 		long[] arrInf = getDecodeDateSizeCrc(binItem);
 		String crc, size, modified;
 		if (arrInf[0] == 0) {
@@ -187,13 +202,13 @@ public class ConverterBinFunc {
 		}
 		for (var s : rowList) {
 			if (!s.isEmpty()) {
-				resultList.add(getPathStringFromBinItem(null, startPath, s, appendInf, null, null, null));
+				resultList.add(getPathStringFromBinItem(null, startPath, s, appendInf, null, null, null, null));
 			}
 		}
 	}
 
 	synchronized static Path getPathFromBinItemOrNull(String startPath, String binItem) {
-		var pathString = getPathStringFromBinItem(null, "", binItem, "", null, null, null);
+		var pathString = getPathStringFromBinItem(null, "", binItem, "", null, null, null, null);
 		return pathString.isEmpty() ? null : Path.of(startPath, pathString);
 	}
 

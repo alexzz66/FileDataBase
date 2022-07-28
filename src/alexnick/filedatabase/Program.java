@@ -479,11 +479,11 @@ public class Program {
 					dupInfoList.add(prev);
 					// if returns empty?
 					dupGroupPathsList.add(NEW_LINE_UNIX
-							+ getPathStringFromBinItem(null, startPath, prev, "", null, null, duplicatesBeans));
+							+ getPathStringFromBinItem(null, startPath, prev, "", null, null, duplicatesBeans, null));
 					bNew = false;
 				}
 				dupInfoList.add(s);
-				dupGroupPathsList.add(getPathStringFromBinItem(null, startPath, s, "", null, null, duplicatesBeans));
+				dupGroupPathsList.add(getPathStringFromBinItem(null, startPath, s, "", null, null, duplicatesBeans, null));
 			} else {
 				if (!bNew) {
 					dupInfoList.addAll(dupGroupPathsList);
