@@ -1,5 +1,6 @@
 package alexnick.filedatabase;
 
+import java.io.File;
 import java.nio.charset.Charset;
 
 public class Const {
@@ -14,6 +15,8 @@ public class Const {
 	static final String BRACE_END = ">";
 	static final String BRACE_END_WITH_SLASH_SPACE = "/> "; // CopyMove.ERROR_BRACE_END;
 	static final String BRACE_END_WITH_SPACE = "> ";
+
+	static final String ROOT_SEPARATOR = ":" + File.separator;
 
 // constant for init Program options; must starts/ends with ';' and be in lowerCase,without ' ' and ':'
 	static final String OPTIONS_TEMP = ";temp;";
@@ -86,6 +89,9 @@ public class Const {
 
 	// 'COPY_NEW_RESULT_POSTFIX' writes after "path list files' for saving result
 	static final String COPY_NEW_RESULT_POSTFIX = "~result.txt";
+	
+	static final String GENERATED_BIN_NAME = "generated.bin";
+	
 
 // Paths of exts 'propertyExtsNeedList','propertyExtsNoNeedList' depends of 'globTEMP'
 	static final String propertyExtsNeed = "~prop~extsNeed" + extensionProperties;
@@ -151,9 +157,9 @@ public class Const {
 	// for EqualSignatureMoveTable
 	static final String MOVE_PREFIX_FOR_COLUMN_RESULT = "$MOVED ";
 	static final String MOVE_PREFIX_FOR_COLUMN_GENERATED_PATH = "<MOVED_FROM> ";
-	
+
 	static final String ERROR_FILE_EXISTS_NO_BRACES = "dest file exists";
-	static final String ERROR_FILE_EXISTS = BRACE_START + "error:"+ERROR_FILE_EXISTS_NO_BRACES + BRACE_END_WITH_SPACE;
+	static final String ERROR_FILE_EXISTS = BRACE_START + "error:" + ERROR_FILE_EXISTS_NO_BRACES + BRACE_END_WITH_SPACE;
 	static final String ERROR_FILE_NOT_MOVED = BRACE_START + "error:file not moved" + BRACE_END_WITH_SPACE;
 
 	// contains ':' to have restricted symbols in file name OS (windows)

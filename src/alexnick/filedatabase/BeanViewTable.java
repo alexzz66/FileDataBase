@@ -101,11 +101,21 @@ public class BeanViewTable extends JDialog {
 		beansTotal = beans0;
 
 		// !!! path must be last string argument (fourCapt)
-		Box contents = new Box(BoxLayout.Y_AXIS);
+
 		myTable = new BeansFourTableDefault(ListSelectionModel.SINGLE_SELECTION, false, true, true, columns[0],
 				columns[1], columns[2], columns[3], beans);
 
-		myTable.addKeyListener(FileDataBase.keyListenerShiftDown);
+		initComponents(viewNoMark, beans0); // TODO
+
+		var t = Toolkit.getDefaultToolkit().getScreenSize();
+		setBounds(0, 0, t.width - 200, t.height - 200);
+
+		setLocationRelativeTo(null);
+		setVisible(true);
+	}
+
+	private void initComponents(boolean viewNoMark, List<MyBean> beans0) {
+		Box contents = new Box(BoxLayout.Y_AXIS);
 		myTable.getTableHeader().addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
@@ -150,7 +160,7 @@ public class BeanViewTable extends JDialog {
 			}
 		});
 
-//FILL JPANEL	
+//FILL JPANEL (first)
 		var butCheckActionListener = new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -176,6 +186,7 @@ public class BeanViewTable extends JDialog {
 									: (checkNow == 2) ? !b.isFourPrefixNoExists()
 											: b.findInOneLowerCase(findId3, Const.textFieldFindSeparator);// filter
 				}
+				
 				updating(false);
 			}
 		};
@@ -200,6 +211,7 @@ public class BeanViewTable extends JDialog {
 				for (var b : beans) {
 					b.check = !b.check;
 				}
+				
 				updating(true);
 			}
 		});
@@ -245,110 +257,12 @@ public class BeanViewTable extends JDialog {
 
 		setLabelChoosed(beans0);
 
-		var butCopyMove = new JButton("Copy/move");
-		butCopyMove.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				int checkCount = printCount(false, true); // recount, because click of mouse on table may be no
-															// corrected
-				if (checkCount <= 0) {
-					return;
-				}
-				List<String> copyFilesEqualSignatureList = new ArrayList<>();
-				Set<Integer> copyFilesEqualSignatureNumbers = new HashSet<>();
-				List<String> copyFilesList = new ArrayList<>();
-				Set<Integer> nonExistingNumbers = new HashSet<>();
-				int equalsPathCountForCopying = fillExistFilesLists(nonExistingNumbers, copyFilesList,
-						copyFilesEqualSignatureNumbers, copyFilesEqualSignatureList);
+		JComboBox<String> cmbAction = new JComboBox<>(
+				new String[] { "copy/move", "toList all/paths", "toList pathsNoRoot", "generate *.bin" });
+		JButton butAction = new JButton(">>");
+		butAction.addActionListener(e -> doAction(cmbAction.getSelectedIndex()));
 
-				String equalsPathInfo = "";
-
-				if (equalsPathCountForCopying > 0) {
-					updating(true);
-					equalsPathInfo = "NB: was been excluded and unchecked equal paths: " + equalsPathCountForCopying
-							+ CommonLib.NEW_LINE_UNIX;
-				}
-
-				if (!copyFilesEqualSignatureList.isEmpty()) {
-					CommonLib.saveAndShowList(false, 1, FileDataBase.getTempPath("equalSignaturesList.txt"),
-							copyFilesEqualSignatureList);
-
-					String message = CommonLib.formatConfirmYesNoMessage(equalsPathInfo
-							+ "Will be excluded for copy/move files with equal column 'Signature, size', count: "
-							+ copyFilesEqualSignatureList.size(), "uncheck equals and continue", "uncheck equals only",
-							null);
-
-					var confirm = JOptionPane.showConfirmDialog(null, message, "Equals signatures",
-							JOptionPane.YES_NO_CANCEL_OPTION);
-
-					if (confirm == JOptionPane.YES_OPTION || confirm == JOptionPane.NO_OPTION) {
-						for (var i : copyFilesEqualSignatureNumbers) {
-							beans.get(i).check = false;
-							updating(true);
-						}
-					}
-
-					if (confirm != JOptionPane.YES_OPTION) {
-						return;
-					}
-					equalsPathInfo = ""; // there's been info, no need
-				}
-
-				if (copyFilesList.isEmpty()) {
-					JOptionPane.showMessageDialog(null, equalsPathInfo + "No found files for copy/move");
-					return;
-				}
-
-				checkCount = printCount(false, true);
-				if (checkCount <= 0) {
-					return;
-				}
-
-				String mess = equalsPathInfo + "Checked: " + checkCount + " / " + beans.size() + CommonLib.NEW_LINE_UNIX
-						+ "Existing files for copy/move: " + copyFilesList.size();
-				int confirm = JOptionPane.CANCEL_OPTION;
-
-				if (nonExistingNumbers.isEmpty()) {
-					confirm = JOptionPane.showConfirmDialog(null, mess + CommonLib.NEW_LINE_UNIX + "Continue?",
-							"Copy/move", JOptionPane.YES_NO_OPTION);
-				} else {
-					String message = CommonLib.formatConfirmYesNoMessage(mess, "uncheck non-existing and continue",
-							"uncheck non-existing", null);
-
-					confirm = JOptionPane.showConfirmDialog(null, message, "Copy/move",
-							JOptionPane.YES_NO_CANCEL_OPTION);
-
-					if (confirm == JOptionPane.YES_OPTION || confirm == JOptionPane.NO_OPTION) {
-						for (var i : nonExistingNumbers) {
-							beans.get(i).check = false;
-							updating(true);
-						}
-					}
-				}
-
-				if (confirm != JOptionPane.YES_OPTION) {
-					return;
-				}
-
-				var tempPath = FileDataBase.getTempPathForCopyMove();
-				if (!CommonLib.saveToFile(true, 1, CopyMove.DeleteIfExists_OLD_RENAME_TO_BAK, tempPath, null,
-						copyFilesList)) {
-					JOptionPane.showMessageDialog(null, "error of saving path list to " + tempPath);
-					return;
-				}
-				isCheckResult = Const.MR_COPY_MOVE;
-				dispose();
-			}
-		});
-
-		JButton butToList = new JButton("toList");
-		butToList.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				FileDataBase.beansToList(false, 2, null, beans);
-			}
-		});
-
+//FILL JPANEL (second)
 		JPanel buttons = new JPanel();
 		buttons.add(tfFindBinFolder);
 		buttons.add(butCheck);
@@ -368,8 +282,8 @@ public class BeanViewTable extends JDialog {
 		buttons.add(butFind);
 		buttons.add(choosed);
 		buttons.add(tfInfo);
-		buttons.add(butCopyMove);
-		buttons.add(butToList);
+		buttons.add(cmbAction);
+		buttons.add(butAction);
 
 //end constructor:		
 		JTextArea area = new JTextArea(3, 0); // add 'buttons' height
@@ -385,6 +299,9 @@ public class BeanViewTable extends JDialog {
 				ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		getContentPane().add(scrollPan, BorderLayout.SOUTH);
 
+//SHIFT DOWN				
+		myTable.addKeyListener(FileDataBase.keyListenerShiftDown);
+
 		tfFindBinFolder.addKeyListener(FileDataBase.keyListenerShiftDown);
 		butCheck.addKeyListener(FileDataBase.keyListenerShiftDown);
 		butInvert.addKeyListener(FileDataBase.keyListenerShiftDown);
@@ -396,14 +313,179 @@ public class BeanViewTable extends JDialog {
 
 		butFind.addKeyListener(FileDataBase.keyListenerShiftDown);
 		tfInfo.addKeyListener(FileDataBase.keyListenerShiftDown);
-		butCopyMove.addKeyListener(FileDataBase.keyListenerShiftDown);
-		butToList.addKeyListener(FileDataBase.keyListenerShiftDown);
+		cmbAction.addKeyListener(FileDataBase.keyListenerShiftDown);
+		butAction.addKeyListener(FileDataBase.keyListenerShiftDown);
+	}
 
-		var t = Toolkit.getDefaultToolkit().getScreenSize();
-		setBounds(0, 0, t.width - 200, t.height - 200);
+//0:copy/move, 1:toList all/paths, 2:toList pathsNoRoot, 3:generate .*bin
+	private void doAction(int selectedIndex) {
+		if (selectedIndex == 0) {
+			doCopyMove();
+			return;
+		}
 
-		setLocationRelativeTo(null);
-		setVisible(true);
+		if (selectedIndex == 3) {
+			generateBin();
+			return;
+		}
+		FileDataBase.beansToList(false, selectedIndex == 2 ? 3 : 2, null, beans);
+	}
+
+	private void generateBin() {// TODO Auto-generated method stub
+		int checkCount = printCount(false, true);
+		if (checkCount <= 0) {
+			return;
+		}
+
+		Set<String> beansSet = new HashSet<String>();
+		Set<Integer> errorNumbersSet = new HashSet<>();
+
+		for (int i = 0; i < beans.size(); i++) {
+			var b = beans.get(i);
+			if (!b.check) {
+				continue;
+			}
+
+			if (CommonLib.nullEmptyString(b.serviceString)) {
+				errorNumbersSet.add(i);
+				continue;
+			}
+
+			if (!beansSet.add(b.serviceString)) {
+				errorNumbersSet.add(i);
+				continue;
+			}
+		}
+
+		var sb = new StringBuilder();
+		sb.append("Checked: ").append(checkCount).append(" / ").append(beans.size()).append(CommonLib.NEW_LINE_UNIX)
+				.append("Found items to generate '*.bin': ").append(beansSet.size());
+
+		int confirm = JOptionPane.CANCEL_OPTION;
+
+		if (errorNumbersSet.isEmpty()) {
+			sb.append(CommonLib.NEW_LINE_UNIX).append("Continue?");
+			confirm = JOptionPane.showConfirmDialog(null, sb.toString(), "Generate .*bin", JOptionPane.YES_NO_OPTION);
+		} else {
+			String message = CommonLib.formatConfirmYesNoMessage(sb.toString(),
+					"uncheck erroneous items, generate " + Const.GENERATED_BIN_NAME + ", show in Explorer",
+					"uncheck erroneous items", null);
+
+			confirm = JOptionPane.showConfirmDialog(null, message, "Generate .*bin", JOptionPane.YES_NO_CANCEL_OPTION);
+
+			if (confirm == JOptionPane.YES_OPTION || confirm == JOptionPane.NO_OPTION) {
+				for (var i : errorNumbersSet) {
+					beans.get(i).check = false;
+				}
+
+				updating(true);
+			}
+		}
+
+		if (confirm != JOptionPane.YES_OPTION) {
+			return;
+		}
+
+		var resultList = CommonLib.getListFromSet(2, beansSet);
+		Path path = FileDataBase.getTempPath(Const.GENERATED_BIN_NAME);
+
+		if (CommonLib.saveToFile(false, 1, CopyMove.DeleteIfExists_OLD_DELETE, path, null, resultList)) {
+			CommonLib.startProcess(false, path.getParent());
+		}
+	}
+
+	private void doCopyMove() {
+		int checkCount = printCount(false, true);
+		if (checkCount <= 0) {
+			return;
+		}
+
+		List<String> copyFilesEqualSignatureList = new ArrayList<>();
+		Set<Integer> copyFilesEqualSignatureNumbers = new HashSet<>();
+		List<String> copyFilesList = new ArrayList<>();
+		Set<Integer> nonExistingNumbers = new HashSet<>();
+		int equalsPathCountForCopying = fillExistFilesLists(nonExistingNumbers, copyFilesList,
+				copyFilesEqualSignatureNumbers, copyFilesEqualSignatureList);
+
+		String equalsPathInfo = "";
+
+		if (equalsPathCountForCopying > 0) {
+			updating(true);
+			equalsPathInfo = "NB: was been excluded and unchecked equal paths: " + equalsPathCountForCopying
+					+ CommonLib.NEW_LINE_UNIX;
+		}
+
+		if (!copyFilesEqualSignatureList.isEmpty()) {
+			CommonLib.saveAndShowList(false, 1, FileDataBase.getTempPath("equalSignaturesList.txt"),
+					copyFilesEqualSignatureList);
+
+			String message = CommonLib.formatConfirmYesNoMessage(
+					equalsPathInfo + "Will be excluded for copy/move files with equal column 'Signature, size', count: "
+							+ copyFilesEqualSignatureList.size(),
+					"uncheck equals and continue", "uncheck equals only", null);
+
+			var confirm = JOptionPane.showConfirmDialog(null, message, "Equals signatures",
+					JOptionPane.YES_NO_CANCEL_OPTION);
+
+			if (confirm == JOptionPane.YES_OPTION || confirm == JOptionPane.NO_OPTION) {
+				for (var i : copyFilesEqualSignatureNumbers) {
+					beans.get(i).check = false;
+				}
+
+				updating(true);
+			}
+
+			if (confirm != JOptionPane.YES_OPTION) {
+				return;
+			}
+			equalsPathInfo = ""; // there's been info, no need
+		}
+
+		if (copyFilesList.isEmpty()) {
+			JOptionPane.showMessageDialog(null, equalsPathInfo + "No found files for copy/move");
+			return;
+		}
+
+		checkCount = printCount(false, true);
+		if (checkCount <= 0) {
+			return;
+		}
+
+		var sb = new StringBuilder();
+		sb.append(equalsPathInfo).append("Checked: ").append(checkCount).append(" / ").append(beans.size())
+				.append(CommonLib.NEW_LINE_UNIX).append("Existing files for copy/move: ").append(copyFilesList.size());
+
+		int confirm = JOptionPane.CANCEL_OPTION;
+
+		if (nonExistingNumbers.isEmpty()) {
+			sb.append(CommonLib.NEW_LINE_UNIX).append("Continue?");
+			confirm = JOptionPane.showConfirmDialog(null, sb.toString(), "Copy/move", JOptionPane.YES_NO_OPTION);
+		} else {
+			String message = CommonLib.formatConfirmYesNoMessage(sb.toString(), "uncheck non-existing and continue",
+					"uncheck non-existing", null);
+
+			confirm = JOptionPane.showConfirmDialog(null, message, "Copy/move", JOptionPane.YES_NO_CANCEL_OPTION);
+
+			if (confirm == JOptionPane.YES_OPTION || confirm == JOptionPane.NO_OPTION) {
+				for (var i : nonExistingNumbers) {
+					beans.get(i).check = false;
+				}
+				updating(true);
+			}
+
+		}
+
+		if (confirm != JOptionPane.YES_OPTION) {
+			return;
+		}
+
+		var tempPath = FileDataBase.getTempPathForCopyMove();
+		if (!CommonLib.saveToFile(true, 1, CopyMove.DeleteIfExists_OLD_RENAME_TO_BAK, tempPath, null, copyFilesList)) {
+			JOptionPane.showMessageDialog(null, "error of saving path list to " + tempPath);
+			return;
+		}
+		isCheckResult = Const.MR_COPY_MOVE;
+		dispose();
 	}
 
 	private void marking(boolean viewNoMark) {
@@ -451,6 +533,7 @@ public class BeanViewTable extends JDialog {
 
 		var markSetFrame = new MarkSetFrame(this, "Set 'mark' for checked: " + checkCount + "; type * to delete",
 				allEquals, FileDataBase.markPropertySet);
+
 		if (markSetFrame.getIsCheckResult() == Const.MR_OK) {
 			String mark = markSetFrame.getResultMark();// 'getResultMark()' formatted and not empty
 			String markWithBrace = mark.equals(Const.REMOVE_MARK) ? "" : FileDataBase.formatMark(mark, true);
@@ -479,6 +562,7 @@ public class BeanViewTable extends JDialog {
 				}
 				FileDataBase.addMarkToProperties(false, signature, mark);
 			}
+
 			updating(true);
 		}
 		return;

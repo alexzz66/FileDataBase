@@ -380,8 +380,10 @@ public class FileDataBase {
 	/**
 	 * @param noCheckPathInFour if 'true', 'b.four' will means the same as prefix
 	 *                          'no exists'
-	 * @param sortType          0 (by default):no sort list; 1:sort; 2: sort ignore
-	 *                          case
+	 * @param sortType          0 (by default):no sort list;<br>
+	 *                          1:sort;<br>
+	 *                          2: sort ignore case;<br>
+	 *                          3: the same as '2' + mode: PATHS_NO_ROOT
 	 * @param set               if null, to list will be saved checked items from
 	 *                          'beans'; else 'beans' indexes will be taken from
 	 *                          'set'
@@ -400,21 +402,38 @@ public class FileDataBase {
 		List<String> listExistsFullInform = new ArrayList<>();
 		List<String> listNoExistsFullInform = new ArrayList<>();
 		List<String> listNoFoundDiskOrStartPathFullInform = new ArrayList<>();
+
+		Set<String> pathsNoRootSet = null;
+
+		boolean pathsNoRoot = sortType == 3; // mode: PATHS_NO_ROOT
+		if (pathsNoRoot) {
+			sortType = 2;
+			noCheckPathInFour = true;
+			pathsNoRootSet = new HashSet<String>();
+		}
+
 		int count = set == null ? 0 : set.size();
+		int errorCount = 0;
 
 		if (set == null) {
 			for (var b : beans) {
 				if (!b.check) {
 					continue;
 				}
-				count++;
-				fillLists(noCheckPathInFour, b, listExists, listNoExists, listNoFoundDiskOrStartPath,
-						listExistsFullInform, listNoExistsFullInform, listNoFoundDiskOrStartPathFullInform);
+
+				if (fillLists(noCheckPathInFour, b, listExists, listNoExists, listNoFoundDiskOrStartPath,
+						listExistsFullInform, listNoExistsFullInform, listNoFoundDiskOrStartPathFullInform,
+						pathsNoRootSet)) {
+					count++;
+				} else {
+					errorCount++;
+				}
 			}
 		} else {
 			for (var i : set) {
 				fillLists(noCheckPathInFour, beans.get(i), listExists, listNoExists, listNoFoundDiskOrStartPath,
-						listExistsFullInform, listNoExistsFullInform, listNoFoundDiskOrStartPathFullInform);
+						listExistsFullInform, listNoExistsFullInform, listNoFoundDiskOrStartPathFullInform,
+						pathsNoRootSet);
 			}
 		}
 
@@ -425,7 +444,8 @@ public class FileDataBase {
 
 		Path resPath = getTempPath("toListResult.txt");
 		var sb = new StringBuilder();
-		sb.append("Checked items: ").append(count).append(". Found result:" + NEW_LINE_UNIX);
+		sb.append("Chosen items: ").append(count).append("; errors: ").append(errorCount).append(".")
+				.append(NEW_LINE_UNIX).append("Found result:").append(NEW_LINE_UNIX);
 
 		if (!listExists.isEmpty()) {
 			sb.append("<EXISTS>: ").append(listExists.size()).append(NEW_LINE_UNIX);
@@ -442,19 +462,30 @@ public class FileDataBase {
 			sb.append("<").append(listNoFoundCaption).append(">: ").append(listNoFoundDiskOrStartPath.size())
 					.append(NEW_LINE_UNIX);
 		}
+
 		if (sortType < 0 || sortType > 2) {
 			sortType = 0;
 		}
-		sb.append(NEW_LINE_UNIX + "List (").append(sortType == 0 ? "no " : "").append("sorted) be saved to ")
-				.append(resPath).append(NEW_LINE_UNIX + "Choose <YES> to save ALL information; <NO>: paths only");
+
+		sb.append(NEW_LINE_UNIX + "List (").append(sortType == 0 ? "no " : "").append("sorted) will be saved to ")
+				.append(resPath).append(NEW_LINE_UNIX);
+
+		if (pathsNoRoot) {
+			sb.append("Paths without root. Continue?");
+		} else {
+			sb.append("Choose <YES> to save ALL information; <NO>: paths only");
+		}
 
 		var res = JOptionPane.showConfirmDialog(null, sb.toString(), "Save checked to list",
-				JOptionPane.YES_NO_CANCEL_OPTION);
-		if (res == JOptionPane.YES_OPTION) {
-			listExists = listExistsFullInform;
-			listNoExists = listNoExistsFullInform;
-			listNoFoundDiskOrStartPath = listNoFoundDiskOrStartPathFullInform;
-		} else if (res != JOptionPane.NO_OPTION) {
+				pathsNoRoot ? JOptionPane.YES_NO_OPTION : JOptionPane.YES_NO_CANCEL_OPTION);
+
+		if (res == JOptionPane.YES_OPTION) { // full inform or without root
+			if (!pathsNoRoot) {
+				listExists = listExistsFullInform;
+				listNoExists = listNoExistsFullInform;
+				listNoFoundDiskOrStartPath = listNoFoundDiskOrStartPathFullInform;
+			}
+		} else if (res != JOptionPane.NO_OPTION || pathsNoRoot) {
 			return;
 		}
 
@@ -468,14 +499,32 @@ public class FileDataBase {
 		}
 	}
 
-	private static void fillLists(boolean noCheckPathInFour, MyBean b, List<String> listExists,
+	private static boolean fillLists(boolean noCheckPathInFour, MyBean b, List<String> listExists,
 			List<String> listNoExists, List<String> listNoFoundDiskOrStartPath, List<String> listExistsFullInform,
-			List<String> listNoExistsFullInform, List<String> listNoFoundDiskOrStartPathFullInform) {
-		var bIsPrefix = noCheckPathInFour || b.isFourPrefixNoExists();
+			List<String> listNoExistsFullInform, List<String> listNoFoundDiskOrStartPathFullInform,
+			Set<String> pathsNoRootSet) {
+
+		var bIsPrefix = noCheckPathInFour || b.isFourPrefixNoExists() || pathsNoRootSet != null;
 		var s = b.getFour(bIsPrefix, true);
+
 		if (bIsPrefix) {
+			if (pathsNoRootSet != null) {
+				int pos = s.indexOf(Const.ROOT_SEPARATOR);
+				if (pos >= 0) {
+					s = s.substring(pos + Const.ROOT_SEPARATOR.length());
+				}
+
+				if (!pathsNoRootSet.add(s.toLowerCase())) {
+					return false;
+				}
+			}
+
 			listNoFoundDiskOrStartPath.add(s);
-			listNoFoundDiskOrStartPathFullInform.add(fullInform(s, b));
+
+			if (pathsNoRootSet == null) {
+				listNoFoundDiskOrStartPathFullInform.add(fullInform(s, b));
+			}
+
 		} else {
 			var p = Path.of(s);
 			if (p.toFile().exists()) {
@@ -486,6 +535,8 @@ public class FileDataBase {
 				listNoExistsFullInform.add(fullInform(s, b));
 			}
 		}
+
+		return true;
 	}
 
 	synchronized private static String fullInform(String s, MyBean b) {

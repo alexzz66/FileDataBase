@@ -107,18 +107,29 @@ public class ConverterBinFunc {
 		}
 
 		if (needFillBeans) {
+			var extendedBinItem = new StringBuilder();// null:no need; empty:will be as 'binItem'; else:will be
+														// generated
 			var name = pathStringTmp.substring(0, posIndexOfExt);
 			if (CommonLib.notNullEmptyString(startPath)) {
 				name = startPath.concat(name);
+				int pos = startPath.indexOf(Const.ROOT_SEPARATOR);
+				if (pos >= 0) {
+					int pos2 = binItem.indexOf(Const.BRACE_START);
+					if (pos2 > 0) {
+						extendedBinItem.append(binItem.substring(0, pos2 + 1))
+								.append(startPath.substring(pos + Const.ROOT_SEPARATOR.length()))
+								.append(binItem.substring(pos2 + 1));
+					}
+				}
 			}
 
-			fillBeans(name, binItem, columnBinFolderId3Mark, ext, binPath, beans);
+			fillBeans(name, extendedBinItem.toString(), binItem, columnBinFolderId3Mark, ext, binPath, beans);
 		}
 		return sbPathString.toString();
 	}
 
-	private static void fillBeans(String name, String binItem, String[] columnBinFolderId3Mark, String ext,
-			Path binPath, List<MyBean> beans) {
+	private static void fillBeans(final String name, final String extendedBinItem, final String binItem,
+			String[] columnBinFolderId3Mark, String ext, Path binPath, List<MyBean> beans) {
 
 		long[] arrInf = getDecodeDateSizeCrc(binItem);
 		String crc, size, modified;
@@ -167,6 +178,10 @@ public class ConverterBinFunc {
 		}
 		var bean = new MyBean(crc, size, modified, name, ext);
 		bean.binPath = binPath;
+		if (extendedBinItem != null) {
+			bean.serviceString = extendedBinItem.isEmpty() ? binItem : extendedBinItem;
+		}
+
 		beans.add(bean);
 	}
 
