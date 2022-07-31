@@ -470,12 +470,15 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 			return;
 		}
 
-		String s = "Will be compared two *.bin from start paths:" + CommonLib.NEW_LINE_UNIX + "SOURCE: "
-				+ columnsForCompare[0] + CommonLib.NEW_LINE_UNIX + "DEST: " + columnsForCompare[1];
+		var sb = new StringBuilder();
+		sb.append("Will be compared two *.bin from start paths:").append(CommonLib.NEW_LINE_UNIX).append("SOURCE: ")
+				.append(columnsForCompare[0]).append(CommonLib.NEW_LINE_UNIX).append("DEST: ")
+				.append(columnsForCompare[1]);
 
-		var confirm = JOptionPane.showConfirmDialog(this,
-				s.concat(CommonLib.NEW_LINE_UNIX + CommonLib.NEW_LINE_UNIX + "[No]: swap 'SOURCE' and 'DEST'"),
-				"Compare two *.bin", JOptionPane.YES_NO_CANCEL_OPTION);
+		sb.append(CommonLib.NEW_LINE_UNIX).append(CommonLib.NEW_LINE_UNIX).append("[No]: swap 'SOURCE' and 'DEST'")
+				.append(Const.UPDATE_BIN_COMPARING_REMINDER);
+		var confirm = JOptionPane.showConfirmDialog(this, sb.toString(), "Compare two *.bin",
+				JOptionPane.YES_NO_CANCEL_OPTION);
 
 		if (confirm == JOptionPane.NO_OPTION) { // SWAP
 			var path = binPaths[0];
@@ -499,7 +502,7 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 
 //!!! copyMode MUST BE '0', because comparing only, without checking start path exists	
 // binPaths: 0, 1: source: startPath,binPath; 2, 3: dest: startPath, binPath
-			var cf = new CompareFolders(program, compareLogType, 0, binPaths[0].toString(), binPaths[1],
+			var cf = new CompareFolders(false, program, compareLogType, 0, binPaths[0].toString(), binPaths[1],
 					binPaths[2].toString(), binPaths[3], existsStartPaths[0]);
 			if (cf.getIsCheckResult() == Const.MR_NEED_UPDATE_BASE) {
 				isCheckResult = Const.MR_NEED_UPDATE_BASE;
@@ -588,8 +591,8 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 
 		String[] columnBinFolderId3Mark = new String[3];
 		columnBinFolderId3Mark[1] = viewNoId3 ? "1" : ""; // '1' no matter -> empty or no defined
-		columnBinFolderId3Mark[2] = viewNoMark ? "1" : "";		
-		
+		columnBinFolderId3Mark[2] = viewNoMark ? "1" : "";
+
 		for (var b : beans) {
 //'b.getOne()' need not empty for filling beans0, because not empty in 'getPathStringFromBinItem' is sign for start filling myBean			
 			if (!b.check || b.binPath == null || b.getOne().isEmpty()) {
@@ -623,7 +626,7 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 
 				columnBinFolderId3Mark[0] = b.getOne();
 				ConverterBinFunc.getPathStringFromBinItem(columnBinFolderId3Mark, startPath, s, "", b.binPath, setExts,
-						beans0,checkSetLowerCase);
+						beans0, checkSetLowerCase);
 			}
 		}
 		return beans0;
@@ -641,16 +644,14 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 		if (set.isEmpty()) {
 			return null;
 		}
-		
-		
 
 		ArrayList<MyBean> beans0 = new ArrayList<MyBean>();
 		Set<String> checkSetLowerCase = new HashSet<String>();
-		
+
 		String[] columnBinFolderId3Mark = new String[3];
 		columnBinFolderId3Mark[1] = viewNoId3 ? "1" : ""; // '1' no matter -> empty or no defined
 		columnBinFolderId3Mark[2] = viewNoMark ? "1" : "";
-		
+
 		for (var b : beans) {
 //'b.getOne()' need not empty for filling beans0, because not empty in 'getPathStringFromBinItem' is sign for start filling myBean			
 			if (!b.check || b.binPath == null || b.getOne().isEmpty()) {

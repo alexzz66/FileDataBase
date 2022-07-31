@@ -1,7 +1,5 @@
 package alexnick.filedatabase;
 
-import static alexnick.CommonLib.readFile;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -92,151 +90,35 @@ public class InitShowViewTable {
 	}
 
 	private MyBean fillMyBean(Path path, Map<String, String> realBinDir) {
-		var sDat = CommonLib.changeEndOfStringOrEmpty(path.toString(), Const.extensionBinList, Const.extensionBinData);
-		if (sDat.isEmpty()) {
+		var fDat = FileDataBase.getDatPathForBinOrNull(path);
+		if (fDat == null) {
 			return null;
 		}
-		var fDat = Path.of(sDat);
-		if (!fDat.toFile().exists()) {
-			return null;
-		}
-
 // columns: binFolder, startPath, date, result -> all, except 'binfolder', be taken from '*.dat'
 // 'x1': name of parent folder, example bin~data~results~F-GB-14,43-1805ca431af-flash
-		String x1 = path.getParent().toFile().getName();
-		if (!x1.startsWith(Const.binFolderStartSignature))
+		final String parentName = path.getParent().toFile().getName();
+
+		if (!parentName.startsWith(Const.binFolderStartSignature)) {
 			return null;
+		}
 
 // example 'realBinDir': 'key':~bin~data~results~F-GB-14,43-1805ca431af-flash and 'value':'<K:\> '
-		String realDiskInBraceOrEmpty = realBinDir.getOrDefault(x1.toLowerCase(), "");
+		String realDiskInBraceOrEmpty = realBinDir.getOrDefault(parentName.toLowerCase(), "");
 
 // ~bin~data~results~F-GB-14,43-1805ca431af-flash
-// => be after: F-GB-14,43-1805ca431af-flash
+// => will be after: F-GB-14,43-1805ca431af-flash
 // result for exist disk (column 'BinFolder'): <K:\> F-GB-14,43-1805ca431af-flash
-		x1 = realDiskInBraceOrEmpty.concat(x1.replace(Const.binFolderStartSignature, ""));
+		final String x1 = realDiskInBraceOrEmpty.concat(parentName.replace(Const.binFolderStartSignature, ""));
+		String[] stuff = new String[4]; //minimum 4
+		Map<String, Integer> mapCountExt = new HashMap<String, Integer>();
 
-// 'fdat': D:\~bin~data~repository\~bin~data~results~F-GB-14,43-1805ca431af-flash\~$$~.dat		
-		var datList = readFile(0, 0, fDat); // be empty if no exists 'fDat'
-		final String e = "error";
-		String x2 = e;
-		String x3 = e;
-		String x4 = e;
-		int count = 0;
-		int indexExtBegin = 0;
-		int indexExtEnd = 0;
-		for (int i = 0; i < datList.size(); i++) {
-			var s = datList.get(i);
-			if (count >= 4)
-				break;
-			switch (s) {
-			case Const.ALIAS_START_SEARCH -> {
-				if (x2.equals(e)) {
-// 'x2' is start path, may be folder 'F:\test' or full disk, as 'F:\'
-					x2 = datList.get(i + 1);
-					// set real start path
-// !!! 'x2' for existing disks, MUST START WITH '<' and ENDS on '> '					
-					if (realDiskInBraceOrEmpty.length() < 4 || !CommonLib.correctWindowsStartPath(x2)) { // means_empty
-						x2 = Const.NO_DISK_PLUS + x2;// "<NO_DISK> "
-					} else { // 'realDiskInBraceOrEmpty' == '<E:\> '
-
-						// first be one letter from real (exist) disk
-						var startPathFormatted = realDiskInBraceOrEmpty.substring(1, 2);
-
-						if (x2.startsWith(startPathFormatted)) { // the same disk, as start path
-							startPathFormatted = x2;
-						} else {
-
-//create new start path with other (real disk) first letter	
-							startPathFormatted += x2.substring(1); // for whole disk example: 'K:\'
-
-//!!! start path from '.dat' file, must be in ' <' , '>', if current disk different now
-							x2 = startPathFormatted + Const.BRACE_START_FIRST_SPACE + x2 + Const.BRACE_END;// for_whole_disk_example:
-																											// K:\ <F:\>
-						}
-
-						if (!Path.of(startPathFormatted).toFile().exists()) {
-							x2 = Const.NO_FOUND_PLUS + x2;// "<NO_FOUND> "
-						}
-					}
-					count++;
-				}
-			}
-			case Const.ALIAS_DATE -> {
-				if (x3.equals(e)) {
-					// 'x3' set as 2022.04.24_17:36:37 (вс)
-					x3 = datList.get(i + 1);
-					count++;
-				}
-			}
-			case Const.ALIAS_FOUND_EXT -> {
-				if (indexExtBegin == 0) {
-					indexExtBegin = i + 2;
-					count++;
-				}
-			}
-			case Const.ALIAS_FOUND_FILES -> {
-				if (x4.equals(e)) {
-					x4 = datList.get(i + 1);
-					indexExtEnd = i;
-					count++;
-				}
-			}
-			}
-		}
-
-		if (indexExtBegin == 0 || indexExtBegin >= indexExtEnd) {
-			return null;
-		}
-		var ps = x4.indexOf(',');
-		if (ps <= 0 || x4.equals(e)) {
-			return null;
-		}
-
-		int countBinItems = 0;
-
-		try {
-			countBinItems = Integer.valueOf(x4.substring(0, ps));
-		} catch (NumberFormatException e1) {
-			return null;
-		}
-
+		var countBinItems = FileDataBase.getCountBinItemsOrNil(realDiskInBraceOrEmpty, fDat, mapCountExt, stuff);
 		if (countBinItems <= 0) {
 			return null;
 		}
 
-		int cntCheckSum = 0;
-		Map<String, Integer> mapCountExt = new HashMap<String, Integer>();
-		for (int x = indexExtBegin; x < indexExtEnd; x++) {
-			var s = datList.get(x);
-			var pos = s.indexOf(Const.extSeparator);
-			if (pos < 1) {
-				continue;
-			}
-			var ext = s.substring(0, pos);
-			s = s.substring(pos + 3);
-			pos = s.indexOf(',');
-			if (pos < 1) {
-				continue;
-			}
-			try {
-				int cnt = Integer.valueOf(s.substring(0, pos));
-				if (cnt <= 0) {
-					continue;
-				}
-				cntCheckSum += cnt;
-				if (mapCountExt.containsKey(ext)) {
-					return null;
-				}
-				mapCountExt.put(ext, cnt);
-			} catch (NumberFormatException e1) {
-				continue;
-			}
-		}
-		if (cntCheckSum != countBinItems) {
-			return null;
-		}
 // serviceIntTwo uses for 'id' in 'ViewTable'; fourApp uses for total count 'mark' in base
-		var bean = new MyBean(x1, x2, x3, x4, "");
+		var bean = new MyBean(x1, stuff[0], stuff[1], stuff[2], "");
 		bean.serviceIntOne = countBinItems;
 		bean.binPath = path;
 		bean.mapCountExt = mapCountExt;

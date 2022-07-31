@@ -105,7 +105,7 @@ public class BeanViewTable extends JDialog {
 		myTable = new BeansFourTableDefault(ListSelectionModel.SINGLE_SELECTION, false, true, true, columns[0],
 				columns[1], columns[2], columns[3], beans);
 
-		initComponents(viewNoMark, beans0); // TODO
+		initComponents(viewNoMark, beans0);
 
 		var t = Toolkit.getDefaultToolkit().getScreenSize();
 		setBounds(0, 0, t.width - 200, t.height - 200);
@@ -186,7 +186,7 @@ public class BeanViewTable extends JDialog {
 									: (checkNow == 2) ? !b.isFourPrefixNoExists()
 											: b.findInOneLowerCase(findId3, Const.textFieldFindSeparator);// filter
 				}
-				
+
 				updating(false);
 			}
 		};
@@ -211,7 +211,7 @@ public class BeanViewTable extends JDialog {
 				for (var b : beans) {
 					b.check = !b.check;
 				}
-				
+
 				updating(true);
 			}
 		});
@@ -331,7 +331,7 @@ public class BeanViewTable extends JDialog {
 		FileDataBase.beansToList(false, selectedIndex == 2 ? 3 : 2, null, beans);
 	}
 
-	private void generateBin() {// TODO Auto-generated method stub
+	private void generateBin() {
 		int checkCount = printCount(false, true);
 		if (checkCount <= 0) {
 			return;
@@ -362,14 +362,15 @@ public class BeanViewTable extends JDialog {
 				.append("Found items to generate '*.bin': ").append(beansSet.size());
 
 		int confirm = JOptionPane.CANCEL_OPTION;
+		String yes = "Generate file '" + Const.GENERATED_BIN_NAME + "', show in Explorer";
 
 		if (errorNumbersSet.isEmpty()) {
-			sb.append(CommonLib.NEW_LINE_UNIX).append("Continue?");
+			sb.append(CommonLib.NEW_LINE_UNIX).append(yes).append(CommonLib.NEW_LINE_UNIX).append("Continue?");
+
 			confirm = JOptionPane.showConfirmDialog(null, sb.toString(), "Generate .*bin", JOptionPane.YES_NO_OPTION);
 		} else {
-			String message = CommonLib.formatConfirmYesNoMessage(sb.toString(),
-					"uncheck erroneous items, generate " + Const.GENERATED_BIN_NAME + ", show in Explorer",
-					"uncheck erroneous items", null);
+			String message = CommonLib.formatConfirmYesNoMessage(sb.toString(), "uncheck erroneous items. " + yes,
+					"uncheck erroneous items (" + errorNumbersSet.size() + ")", null);
 
 			confirm = JOptionPane.showConfirmDialog(null, message, "Generate .*bin", JOptionPane.YES_NO_CANCEL_OPTION);
 

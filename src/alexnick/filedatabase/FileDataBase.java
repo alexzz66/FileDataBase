@@ -237,6 +237,8 @@ public class FileDataBase {
 		console("Mode '-e' just saves to text file information about folders/files command line and shows this file");
 		addLog(ADDLOG_SEP, true, null);
 		console("Mode '-a', '-auto'. Selects mode as: no parameters: '-v'; one parameter: file '-p', folder '-4'. More parameters: '-e' or '-p', if defined option 'autoNoExtract'");
+		addLog(ADDLOG_SEP, true, null);
+		console("Mode '-cb', '-compareBin'. Must be TWO *.bin files for comparing; not renaming, not copy/move. Text result only");
 		console("");
 	}
 
@@ -267,7 +269,12 @@ public class FileDataBase {
 			firstArg = firstArg.substring(0, pos);
 		}
 
+		if (firstArg.equals("cb") || firstArg.equals("comparebin")) {
+			return Const.MODE_COMPARE_BIN;
+		}
+
 		final boolean bAutoMode = firstArg.equals("a") || firstArg.equals("auto");
+
 //first arg: 'a','v', '1'..'4','e','p'
 		if (firstArg.equals("v") || firstArg.equals("view") || (bAutoMode && args.length == 1)) {
 			return Const.MODE_VIEW;
@@ -509,9 +516,9 @@ public class FileDataBase {
 
 		if (bIsPrefix) {
 			if (pathsNoRootSet != null) {
-				int pos = s.indexOf(Const.ROOT_SEPARATOR);
+				int pos = s.indexOf(Const.ROOT_SEPARATOR_WINDOWS);
 				if (pos >= 0) {
-					s = s.substring(pos + Const.ROOT_SEPARATOR.length());
+					s = s.substring(pos + Const.ROOT_SEPARATOR_WINDOWS.length());
 				}
 
 				if (!pathsNoRootSet.add(s.toLowerCase())) {
@@ -557,10 +564,185 @@ public class FileDataBase {
 
 	synchronized static boolean isCorrectBin(Path path) {
 		var f = path.toFile();
-		if (f.isDirectory())
+		if (!f.exists() || f.isDirectory()) {
 			return false;
+		}
+
 		// 'f.length() < 20' suppose like that: 'aabbccdd(0)123456789'
-		return f.exists() && f.length() > 20 && path.toString().endsWith(Const.extensionBinList);
+		return f.length() > 20 && path.toString().endsWith(Const.extensionBinList);
+	}
+
+	synchronized static Path getDatPathForBinOrNull(Path path) {
+		if (path == null) {
+			return null;
+		}
+
+		String sDat = CommonLib.changeEndOfStringOrEmpty(path.toString(), Const.extensionBinList,
+				Const.extensionBinData);
+		if (sDat.isEmpty()) {
+			return null;
+		}
+
+		File f = Path.of(sDat).toFile();
+		if (!f.exists() || f.isDirectory()) {
+			return null;
+		}
+
+		return f.toPath();
+	}
+
+//'stuffForReturn' must be created, size minimum 4, be filled 'two', 'three', 'four', 'two' AS_IS_IN_DAT for MyBean	
+//'realDiskInBraceOrEmpty' if not null/empty, must be like example '<E:\> '; otherwise must be empty
+//'mapCountExtForReturn' if created, will be cleared and filled extension info; ALSO MEANS defining checkSum
+	synchronized static int getCountBinItemsOrNil(String realDiskInBraceOrEmpty, Path fDat,
+			Map<String, Integer> mapCountExtForReturn, String[] stuffForReturn) {
+		if (stuffForReturn == null || stuffForReturn.length < 4) {
+			return 0;
+		}
+
+		if (realDiskInBraceOrEmpty == null) {
+			realDiskInBraceOrEmpty = "";
+		}
+// 'fdat': D:\~bin~data~repository\~bin~data~results~F-GB-14,43-1805ca431af-flash\~$$~.dat
+		var datList = readFile(0, 0, fDat); // be empty if no exists 'fDat'
+		final String e = "error";
+		String x2 = e;
+		String x3 = e;
+		String x4 = e;
+		String realStartPath = null;
+
+		int count = 0;
+		int indexExtBegin = 0;
+		int indexExtEnd = 0;
+		for (int i = 0; i < datList.size(); i++) {
+			var s = datList.get(i);
+			if (count >= 4)
+				break;
+			switch (s) {
+			case Const.ALIAS_START_SEARCH -> {
+				if (x2.equals(e)) {
+					// 'x2' is start path, may be folder 'F:\test' or full disk, as 'F:\'
+					x2 = datList.get(i + 1);
+					realStartPath = x2;
+					// set real start path
+					// !!! 'x2' for existing disks, MUST START WITH '<' and ENDS on '> '
+					if (realDiskInBraceOrEmpty.length() < 4 || !CommonLib.correctWindowsStartPath(x2)) { // means_empty
+						x2 = Const.NO_DISK_PLUS + x2;// "<NO_DISK> "
+					} else { // 'realDiskInBraceOrEmpty' == '<E:\> '
+
+						// first be one letter from real (exist) disk
+						var startPathFormatted = realDiskInBraceOrEmpty.substring(1, 2);
+
+						if (x2.startsWith(startPathFormatted)) { // the same disk, as start path
+							startPathFormatted = x2;
+						} else {
+
+							// create new start path with other (real disk) first letter
+							startPathFormatted += x2.substring(1); // for whole disk example: 'K:\'
+
+// !!! start path from '.dat' file, must be in ' <' , '>', if current disk different now
+							x2 = startPathFormatted + Const.BRACE_START_FIRST_SPACE + x2 + Const.BRACE_END;// for_whole_disk_example:
+																											// K:\ <F:\>
+						}
+
+						if (!Path.of(startPathFormatted).toFile().exists()) {
+							x2 = Const.NO_FOUND_PLUS + x2;// "<NO_FOUND> "
+						}
+					}
+					count++;
+				}
+			}
+			case Const.ALIAS_DATE -> {
+				if (x3.equals(e)) {
+					// 'x3' set as 2022.04.24_17:36:37 (вс)
+					x3 = datList.get(i + 1);
+					count++;
+				}
+			}
+			case Const.ALIAS_FOUND_EXT -> {
+				if (indexExtBegin == 0) {
+					indexExtBegin = i + 2;
+					count++;
+				}
+			}
+			case Const.ALIAS_FOUND_FILES -> {
+				if (x4.equals(e)) {
+					x4 = datList.get(i + 1);
+					indexExtEnd = i;
+					count++;
+				}
+			}
+			}
+		}
+
+		if (indexExtBegin == 0 || indexExtBegin >= indexExtEnd) {
+			return 0;
+		}
+		var ps = x4.indexOf(',');
+		if (ps <= 0 || x4.equals(e)) {
+			return 0;
+		}
+
+		int countBinItems = 0;
+
+		try {
+			countBinItems = Integer.valueOf(x4.substring(0, ps));
+		} catch (NumberFormatException e1) {
+			return 0;
+		}
+
+		if (countBinItems <= 0) {
+			return 0;
+		}
+
+//FILL STUFF >> CORRECT VALUES	
+		stuffForReturn[0] = x2;
+		stuffForReturn[1] = x3;
+		stuffForReturn[2] = x4;
+		stuffForReturn[3] = realStartPath;
+
+//CHECKSUM
+		if (mapCountExtForReturn == null) {
+			return countBinItems;
+		}
+
+		int cntCheckSum = 0;
+		mapCountExtForReturn.clear();
+
+		for (int x = indexExtBegin; x < indexExtEnd; x++) {
+			var s = datList.get(x);
+			var pos = s.indexOf(Const.extSeparator);
+			if (pos < 1) {
+				continue;
+			}
+			var ext = s.substring(0, pos);
+			s = s.substring(pos + 3);
+			pos = s.indexOf(',');
+			if (pos < 1) {
+				continue;
+			}
+			try {
+				int cnt = Integer.valueOf(s.substring(0, pos));
+				if (cnt <= 0) {
+					continue;
+				}
+
+				cntCheckSum += cnt;
+				if (mapCountExtForReturn.containsKey(ext)) {
+					return 0;
+				}
+
+				mapCountExtForReturn.put(ext, cnt);
+			} catch (NumberFormatException e1) {
+				continue;
+			}
+		}
+
+		if (cntCheckSum != countBinItems) {
+			return 0;
+		}
+
+		return countBinItems;
 	}
 
 	synchronized static List<Entry<String, Integer>> fillSortedListExtCountOrNull(List<MyBean> beans) {

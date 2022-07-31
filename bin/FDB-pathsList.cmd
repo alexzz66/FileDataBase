@@ -42,3 +42,4 @@ start /b /high java alexnick.filedatabase.FileDataBase -p:finalPause;temp;tempYe
 :mode '-a' : no parameters, set mode '-v'; else if one parameter and it folder -> mode '-4'; if file -> '-p'; if more than 1 parameter, mode '-e'
 :if defined "autoNoExtract;" >> instead of 'extract mode' be set 'pathsList mode'
 
+:mode '-cb' (-compareBin) must be TWO *.bin files for comparing; not renaming, not copy/move. Text result only

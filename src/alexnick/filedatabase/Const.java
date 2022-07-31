@@ -3,6 +3,8 @@ package alexnick.filedatabase;
 import java.io.File;
 import java.nio.charset.Charset;
 
+import alexnick.CommonLib;
+
 public class Const {
 
 //charset for class 'BufferTools' in com.mpatric.mp3agic; by default: "ISO-8859-1"	
@@ -16,7 +18,9 @@ public class Const {
 	static final String BRACE_END_WITH_SLASH_SPACE = "/> "; // CopyMove.ERROR_BRACE_END;
 	static final String BRACE_END_WITH_SPACE = "> ";
 
-	static final String ROOT_SEPARATOR = ":" + File.separator;
+	static final String ROOT_SEPARATOR_WINDOWS = ":" + File.separator;
+	static final String UPDATE_BIN_COMPARING_REMINDER = CommonLib.NEW_LINE_UNIX + CommonLib.NEW_LINE_UNIX
+			+ "Recommended update *.bin files before comparing";
 
 // constant for init Program options; must starts/ends with ';' and be in lowerCase,without ' ' and ':'
 	static final String OPTIONS_TEMP = ";temp;";
@@ -89,9 +93,8 @@ public class Const {
 
 	// 'COPY_NEW_RESULT_POSTFIX' writes after "path list files' for saving result
 	static final String COPY_NEW_RESULT_POSTFIX = "~result.txt";
-	
+
 	static final String GENERATED_BIN_NAME = "generated.bin";
-	
 
 // Paths of exts 'propertyExtsNeedList','propertyExtsNoNeedList' depends of 'globTEMP'
 	static final String propertyExtsNeed = "~prop~extsNeed" + extensionProperties;
@@ -128,6 +131,7 @@ public class Const {
 	static final int MODE_PATHSLIST = 1026;
 	static final int MODE_VIEW = 2048;// must be more than 10 as minimum
 	static final int MODE_VIEW_TEMP = 2049;// must be more than 10 as minimum
+	static final int MODE_COMPARE_BIN = 2050;
 
 	static final int textFieldStardardSize = 20;
 	static final int textFieldBigSize = 32;

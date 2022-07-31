@@ -64,3 +64,6 @@ More parameters: '-e' or '-p', if defined option 'autoNoExtract'
 
 -------
 
+"Mode '-cb', '-compareBin'. Must be TWO *.bin files for comparing; not renaming, not copy/move. Text result only"
+
+-------

@@ -1332,6 +1332,10 @@ public class CommonLib {
 	 * @return 'source' with changed 'endSource' or empty if error
 	 */
 	synchronized public static String changeEndOfStringOrEmpty(String source, String endSource, String endDest) {
+		if (nullEmptyString(source) || nullEmptyString(endSource) || nullEmptyString(endDest)) {
+			return "";
+		}
+
 		var lenEndSource = endSource.length();
 		if (source.length() < lenEndSource) {
 			return "";

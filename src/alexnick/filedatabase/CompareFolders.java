@@ -46,6 +46,9 @@ public class CompareFolders {
 	}
 
 	/**
+	 * @param querySavingResult     for 'copyMode' == 0: if true, need query before
+	 *                              saving result file<br>
+	 *                              for any 'copyMode', query will be set
 	 * @param program               class, not must be null
 	 * @param compareLogType        0 (by default):new, newer and newerEqualSize in
 	 *                              log; other lists in short format (no more limit,
@@ -58,10 +61,10 @@ public class CompareFolders {
 	 *                              new folder; 3: 'exchange' method, just
 	 *                              'sourceStartPath' be changed on 'destStartPath';
 	 *                              4: choose method;
-	 * @param sourceStartPathString must be from exists Path;
+	 * @param sourceStartPathString must not be null/empty
 	 * @param sourceBinPath         if 'null', be updated '*.bin' file; else: must
 	 *                              be exists
-	 * @param destStartPathString   must be from exists Path
+	 * @param destStartPathString   must not be null/empty
 	 * @param destBinPathFile       if 'null', be updated '*.bin' file; else: must
 	 *                              be exists
 	 * @param sourceStartPathExists for 'copyMode' == 0 => if 'true' (call from
@@ -71,9 +74,9 @@ public class CompareFolders {
 	 * @throws Exception if any errors
 	 */
 //method called with  'copymode' > 0 -> for Const.MODE_STOP_FOUR (when 'bin created')
-	public CompareFolders(Program program, int compareLogType, int copyMode, String sourceStartPathString,
-			Path sourceBinPath, String destStartPathString, Path destBinPath, boolean sourceStartPathExists)
-			throws Exception {
+	public CompareFolders(boolean querySavingResult, Program program, int compareLogType, int copyMode,
+			String sourceStartPathString, Path sourceBinPath, String destStartPathString, Path destBinPath,
+			boolean sourceStartPathExists) throws Exception {
 		this.program = program;
 		this.copyMode = copyMode < 0 || copyMode > 4 ? 0 : copyMode;
 		this.compareLogType = compareLogType < 0 || compareLogType > 2 ? 0 : compareLogType;
@@ -94,11 +97,14 @@ public class CompareFolders {
 			bNeedFullPaths = false;
 		}
 		equalSignMap = copyMode == 0 && sourceStartPathExists ? new TreeMap<String, SetStringClass>() : null;
-		isCheckResult = doCompareFolders(bNeedFullPaths);
+		isCheckResult = doCompareFolders(querySavingResult, bNeedFullPaths);
 	}
 
 	// !!! for 'copyMode' == 0 -> no check exist start path; 'binPath' check only
 	private Path[] checkParametersOrThrow(String startPathString, Path binPath) throws Exception {
+		if (CommonLib.nullEmptyString(startPathString)) {
+			throw new IllegalArgumentException("Start path must not be null/empty");
+		}
 		File binPathFile = null;
 		File startPathFile = copyMode == 0 ? null
 				: Path.of(startPathString).toAbsolutePath().toFile().getCanonicalFile();
@@ -118,13 +124,13 @@ public class CompareFolders {
 			binPathFile = binPath.toFile();
 		}
 
-		if (!binPathFile.exists()) {
+		if (!binPathFile.exists() || binPathFile.isDirectory()) {
 			throw new IllegalArgumentException("Path of *.bin must exist " + binPathFile);
 		}
 
 		Path[] paths = new Path[2];
 		paths[0] = (copyMode == 0) ? Path.of(startPathString) : startPathFile.toPath();
-		paths[1] = binPathFile.toPath();
+		paths[1] = binPathFile.getCanonicalFile().toPath();
 
 		if (paths[0] == null || paths[1] == null) {
 			throw new IllegalArgumentException("Error of checking parameters for comparing");
@@ -133,7 +139,7 @@ public class CompareFolders {
 		return paths;
 	}
 
-	private int doCompareFolders(boolean bNeedFullPaths) { // arg trimmed, lowercase
+	private int doCompareFolders(boolean querySavingResult, boolean bNeedFullPaths) { // arg trimmed, lowercase
 		var result = Const.MR_NO_CHOOSED;
 		Path pathLog = null;
 		try {
@@ -273,7 +279,7 @@ public class CompareFolders {
 				CommonLib.addLog(CommonLib.NEW_LINE_UNIX + "comparing folders's finished", true, compareLog);
 
 				// first parameter do 'true', to '.bak' create; copying's strange sometimes
-				CommonLib.saveAndShowList(true, copyMode > 0 ? 3 : 1, pathLog, compareLog);
+				CommonLib.saveAndShowList(true, querySavingResult || copyMode > 0 ? 3 : 1, pathLog, compareLog);
 			}
 
 		} catch (Exception e) {
@@ -695,8 +701,8 @@ public class CompareFolders {
 		System.out.println();
 		System.out.println(CommonLib.PRINTDELIMITER);
 		System.out.println("Comparing two *.bin files");
-		System.out.println("First (new), size: " + f1List.size() + ", " + sourceBinPath);
-		System.out.println("Second (old), size: " + f2List.size() + ", " + destBinPath);
+		System.out.println("First (new, source), size: " + f1List.size() + ", " + sourceBinPath);
+		System.out.println("Second (old, dest), size: " + f2List.size() + ", " + destBinPath);
 		System.out.println(CommonLib.PRINTDELIMITER);
 
 		for (int i = 0; i < f1List.size(); i++) {
@@ -829,8 +835,8 @@ public class CompareFolders {
 
 		var sub = s2.substring(0, s2.indexOf('*'));
 		if (arrDateSizeCrc1[0] == 0 || arrDateSizeCrc2[0] == 0 || sub.length() < 20) {
-			equalList.add(
-					"<error compare> " + ConverterBinFunc.getPathStringFromBinItem(null, "", s1, "", null, null, null, null));
+			equalList.add("<error compare> "
+					+ ConverterBinFunc.getPathStringFromBinItem(null, "", s1, "", null, null, null, null));
 			return;
 		}
 

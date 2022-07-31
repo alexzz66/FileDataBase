@@ -15,6 +15,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.FutureTask;
 
+import alexnick.CommonLib;
 import alexnick.CopyMove;
 
 import static alexnick.CopyMove.*;
@@ -25,7 +26,6 @@ public class Program {
 	private String options;
 	Set<String> extsNeedListSet = new HashSet<String>();
 	Set<String> extsNoNeedListSet = new HashSet<String>();
-	// private String
 
 	/**
 	 * @param mode       must be defined as 'Const.MODE_ ...'
@@ -69,6 +69,11 @@ public class Program {
 			return;
 		}
 
+		if (mode == Const.MODE_COMPARE_BIN) {
+			compareBinModeStart(parameters);
+			return;
+		}
+
 		if (mode == Const.MODE_VIEW) {
 			var showView = new InitShowViewTable(this);
 			var result = showView.getShowViewResult();
@@ -90,6 +95,105 @@ public class Program {
 		}
 
 		createBin(needCalcID3, mode, parameters.get(0), null);
+	}
+
+	private void compareBinModeStart(List<String> parameters) {
+		Path one = null;
+		Path two = null;
+		final String errorMessage = "For comparing required 2 files with '.bin' extension";
+		try {
+			if (parameters.size() != 2) {
+				errorArgument(errorMessage);
+				return;
+			}
+
+			for (int i = 0; i < parameters.size(); i++) {
+				Path p = Path.of(parameters.get(i));
+				if (!FileDataBase.isCorrectBin(p)) {
+					errorArgument("Not correct file: " + p);
+					break;
+				}
+
+				if (i == 0) {
+					one = p;
+				} else if (i == 1) {
+					two = p;
+				} else {
+					break;
+				}
+			}
+
+			if (one == null || two == null) {
+				errorArgument(errorMessage);
+				return;
+			}
+
+// define real 'startPath' from '.dat' or set by default
+//!!! anyway 'startPath' not checked on existing, because here not uses ROOTLIST (Map realBinDir)
+			String[] stuff = new String[4]; // minimum 4, need index == 3 (real start path from '.dat')
+
+			Path oneDat = FileDataBase.getDatPathForBinOrNull(one);
+			String oneStartPath = "A:/";
+			final int realStartPathIndex = 3;
+
+			if (oneDat != null) {
+//First parameter must be empty				
+// Third parameter 'getCountBinItemsOrNil' == null, because not need checksum (where count of extensions equals countBinItems)
+				var countBinItems = FileDataBase.getCountBinItemsOrNil("", oneDat, null, stuff);
+				if (countBinItems > 0) {
+					oneStartPath = stuff[realStartPathIndex];
+				}
+			}
+
+			stuff[realStartPathIndex] = "";
+
+			Path twoDat = FileDataBase.getDatPathForBinOrNull(two);
+			String twoStartPath = "B:/";
+
+			if (oneDat != null) {
+				var countBinItems = FileDataBase.getCountBinItemsOrNil("", twoDat, null, stuff);
+				if (countBinItems > 0) {
+					twoStartPath = stuff[realStartPathIndex];
+				}
+			}
+
+			addLog("Defined files for comparing '*.bin':", true, null);
+			addLog("Source: " + one.toString(), true, null);
+			addLog("source start path: " + oneStartPath, true, null);
+			System.out.println();
+			addLog("Dest: " + two.toString(), true, null);
+			addLog("dest start path: " + twoStartPath, true, null);
+			
+			List<String> confirmList = new ArrayList<String>();
+			confirmList.add("Compare this 'source' and 'dest'"); // 0
+			confirmList.add("Swap 'source' and 'dest' and compare");// 1
+			confirmList.add("Cancel (can be any symbol too)");// 2
+
+			int confirm = CommonLib.pauseQueryList(confirmList, null);
+			if (confirm == 1) { //swap
+				System.out.println("...swapping");
+				String s = oneStartPath;
+				oneStartPath = twoStartPath;
+				twoStartPath = s;
+				
+				Path p = one;
+				one = two;
+				two = p;				
+			} else if (confirm != 0) {
+				return;
+			}
+			
+//!!!'compareLogType' = 2 recommended for full log format, because need information about equals paths/signatures
+			int compareLogType = 2;
+
+//!!! copyMode MUST BE '0', because comparing only, without checking start path exists	
+// binPaths: 0, 1: source: startPath,binPath; 2, 3: dest: startPath, binPath
+			new CompareFolders(true, this, compareLogType, 0, oneStartPath, one, twoStartPath, two, false);
+
+		} catch (Exception e) {
+			System.out.println("Error of comparing *.bin: " + e.getMessage());
+		}
+
 	}
 
 	/**
@@ -483,7 +587,8 @@ public class Program {
 					bNew = false;
 				}
 				dupInfoList.add(s);
-				dupGroupPathsList.add(getPathStringFromBinItem(null, startPath, s, "", null, null, duplicatesBeans, null));
+				dupGroupPathsList
+						.add(getPathStringFromBinItem(null, startPath, s, "", null, null, duplicatesBeans, null));
 			} else {
 				if (!bNew) {
 					dupInfoList.addAll(dupGroupPathsList);
@@ -537,7 +642,7 @@ public class Program {
 		}
 
 		if (!destStartPathString.isEmpty()) {
-			new CompareFolders(this, compareLogType, copyMode, startPath, binPath, destStartPathString, null, false);
+			new CompareFolders(false, this, compareLogType, copyMode, startPath, binPath, destStartPathString, null, false);
 		}
 	}
 
@@ -806,6 +911,8 @@ public class Program {
 			info = "THREE, finds and deletes duplicates after 'ONE,TWO'";
 		} else if (value == Const.MODE_STOP_FOUR) {
 			info = "FOUR, copies selected files to selected folder";
+		} else if (value == Const.MODE_COMPARE_BIN) {
+			info = "COMPARE_BIN";
 		} else {
 			return Const.MODE_NO_DEFINED;
 		}

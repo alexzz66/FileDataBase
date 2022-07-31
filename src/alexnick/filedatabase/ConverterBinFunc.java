@@ -112,12 +112,12 @@ public class ConverterBinFunc {
 			var name = pathStringTmp.substring(0, posIndexOfExt);
 			if (CommonLib.notNullEmptyString(startPath)) {
 				name = startPath.concat(name);
-				int pos = startPath.indexOf(Const.ROOT_SEPARATOR);
+				int pos = startPath.indexOf(Const.ROOT_SEPARATOR_WINDOWS);
 				if (pos >= 0) {
 					int pos2 = binItem.indexOf(Const.BRACE_START);
 					if (pos2 > 0) {
 						extendedBinItem.append(binItem.substring(0, pos2 + 1))
-								.append(startPath.substring(pos + Const.ROOT_SEPARATOR.length()))
+								.append(startPath.substring(pos + Const.ROOT_SEPARATOR_WINDOWS.length()))
 								.append(binItem.substring(pos2 + 1));
 					}
 				}
