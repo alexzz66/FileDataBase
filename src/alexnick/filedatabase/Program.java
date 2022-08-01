@@ -15,7 +15,6 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.FutureTask;
 
-import alexnick.CommonLib;
 import alexnick.CopyMove;
 
 import static alexnick.CopyMove.*;
@@ -74,6 +73,11 @@ public class Program {
 			return;
 		}
 
+		if (mode == Const.MODE_DELETE_EMPTY_DIR) {
+			deleteEmptyDir(parameters);
+			return;
+		}
+
 		if (mode == Const.MODE_VIEW) {
 			var showView = new InitShowViewTable(this);
 			var result = showView.getShowViewResult();
@@ -95,6 +99,71 @@ public class Program {
 		}
 
 		createBin(needCalcID3, mode, parameters.get(0), null);
+	}
+
+	private void deleteEmptyDir(List<String> parameters) {
+		final String errorMessage = "For deleting empty folders required ONE folder in parameters";
+		List<MyBean> beans = null;
+		File startFolderFile = null;
+		try {
+			var res = false;
+			if (parameters.size() == 1) {
+				var path = Path.of(parameters.get(0)).toAbsolutePath();
+				startFolderFile = path.toFile().getCanonicalFile();
+				res = startFolderFile.isDirectory();
+			}
+			if (!res) {
+				errorArgument("not defined search folder");
+			}
+
+			new ArrayList<MyBean>();
+			addLog("...start search empty folders in " + startFolderFile, true, null);
+			int needResultBeans = 1; // 1:empty; 2:no empty; 3:all
+			var ff = new FindDirectories(needResultBeans, startFolderFile.toPath());
+			Files.walkFileTree(startFolderFile.toPath(), ff);
+			beans = ff.getBeans();
+
+		} catch (Exception e) {
+			addLog("Error: " + e.getMessage(), true, null);
+			addLog(errorMessage, true, null);
+			return;
+		}
+
+		showDeleteEmptyFolders(startFolderFile, beans);
+	}
+
+	private void showDeleteEmptyFolders(File startFolderFile, List<MyBean> beans) { // TODO delete empty dir
+		if (nullEmptyList(beans) || startFolderFile == null) {
+			System.out.println("Delete empty folders: not found empty folders");
+			return;
+		}
+
+		FileDataBase.showFrameInfo("Delete empty folders table");
+		List<String> pathsForDelete = null;
+
+		var table = new DeleteEmptyFoldersTable(startFolderFile.toString(), beans);
+		var ft = new FutureTask<>(table);
+		new Thread(ft).start();
+		try {
+			var isCheckResult = ft.get();
+			if (isCheckResult == Const.MR_DELETE) {
+				pathsForDelete = table.getPathsForDelete();
+			}
+
+		} catch (Exception e) {
+			System.out.println("error of show 'delete empty folders table'...");
+		}
+
+		deleteEmptyFolders(pathsForDelete);
+	}
+
+//'pathsForDelete' must be in correct order (will be deleted first empty folders without subfolders)
+	private void deleteEmptyFolders(List<String> pathsForDelete) {
+		if (nullEmptyList(pathsForDelete)) {
+			System.out.println("Not defined folders for delete");
+			return;
+		}
+		deleteFiles(SIGN_FOLDER, FileDataBase.getTempPath("deleteEmptyFoldersResult.txt"), pathsForDelete, null);
 	}
 
 	private void compareBinModeStart(List<String> parameters) {
@@ -163,26 +232,26 @@ public class Program {
 			System.out.println();
 			addLog("Dest: " + two.toString(), true, null);
 			addLog("dest start path: " + twoStartPath, true, null);
-			
+
 			List<String> confirmList = new ArrayList<String>();
 			confirmList.add("Compare this 'source' and 'dest'"); // 0
 			confirmList.add("Swap 'source' and 'dest' and compare");// 1
 			confirmList.add("Cancel (can be any symbol too)");// 2
 
-			int confirm = CommonLib.pauseQueryList(confirmList, null);
-			if (confirm == 1) { //swap
+			int confirm = pauseQueryList(confirmList, null);
+			if (confirm == 1) { // swap
 				System.out.println("...swapping");
 				String s = oneStartPath;
 				oneStartPath = twoStartPath;
 				twoStartPath = s;
-				
+
 				Path p = one;
 				one = two;
-				two = p;				
+				two = p;
 			} else if (confirm != 0) {
 				return;
 			}
-			
+
 //!!!'compareLogType' = 2 recommended for full log format, because need information about equals paths/signatures
 			int compareLogType = 2;
 
@@ -530,7 +599,7 @@ public class Program {
 				if (list.isEmpty()) {
 					addLog("no found files for deleting", true, delList);
 				} else {
-					deletedCount = deleteFiles(null, list, delList);
+					deletedCount = deleteFiles(SIGN_FILE, null, list, delList);
 				}
 			}
 		} catch (Exception e) {
@@ -642,7 +711,8 @@ public class Program {
 		}
 
 		if (!destStartPathString.isEmpty()) {
-			new CompareFolders(false, this, compareLogType, copyMode, startPath, binPath, destStartPathString, null, false);
+			new CompareFolders(copyMode > 0, this, compareLogType, copyMode, startPath, binPath, destStartPathString,
+					null, false);
 		}
 	}
 
@@ -913,6 +983,8 @@ public class Program {
 			info = "FOUR, copies selected files to selected folder";
 		} else if (value == Const.MODE_COMPARE_BIN) {
 			info = "COMPARE_BIN";
+		} else if (value == Const.MODE_DELETE_EMPTY_DIR) {
+			info = "DELETE_EMPTY_DIR";
 		} else {
 			return Const.MODE_NO_DEFINED;
 		}
@@ -1027,7 +1099,8 @@ public class Program {
 		try {
 			var result = ft.get();
 			if (result == Const.MR_DELETE) {
-				deleteFiles(FileDataBase.getTempPath("deleteResult.txt"), pathsListTable.getResultStringPaths(), null);
+				deleteFiles(SIGN_FILE, FileDataBase.getTempPath("deleteResult.txt"),
+						pathsListTable.getResultStringPaths(), null);
 			} else if (result == Const.MR_COPY_MOVE) {
 				doCopyMoveNew();
 			}

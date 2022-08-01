@@ -132,6 +132,7 @@ public class Const {
 	static final int MODE_VIEW = 2048;// must be more than 10 as minimum
 	static final int MODE_VIEW_TEMP = 2049;// must be more than 10 as minimum
 	static final int MODE_COMPARE_BIN = 2050;
+	static final int MODE_DELETE_EMPTY_DIR = 2051;
 
 	static final int textFieldStardardSize = 20;
 	static final int textFieldBigSize = 32;

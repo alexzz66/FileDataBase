@@ -1120,14 +1120,18 @@ public class CommonLib {
 	 * Each string from list, which length >= 3, will be converted to Path, then
 	 * deleted.
 	 * 
-	 * @param saveResultTo if null: no saving 'log'; else 'log' will be trying save
-	 *                     and show result
-	 * @param list         paths of files, will be deleted
-	 * @param log          filling by delete results; if null, will be created
+	 * @param needFileDirectory SIGN_FILE:must be file;<br>
+	 *                          SIGN_FOLDER:must be directory; <br>
+	 *                          else (SIGN_FILE_OR_FOLDER):no matter
+	 * @param saveResultTo      if null: no saving 'log'; else 'log' will be trying
+	 *                          save and show result
+	 * @param list              paths of files, will be deleted
+	 * @param log               filling by delete results; if null, will be created
 	 * @return deleted count
 	 */
-	synchronized public static int deleteFiles(Path saveResultTo, List<String> list, List<String> log) {
-		List<File> fileList = getFileListOrNull(false, SIGN_FILE, list);
+	synchronized public static int deleteFiles(int needFileDirectory, Path saveResultTo, List<String> list,
+			List<String> log) {
+		List<File> fileList = getFileListOrNull(false, needFileDirectory, list);
 		if (nullEmptyList(fileList)) {
 			System.out.println("error: no found correct paths for deleting");
 			return 0;
@@ -1153,6 +1157,7 @@ public class CommonLib {
 
 		CopyMove.setQueryCopyMove(CopyMove.QUERY_CONFIRM_LIST);
 		Set<Integer> deletedNumbers = new HashSet<Integer>();
+
 		for (int i = 0; i < fileList.size(); i++) {
 			File f = fileList.get(i);
 			addLog("try delete: " + f, true, log);
@@ -1171,7 +1176,7 @@ public class CommonLib {
 				}
 			}
 
-			var len = f.length();
+			var len = f.isDirectory() ? 0 : f.length();
 			boolean deleted = false;
 			try {
 				Files.delete(f.toPath());
@@ -1186,7 +1191,7 @@ public class CommonLib {
 		}
 
 		addLog(ADDLOG_SEP, true, log);
-		addLog("Delete files result: " + deletedCount + " of " + fileList.size() + ", total size of deleted: "
+		addLog("Delete result: " + deletedCount + " of " + fileList.size() + ", total size of deleted: "
 				+ bytesToKBMB(false, 0, deletedTotalSize), true, log);
 
 		if (deletedCount < fileList.size()) {
@@ -1217,7 +1222,7 @@ public class CommonLib {
 		}
 		List<String> list = readFile(2, 0, file.toPath());
 		Path saveResultTo = Path.of(file.toString().concat(".deleteResult.txt"));
-		return deleteFiles(saveResultTo, list, log);
+		return deleteFiles(SIGN_FILE, saveResultTo, list, log);
 	}
 
 	/**
@@ -1239,9 +1244,9 @@ public class CommonLib {
 	/**
 	 * @param needCanonicalFile if 'true', result file try transform to 'canonical'
 	 *                          name, with correct symbols register
-	 * @param needFileDirectory MARK_FILE:must be file;<br>
-	 *                          MARK_FOLDER:must be directory;<br>
-	 *                          else (MARK_FILE_OR_FOLDER):no matter
+	 * @param needFileDirectory SIGN_FILE:must be file;<br>
+	 *                          SIGN_FOLDER:must be directory;<br>
+	 *                          else (SIGN_FILE_OR_FOLDER):no matter
 	 * @param list              if null/empty, returns 'null';<br>
 	 *                          from each string will be removed symbols after "*",
 	 *                          "?", "\"", "<", ">", "|"; starts of string must be
@@ -1269,8 +1274,8 @@ public class CommonLib {
 	 *                            less than '1', will be set as '1'; recommended
 	 *                            '2', example '/x' <br>
 	 *                            or '4', example 'C:/x'
-	 * @param needFileDirectory   MARK_FILE:must be file; MARK_FOLDER:must be
-	 *                            directory; else (MARK_FILE_OR_FOLDER):no matter
+	 * @param needFileDirectory   SIGN_FILE:must be file; SIGN_FOLDER:must be
+	 *                            directory; else (SIGN_FILE_OR_FOLDER):no matter
 	 * @param fileString          string for create result file; must not be
 	 *                            null/empty
 	 * @return existing file path; or null
@@ -1306,9 +1311,9 @@ public class CommonLib {
 	/**
 	 * @param needCanonicalFile  if 'true', result file try transform to 'canonical'
 	 *                           name, with correct symbols register
-	 * @param needFileDirectory: MARK_FILE:must be file;<br>
-	 *                           MARK_FOLDER:must be directory; <br>
-	 *                           else (MARK_FILE_OR_FOLDER):no matter
+	 * @param needFileDirectory: SIGN_FILE:must be file;<br>
+	 *                           SIGN_FOLDER:must be directory; <br>
+	 *                           else (SIGN_FILE_OR_FOLDER):no matter
 	 * @param file               must be existing file for reading path strings
 	 * @return created (but may be empty) list of existing path or null
 	 */

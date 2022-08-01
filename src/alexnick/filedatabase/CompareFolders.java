@@ -46,9 +46,7 @@ public class CompareFolders {
 	}
 
 	/**
-	 * @param querySavingResult     for 'copyMode' == 0: if true, need query before
-	 *                              saving result file<br>
-	 *                              for any 'copyMode', query will be set
+	 * @param querySavingResult     if true, need query before saving result file
 	 * @param program               class, not must be null
 	 * @param compareLogType        0 (by default):new, newer and newerEqualSize in
 	 *                              log; other lists in short format (no more limit,
@@ -279,7 +277,7 @@ public class CompareFolders {
 				CommonLib.addLog(CommonLib.NEW_LINE_UNIX + "comparing folders's finished", true, compareLog);
 
 				// first parameter do 'true', to '.bak' create; copying's strange sometimes
-				CommonLib.saveAndShowList(true, querySavingResult || copyMode > 0 ? 3 : 1, pathLog, compareLog);
+				CommonLib.saveAndShowList(true, querySavingResult ? 3 : 1, pathLog, compareLog);
 			}
 
 		} catch (Exception e) {

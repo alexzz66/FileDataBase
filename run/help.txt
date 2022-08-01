@@ -67,3 +67,7 @@ More parameters: '-e' or '-p', if defined option 'autoNoExtract'
 "Mode '-cb', '-compareBin'. Must be TWO *.bin files for comparing; not renaming, not copy/move. Text result only"
 
 -------
+
+Mode '-dd', '-deleteDirectories'. Must be ONE exists folder; will be found and removed EMPTY subfolders
+
+-------

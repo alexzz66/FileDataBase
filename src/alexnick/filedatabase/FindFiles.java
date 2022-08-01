@@ -28,10 +28,11 @@ public class FindFiles extends SimpleFileVisitor<Path> {
 	private int lengthStartPath;
 
 	/**
-	 * @param needListFullPaths      if true, be created and filling by full path
-	 *                               'listFullPaths'; this are the same paths, as
-	 *                               'listPathsToEndBin', but in full path format
-	 * @param lengthStartPath        length, be removed with start each path string
+	 * @param needListFullPaths      if true, will be created and filling by full
+	 *                               path 'listFullPaths'; this are the same paths,
+	 *                               as 'listPathsToEndBin', but in full path format
+	 * @param lengthStartPath        length, will be removed with start each path
+	 *                               string
 	 * @param needHmExtsInfoIncluded result info (count,size) about extensions,
 	 *                               'false' if no need calculate
 	 * @param extsNeed               set of extensions, in lower case, without

@@ -185,7 +185,8 @@ public class FileDataBase {
 				errorArgument("no found program 'root' folder");
 				return;
 			}
-			path = Path.of(path.toString(), helpName);
+			path = path.getParent();
+			path = Path.of(path.toString(), "run", helpName);
 			if (!path.toFile().exists()) {
 				System.out.println("Error, not found file: " + path);
 				return;
@@ -239,6 +240,8 @@ public class FileDataBase {
 		console("Mode '-a', '-auto'. Selects mode as: no parameters: '-v'; one parameter: file '-p', folder '-4'. More parameters: '-e' or '-p', if defined option 'autoNoExtract'");
 		addLog(ADDLOG_SEP, true, null);
 		console("Mode '-cb', '-compareBin'. Must be TWO *.bin files for comparing; not renaming, not copy/move. Text result only");
+		addLog(ADDLOG_SEP, true, null);
+		console("Mode '-dd', '-deleteDirectories'. Must be ONE exists folder; will be found and removed EMPTY subfolders");
 		console("");
 	}
 
@@ -271,6 +274,10 @@ public class FileDataBase {
 
 		if (firstArg.equals("cb") || firstArg.equals("comparebin")) {
 			return Const.MODE_COMPARE_BIN;
+		}
+
+		if (firstArg.equals("dd") || firstArg.equals("deletedirectories")) {
+			return Const.MODE_DELETE_EMPTY_DIR;
 		}
 
 		final boolean bAutoMode = firstArg.equals("a") || firstArg.equals("auto");

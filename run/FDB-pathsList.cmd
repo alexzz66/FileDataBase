@@ -1,8 +1,7 @@
 @echo off
-start /b /high java -cp %~d0%~p0 alexnick.filedatabase.FileDataBase -a:autoNoExtract;bigSize;plCrYes;finalPause;extractSaveYes;doubleRepo;temp; %*
-pause
-:start /b /high :cd /d %~d0%~p0
-:java -cp %~d0%~p0  >> set '-cp %~d0%~p0' on error reading files of "FileDataBase"
+cd /d %~d0%~p0
+cd ../bin
+start /b /high java alexnick.filedatabase.FileDataBase -p:finalPause;temp;tempYes;bigSize;plCrcNo;plOneFolderYes;  %*
 
 :FOR ALL MODES >>
 :option register (bigsize,bigSize,bIGSIZE) no matter; all option must be separated by ";", example -a:tempYes;bigsize;finalPause
@@ -42,3 +41,5 @@ pause
 :if defined "autoNoExtract;" >> instead of 'extract mode' be set 'pathsList mode'
 
 :mode '-cb' (-compareBin) must be TWO *.bin files for comparing; not renaming, not copy/move. Text result only
+
+:mode '-dd' (-deleteDirectories) must be ONE exists folder; will be found and removed EMPTY subfolders
