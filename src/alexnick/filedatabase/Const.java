@@ -202,4 +202,5 @@ public class Const {
 	static final String OLD_NAME_START = "old: \"";
 	static final String OLD_NAME_END = "\""; // need for write rename result in PathsListTable
 	static final String ERROR_OLD_DELETE_ON_MOVING = "errorOldDeleteOnMoving.txt";
+    static final String NOT_CHOSEN = "not chosen";
 }

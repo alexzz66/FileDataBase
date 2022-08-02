@@ -24,6 +24,7 @@ public class MyBean {
 	Path binPath = null;
 	Map<String, Integer> mapCountExt = null;
 	Map<String, Set<String>> mapExtSignatures = null;
+	Set<Integer> serviceSet = null;
 
 	/**
 	 * MyBean for table with 4 columns, all strings must not be 'null'<br>
