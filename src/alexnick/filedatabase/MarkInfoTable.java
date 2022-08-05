@@ -171,7 +171,7 @@ public class MarkInfoTable extends JDialog {
 				for (var b : beans) {
 					b.check = (checkNow <= 0) ? false
 							: (checkNow >= CHECK_NOW_MAX) ? true
-									: b.findInOneLowerCase(findMark, Const.textFieldFindSeparator);// filter
+									: b.findInColumnLowerCase(1, findMark, Const.textFieldFindSeparator);// filter
 				}
 				updating(false);
 			}

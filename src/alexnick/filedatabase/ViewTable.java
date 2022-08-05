@@ -155,7 +155,8 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 					b.check = (checkNow <= 0) ? false
 							: (checkNow >= CHECK_NOW_MAX) ? true
 									: (checkNow == 2) ? getStartPathExists(b, null)
-											: b.findInOneLowerCase(findBinFolder, Const.textFieldFindSeparator);// filter
+											: b.findInColumnLowerCase(1, findBinFolder, Const.textFieldFindSeparator);// filter
+																														// TODO
 				}
 				updating(false);
 			}
@@ -171,7 +172,7 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 		buttons.add(tfFindBinFolder);
 		var butCheck = new JButton("check");
 		butCheck.addActionListener(butCheckActionListener);
-		butCheck.setToolTipText(Const.butCheckToolTip);
+//TODO		butCheck.setToolTipText(Const.butCheckToolTip);
 		buttons.add(butCheck);
 
 		var butInvert = new JButton("invert");

@@ -185,7 +185,7 @@ public class Const {
 	private final static String tfTipPrefix = "find substring in column '";
 	private final static String tfTipPostfix = "', for several items, use separator '" + textFieldFindSeparator + "'";
 
-	static final String textFieldBinFolderToolTip = tfTipPrefix + "BinFolder" + tfTipPostfix;
+	static final String textFieldBinFolderToolTip = tfTipPrefix + "<set in combobox>" + tfTipPostfix;
 	static final String textFieldPathToolTip = tfTipPrefix + "Path" + tfTipPostfix;
 	static final String textFieldMarkToolTip = tfTipPrefix + "Mark" + tfTipPostfix;
 
@@ -202,5 +202,5 @@ public class Const {
 	static final String OLD_NAME_START = "old: \"";
 	static final String OLD_NAME_END = "\""; // need for write rename result in PathsListTable
 	static final String ERROR_OLD_DELETE_ON_MOVING = "errorOldDeleteOnMoving.txt";
-    static final String NOT_CHOSEN = "not chosen";
+	static final String NOT_CHOSEN = "not chosen";
 }

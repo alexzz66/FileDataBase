@@ -143,16 +143,24 @@ public class MyBean {
 	/**
 	 * Finds 'substringInLowerCase' in MyBean.one
 	 * 
-	 * @param substringInLowerCase substring for finding, not must be null/empty,
+	 * @param columnNumber         set 1:'one', 2:'two', 3:'three',
+	 *                             4:'four'+'fourApp'; 5:'four only' <br>
+	 *                             else return false
+	 * @param substringInLowerCase substring for finding, must not be null/empty,
 	 *                             MUST BE IN LOWER CASE
 	 * @param separatorInLowerCase if not null/empty, MUST BE IN LOWER CASE:
 	 *                             'findInLowerCase' will be divided on separate
 	 *                             strings, finding be in each
 	 * 
-	 * @return 'true' if found 'findLowerCase' in 'MyBean.one'
+	 * @return 'true' if found 'findLowerCase' in defined 'columnNumber'
 	 */
-	boolean findInOneLowerCase(String substringInLowerCase, String separatorInLowerCase) {
-		return findInLowerCase(0, one.toLowerCase(), substringInLowerCase, separatorInLowerCase);
+	boolean findInColumnLowerCase(int columnNumber, String substringInLowerCase, String separatorInLowerCase) {
+		String s = columnNumber == 1 ? one
+				: columnNumber == 2 ? two
+						: columnNumber == 3 ? three
+								: columnNumber == 4 ? getFour(false, true)
+										: columnNumber == 5 ? getFour(false, false) : "";
+		return s.isEmpty() ? false : findInLowerCase(0, s.toLowerCase(), substringInLowerCase, separatorInLowerCase);
 	}
 
 	/**
