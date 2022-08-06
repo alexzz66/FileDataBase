@@ -9,9 +9,10 @@ import static alexnick.CommonLib.startProcess;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.nio.file.Files;
@@ -43,11 +44,13 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 	private List<MyBean> beans;
 	private BeansFourTableDefault myTable;
 
-	private int checkNow = -1;
-	private final int CHECK_NOW_MAX = 3; // minimum == 0
+	private int lastIndex = -1;
+	private String[] cmbCheckItems = new String[] { "all", "exist", "no", "invert", "by BinFolder only",
+			"by Start path only", "by Modified only", "by Result only", "by BinFolder add", "by Start path add",
+			"by Modified add", "by Result add", "by BinFolder sub", "by Start path sub", "by Modified sub",
+			"by Result sub" };
 
-	private String lastFindBinFolder = "";
-	private JTextField tfFindBinFolder;
+	private JTextField tfSetCheckAction;
 	private JLabel checkInfo;
 	private JButton butMark = null;
 	volatile private int lastSortType = SortBeans.sortNoDefined;
@@ -81,9 +84,19 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 		beans.addAll(beans0);
 		setStandardTitle();
 
-		Box contents = new Box(BoxLayout.Y_AXIS);
 		myTable = new BeansFourTableDefault(ListSelectionModel.SINGLE_SELECTION, false, false, true, columns[0],
 				columns[1], columns[2], columns[3], beans);
+
+		initComponents();
+
+		setPreferredSize(new Dimension(1024, 600));
+		pack();
+
+		setLocationRelativeTo(null);
+		setVisible(true);
+	}
+
+	private void initComponents() {
 		myTable.getTableHeader().addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
@@ -93,25 +106,8 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 			}
 
 		});
-		contents.add(new JScrollPane(myTable));
 
-		myTable.addMouseListener(new MouseListener() {
-			@Override
-			public void mouseReleased(MouseEvent e) {
-			}
-
-			@Override
-			public void mousePressed(MouseEvent e) {
-			}
-
-			@Override
-			public void mouseExited(MouseEvent e) {
-			}
-
-			@Override
-			public void mouseEntered(MouseEvent e) {
-			}
-
+		myTable.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				if (e.getButton() != 1) {
@@ -119,7 +115,7 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 				}
 
 				if (e.getClickCount() == 1 && myTable.getSelectedColumn() == 0) {
-					printCount(true, null);
+					printCount(-1, null, null);
 					return;
 				}
 
@@ -130,65 +126,43 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 			}
 		});
 
-		var butCheckActionListener = new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				if (beans.isEmpty()) {
-					return;
-				}
-
-				var clickOnTfFindBindFolder = e.getActionCommand().equals(Const.textFieldBinFolderClick);
-				var findBinFolder = tfFindBinFolder.getText().toLowerCase();
-
-				if (!findBinFolder.equals(lastFindBinFolder) || clickOnTfFindBindFolder) {
-					checkNow = findBinFolder.isEmpty() ? 0 : 1;
-					lastFindBinFolder = findBinFolder;
-				} else { // 0:no;1:filter(optional);2:exists;3:all
-					checkNow = (checkNow <= 0) ? 1 : (checkNow >= CHECK_NOW_MAX) ? 0 : checkNow + 1;
-
-					if (checkNow == 1 && findBinFolder.isEmpty()) {// filter, no need if empty
-						checkNow = 2;
-					}
-				}
-
-				for (var b : beans) {
-					b.check = (checkNow <= 0) ? false
-							: (checkNow >= CHECK_NOW_MAX) ? true
-									: (checkNow == 2) ? getStartPathExists(b, null)
-											: b.findInColumnLowerCase(1, findBinFolder, Const.textFieldFindSeparator);// filter
-																														// TODO
-				}
-				updating(false);
-			}
-		};
-
 //FILL JPANEL
-		JPanel buttons = new JPanel();
-		tfFindBinFolder = new JTextField(FileDataBase.sizeTextField);
-		tfFindBinFolder.setActionCommand(Const.textFieldBinFolderClick);
-		tfFindBinFolder.addActionListener(butCheckActionListener);
-		tfFindBinFolder.setToolTipText(Const.textFieldBinFolderToolTip);
+		var cmbChecking = new JComboBox<String>(cmbCheckItems);
 
-		buttons.add(tfFindBinFolder);
-		var butCheck = new JButton("check");
-		butCheck.addActionListener(butCheckActionListener);
-//TODO		butCheck.setToolTipText(Const.butCheckToolTip);
-		buttons.add(butCheck);
+		ActionListener butCheckActionListener = e -> checking(cmbChecking.getSelectedIndex());
 
-		var butInvert = new JButton("invert");
-		butInvert.addActionListener(new ActionListener() {
+		cmbChecking.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				for (var b : beans) {
-					b.check = !b.check;
-				}
-				updating(true);
+				tfSetCheckAction.setEnabled(cmbChecking.getSelectedIndex() >= 4);
 			}
 		});
-		buttons.add(butInvert);
+
+		cmbChecking.addKeyListener(new KeyAdapter() {
+			public void keyPressed(KeyEvent e) {
+				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+					checking(cmbChecking.getSelectedIndex());
+				}
+			}
+		});
+
+		tfSetCheckAction = new JTextField(FileDataBase.sizeTextField);
+		tfSetCheckAction.addActionListener(butCheckActionListener);
+		tfSetCheckAction.setToolTipText(Const.textFieldBinFolderToolTip);
+		tfSetCheckAction.setEnabled(false);
+
+		var butCheck = new JButton("Set");
+		butCheck.addActionListener(butCheckActionListener);
 
 		checkInfo = new JLabel();
-		printCount(true, null); // set count on start window
+		printCount(-1, null, null); // set count on start window
+
+//ADDING (start)		
+		JPanel buttons = new JPanel();
+
+		buttons.add(cmbChecking);
+		buttons.add(tfSetCheckAction);
+		buttons.add(butCheck);
 		buttons.add(checkInfo);
 
 		if (!viewNoMark && FileDataBase.initMarkIsProperty()) {
@@ -204,7 +178,7 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				List<String> extNew = new ArrayList<String>();
-				if (printCount(false, extNew) == null || extNew.isEmpty()) {
+				if (printCount(lastIndex, extNew, null) == null || extNew.isEmpty()) {
 					return;
 				}
 				var sc = new ExtensionFrame(ViewTable.this, true, extNew, null, null);
@@ -213,6 +187,7 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 				}
 			}
 		});
+
 		buttons.add(butViewExts);
 
 		JButton butClose = new JButton("Close");
@@ -225,13 +200,115 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 		butCompareTwoBin.addActionListener(e -> compareTwoBin());
 		buttons.add(butCompareTwoBin);
 
+		Box contents = new Box(BoxLayout.Y_AXIS);
+		contents.add(new JScrollPane(myTable));
 		getContentPane().add(contents);
 		getContentPane().add(buttons, "South");
 
-		setPreferredSize(new Dimension(1024, 600));
-		pack();
-		setLocationRelativeTo(null);
-		setVisible(true);
+	}
+
+//0:"all", 1:"exist", 2:"no", 3:"invert",
+//4:"by BinFolder only", 5:"by Start path only", 6:"by Modified only", 7:"by Result only",
+//8:"by BinFolder add", 9:"by Start path add", 10:"by Modified add", 11:"by Result add"
+//12:"by BinFolder sub", 13:"by Start path sub", 14:"by Modified sub", 15:"by Result sub"
+	private void checking(final int index) {
+		if (index < 0 || index >= cmbCheckItems.length || beans.isEmpty()) {
+			return;
+		}
+
+		int[] addedInfo = new int[2]; // plus and minus info
+		addedInfo[0] = 0;
+		addedInfo[1] = 0;
+
+		boolean bAdd = index >= 8 && index <= 11;
+		boolean bSub = !bAdd && index >= 12 && index <= 15;
+
+		int i = bSub ? index - 8 : bAdd ? index - 4 : index; // 12..15 OR 8..11->4..7
+
+		String find = null;
+
+		if (i >= 4) {
+			find = tfSetCheckAction.getText().toLowerCase();
+			if (find.isEmpty()) {
+				updating(lastIndex, null);
+				return;
+			}
+		}
+
+		for (var b : beans) {
+			var z = false;
+
+			if (i >= 4) { // by column, 4..7->1..4
+				if ((b.check && bAdd) || (!b.check && bSub)) {
+					continue;
+				}
+
+				z = b.findInColumnLowerCase(i - 3, find, Const.textFieldFindSeparator);
+				if (bSub) {
+					z = !z;
+				}
+
+			} else if (i == 0) { // all
+				z = true;
+			} else if (index == 1) { // exist
+				z = getStartPathExists(b, null);
+			} else if (i == 2) { // no
+				z = false;
+			} else if (i == 3) { // invert
+				z = !b.check;
+			} else {
+				continue; // must not be so...
+			}
+
+			if (b.check != z) {
+				if (z) {
+					addedInfo[0]++;
+				} else {
+					addedInfo[1]++;
+				}
+				b.check = z;
+			}
+		}
+
+		updating(index, addedInfo);
+	}
+
+	// 'addedInfo' if not null and length == 2, be added info to label
+	// 'index' must be -1 OR as index in 'cmbCheckItems'
+	private void updating(int index, int[] addedInfo) {
+		setStandardTitle();
+		lastSortType = SortBeans.sortNoDefined;
+		myTable.updateUI();
+		printCount(index, null, addedInfo);
+	}
+
+	/**
+	 * @param index     'index' (or 'lastIndex') must be -1 OR as index in
+	 *                  'cmbCheckItems'
+	 * @param extNew    set list for get result
+	 * @param addedInfo if not null and length == 2, be added info to label
+	 * @return null if was errors while counting 'arCheckCount' or countItems
+	 *         (total, arCheckCount[1]) == 0
+	 */
+	private int[] printCount(int index, List<String> extNew, int[] addedInfo) {
+		lastIndex = index;
+		var arCheckCount = getBeanCountOrNull(extNew);
+
+		if (arCheckCount == null || arCheckCount.length != 2) {
+			checkInfo.setText("not chosen");
+			return null;
+		}
+
+		var sb = new StringBuilder();
+		sb.append((index < 0 || index >= cmbCheckItems.length) ? "count" : cmbCheckItems[index]);
+		sb.append(": ").append(arCheckCount[0]).append(" / ").append(arCheckCount[1]);
+
+		if (addedInfo != null && addedInfo.length == 2) {
+			sb.append(" (+").append(addedInfo[0]).append("/-").append(addedInfo[1]).append(")");
+		}
+
+		checkInfo.setText(sb.toString());
+		return arCheckCount[1] == 0 ? null : arCheckCount;
 	}
 
 	private void fillMarkMaps() {
@@ -255,6 +332,11 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 	}
 
 	private void markInfo() {
+		if (printCount(lastIndex, null, null) == null) { // null, if checked items no contains 'countBinItems'
+			// (serviceIntOne)
+			return;
+		}
+
 		if (viewNoMark || CommonLib.nullEmptyList(arMarkInfoList) || arMarkInfoList.size() != beans.size()) {
 			return;
 		}
@@ -311,13 +393,6 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 			isCheckResult = Const.MR_COPY_MOVE;
 			dispose();
 		}
-	}
-
-	private void updating(boolean resetCheckNow) {
-		setStandardTitle();
-		lastSortType = SortBeans.sortNoDefined;
-		myTable.updateUI();
-		printCount(resetCheckNow, null);
 	}
 
 	private void sorting(int columnIndex) {
@@ -457,7 +532,7 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 		}
 		beans.remove(row);
 		fillMarkMaps();
-		updating(true);
+		updating(-1, null);
 		return false;
 	}
 
@@ -519,8 +594,8 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 // 0, 1: source: startPath,binPath; 2, 3: dest: startPath, binPath; 'columnsForCompare' created and size == 2
 //'existsStartPaths' will be filling of start paths exist information, must be created and size == 2
 	private Path[] getBinPathForCompareOrNull(boolean[] existsStartPaths, String[] columnsForCompare) {
-
-		if (printCount(false, null) == null) { // null, if checked items no contains 'countBinItems' (serviceIntOne)
+		if (printCount(lastIndex, null, null) == null) { // null, if checked items no contains 'countBinItems'
+															// (serviceIntOne)
 			return null;
 		}
 		Path[] bp1 = null; // 2 items: startPath, binPath
@@ -708,32 +783,6 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 	}
 
 	/**
-	 * @param resetCheckNow if 'true', in result label be written 'count', else
-	 *                      depends on 'checkNow'
-	 * @param extNew        set list for get result
-	 * @return
-	 */
-	private int[] printCount(boolean resetCheckNow, List<String> extNew) {
-		var arCheckCount = getBeanCountOrNull(extNew);
-		final String noCheck = "not chosen";
-		if (arCheckCount == null || arCheckCount.length != 2) {
-			checkInfo.setText(noCheck);
-			return null;
-		}
-		if (resetCheckNow) {
-			checkNow = -1;
-		}
-		var s = (checkNow < 0 || checkNow > CHECK_NOW_MAX) ? "count"
-				: checkNow == 2 ? "exists" : checkNow == CHECK_NOW_MAX ? "all" : checkNow == 1 ? "filter" : noCheck;
-
-		if (!s.equals(noCheck) || arCheckCount[1] > 0) {
-			s += ": " + arCheckCount[0] + " / " + arCheckCount[1];
-		}
-		checkInfo.setText(s);
-		return arCheckCount;
-	}
-
-	/**
 	 * @param extNew if not null: be filling with extensions, example 'fb2 : 25'
 	 * @return array, checked/all or null, if 'countBinItems'(serviceIntOne) or
 	 *         'mapCountExt' not defined for any checked
@@ -778,7 +827,7 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 				extNew.add(s.getKey().concat(Const.extSeparator).concat(s.getValue().toString()));
 			}
 		}
-		return countItems == 0 ? null : new int[] { checkCount, countItems };
+		return new int[] { checkCount, countItems };
 	}
 
 	@Override
