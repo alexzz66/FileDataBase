@@ -46,11 +46,13 @@ public class BeanViewTable extends JDialog {
 	private JLabel choosed;
 
 	private JTextField tfInfo;
-	private int lastIndex = -1;
-	private String[] cmbCheckItems = new String[] { "all", "exist", "no", "invert", "by BinFolder only",
-			"by Signature only", "by Modified only", "by Path only", "by BinFolder add", "by Signature add",
-			"by Modified add", "by Path add", "by BinFolder sub", "by Signature sub", "by Modified sub", "by Path sub",
-			"remove from table" };// !!! 'remove' must be LAST ITEM
+
+	private int[] lastIndex = { 0, 0 }; // first as cmbCheckItems index;second as cmbCheckItemsApp
+
+	private String[] cmbCheckItems = new String[] { "all", "no", "invert", "exist", "by BinFolder", "by Signature",
+			"by Modified", "by Path", "remove from table" };// !!! 'remove' must be LAST ITEM
+
+	private String[] cmbCheckItemsApp = new String[] { "only", "add", "sub" };
 
 	private final String caption;
 	volatile private int lastSortType = SortBeans.sortNoDefined;
@@ -135,7 +137,7 @@ public class BeanViewTable extends JDialog {
 				}
 				if (myTable.getSelectedColumn() == 0) {
 					if (e.getClickCount() == 1) {
-						printCount(-1, false, null);
+						printCount(null, false, null);
 					}
 					return;
 				}
@@ -147,22 +149,18 @@ public class BeanViewTable extends JDialog {
 
 //FILL JPANEL (first)
 		var cmbChecking = new JComboBox<String>(cmbCheckItems);
+		var cmbCheckingApp = new JComboBox<String>(cmbCheckItemsApp);
+		cmbCheckingApp.setEnabled(false);
 
-		ActionListener butCheckActionListener = e -> checking(cmbChecking.getSelectedIndex());
+		ActionListener butCheckActionListener = e -> checking(cmbChecking.getSelectedIndex(),
+				cmbCheckingApp.getSelectedIndex());
 
 		cmbChecking.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				var index = cmbChecking.getSelectedIndex();
 				tfSetCheckAction.setEnabled(index >= 4 && index < cmbCheckItems.length - 1);
-			}
-		});
-
-		cmbChecking.addKeyListener(new KeyAdapter() {
-			public void keyPressed(KeyEvent e) {
-				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-					checking(cmbChecking.getSelectedIndex());
-				}
+				cmbCheckingApp.setEnabled(index >= 3 && index < cmbCheckItems.length - 1);
 			}
 		});
 
@@ -175,7 +173,7 @@ public class BeanViewTable extends JDialog {
 		butCheck.addActionListener(butCheckActionListener);
 
 		checkInfo = new JLabel();
-		printCount(-1, false, null); // check on show window
+		printCount(null, false, null); // check on show window
 
 		if (!viewNoMark) {
 			butMark = new JButton("mark");
@@ -227,6 +225,8 @@ public class BeanViewTable extends JDialog {
 //FILL JPANEL (second)
 		JPanel buttons = new JPanel();
 		buttons.add(cmbChecking);
+		buttons.add(cmbCheckingApp);
+
 		buttons.add(tfSetCheckAction);
 		buttons.add(butCheck);
 		buttons.add(checkInfo);
@@ -262,10 +262,23 @@ public class BeanViewTable extends JDialog {
 				ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		getContentPane().add(scrollPan, BorderLayout.SOUTH);
 
-//SHIFT DOWN				
+//SHIFT DOWN AND KEYADAPTER
+		var keyAdapterEnter = new KeyAdapter() {
+			public void keyPressed(KeyEvent e) {
+				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+					checking(cmbChecking.getSelectedIndex(), cmbCheckingApp.getSelectedIndex());
+				}
+			}
+		};
+
 		myTable.addKeyListener(FileDataBase.keyListenerShiftDown);
 
+		cmbChecking.addKeyListener(keyAdapterEnter);
 		cmbChecking.addKeyListener(FileDataBase.keyListenerShiftDown);
+
+		cmbCheckingApp.addKeyListener(keyAdapterEnter);
+		cmbCheckingApp.addKeyListener(FileDataBase.keyListenerShiftDown);
+
 		tfSetCheckAction.addKeyListener(FileDataBase.keyListenerShiftDown);
 		butCheck.addKeyListener(FileDataBase.keyListenerShiftDown);
 
@@ -280,18 +293,28 @@ public class BeanViewTable extends JDialog {
 		butAction.addKeyListener(FileDataBase.keyListenerShiftDown);
 	}
 
-//0:"all", 1:"exist", 2:"no", 3:"invert", 4:"by BinFolder only", 5:"by Signature only", 6:"by Modified only", 7:"by Path only",
-//8:"by BinFolder add", 9:"by Signature add", 10:"by Modified add", 11:"by Path add"
-//12:"by BinFolder sub", 13:"by Signature sub", 14:"by Modified sub", 15:"by Path sub"
-//16:remove from table	
-	private void checking(final int index) {
-		if (index < 0 || index >= cmbCheckItems.length || beans.isEmpty()) {
+//0:"all", 1:"no", 2:"invert", 3:"exists" (3 and more: with indexTwo)
+//4:"by BinFolder", 5:"by Start path only", 6:"by Modified ", 7:"by Result"
+//8:remove from table	
+//app: 0:"only", 1:"add", 2:"sub" 	
+	private void checking(final int indexOne, int indexTwo) {
+		if (beans.isEmpty() || indexOne < 0 || indexOne >= cmbCheckItems.length) {
 			return;
 		}
 
-		if (index >= cmbCheckItems.length - 1) {
+		if (indexOne >= cmbCheckItems.length - 1) {
 			removeFromTable();
 			return;
+		}
+
+		var bNeedFilterApp = indexOne >= 3;
+
+		if (indexTwo < 0 || indexTwo >= cmbCheckItemsApp.length) {
+			if (bNeedFilterApp) {
+				return;
+			}
+
+			indexTwo = 0; // for 'all','no','invert' no matter, but in array write correct number
 		}
 
 		// remains all but the last
@@ -299,14 +322,12 @@ public class BeanViewTable extends JDialog {
 		addedInfo[0] = 0;
 		addedInfo[1] = 0;
 
-		boolean bAdd = index >= 8 && index <= 11;
-		boolean bSub = !bAdd && index >= 12 && index <= 15;
-
-		int i = bSub ? index - 8 : bAdd ? index - 4 : index; // 12..15 OR 8..11->4..7
+		boolean bAdd = bNeedFilterApp && indexTwo == 1;
+		boolean bSub = !bAdd && bNeedFilterApp && indexTwo == 2;
 
 		String find = null;
 
-		if (i >= 4) {
+		if (indexOne >= 4) {
 			find = tfSetCheckAction.getText().toLowerCase();
 			if (find.isEmpty()) {
 				updating(lastIndex, null);
@@ -315,40 +336,43 @@ public class BeanViewTable extends JDialog {
 		}
 
 		for (var b : beans) {
-			var z = false;
+			var res = false;
 
-			if (i >= 4) { // by column, 4..7->1..4
+			if (bNeedFilterApp) { // by exists, column
 				if ((b.check && bAdd) || (!b.check && bSub)) {
 					continue;
 				}
-
-				z = b.findInColumnLowerCase(i - 3, find, Const.textFieldFindSeparator);
-				if (bSub) {
-					z = !z;
+				if (indexOne == 3) { // exists
+					res = !b.isFourPrefixNoExists();
+				} else { // by column 4,5,6,7; 'find' not null here
+					res = b.findInColumnLowerCase(indexOne - 3, find, Const.textFieldFindSeparator);
 				}
 
-			} else if (i == 0) { // all
-				z = true;
-			} else if (index == 1) { // exist
-				z = !b.isFourPrefixNoExists();
-			} else if (i == 2) { // no
-				z = false;
-			} else if (i == 3) { // invert
-				z = !b.check;
+				if (bSub) {
+					res = !res;
+				}
+
+			} else if (indexOne == 0) { // all
+				res = true;
+			} else if (indexOne == 1) { // no
+				res = false;
+			} else if (indexOne == 2) { // invert
+				res = !b.check;
 			} else {
 				continue; // must not be so...
 			}
 
-			if (b.check != z) {
-				if (z) {
+			if (b.check != res) {
+				if (res) {
 					addedInfo[0]++;
 				} else {
 					addedInfo[1]++;
 				}
-				b.check = z;
+				b.check = res;
 			}
 		}
 
+		int[] index = { indexOne, indexTwo };
 		updating(index, addedInfo);
 	}
 
@@ -359,7 +383,7 @@ public class BeanViewTable extends JDialog {
 		}
 		var sb = new StringBuilder();
 		sb.append("Remove checked items from table: ").append(checkCount).append(" / ").append(beans.size());
-		sb.append(CommonLib.NEW_LINE_UNIX).append("( items can be restored by pressing '>>' )");
+		sb.append(CommonLib.NEW_LINE_UNIX).append("[ items can be restored by pressing '>>' ]");
 		sb.append(CommonLib.NEW_LINE_UNIX).append(CommonLib.NEW_LINE_UNIX).append("Continue?");
 
 		var confirm = JOptionPane.showConfirmDialog(this, sb.toString(), "Remove items", JOptionPane.YES_NO_OPTION);
@@ -377,7 +401,7 @@ public class BeanViewTable extends JDialog {
 		}
 
 		tfInfo.setText("");
-		updating(-1, null);
+		updating(null, null);
 	}
 
 //0:copy/move, 1:toList all/paths, 2:toList pathsNoRoot, 3:generate .*bin  
@@ -442,7 +466,7 @@ public class BeanViewTable extends JDialog {
 					beans.get(i).check = false;
 				}
 
-				updating(-1, null);
+				updating(null, null);
 			}
 		}
 
@@ -474,7 +498,7 @@ public class BeanViewTable extends JDialog {
 		String equalsPathInfo = "";
 
 		if (equalsPathCountForCopying > 0) {
-			updating(-1, null);
+			updating(null, null);
 			equalsPathInfo = "NB: was been excluded and unchecked equal paths: " + equalsPathCountForCopying
 					+ CommonLib.NEW_LINE_UNIX;
 		}
@@ -496,7 +520,7 @@ public class BeanViewTable extends JDialog {
 					beans.get(i).check = false;
 				}
 
-				updating(-1, null);
+				updating(null, null);
 			}
 
 			if (confirm != JOptionPane.YES_OPTION) {
@@ -534,7 +558,7 @@ public class BeanViewTable extends JDialog {
 				for (var i : nonExistingNumbers) {
 					beans.get(i).check = false;
 				}
-				updating(-1, null);
+				updating(null, null);
 			}
 
 		}
@@ -628,7 +652,7 @@ public class BeanViewTable extends JDialog {
 				FileDataBase.addMarkToProperties(false, signature, mark);
 			}
 
-			updating(-1, null);
+			updating(null, null);
 		}
 		return;
 	}
@@ -646,8 +670,8 @@ public class BeanViewTable extends JDialog {
 	}
 
 //'addedInfo' if not null and length == 2, be added info to label	
-//'index' must be -1 OR as index in 'cmbCheckItems'
-	private void updating(int index, int[] addedInfo) {
+//'index' must be null OR as indexes in 'cmbCheckItems', 'cmbCheckItemsApp'
+	private void updating(int index[], int[] addedInfo) {
 		setStandardTitle();
 		lastSortType = SortBeans.sortNoDefined;
 		myTable.updateUI();
@@ -776,7 +800,9 @@ public class BeanViewTable extends JDialog {
 
 //'addedInfo' if not null and length == 2, be added info to label	
 //'index' (or 'lastIndex') must be -1 OR as index in 'cmbCheckItems'	
-	private int printCount(int index, boolean messageIfNoChecked, int[] addedInfo) {
+	private int printCount(int[] index, boolean messageIfNoChecked, int[] addedInfo) {
+		lastIndex = index;
+
 		int checkCount = 0;
 		for (var b : beans) {
 			if (!b.check) {
@@ -785,11 +811,13 @@ public class BeanViewTable extends JDialog {
 			checkCount++;
 		}
 
-		lastIndex = index;
-
 		var sb = new StringBuilder();
-		// last item of 'cmbCheckItems' must be 'remove from table'
-		sb.append((index < 0 || index >= cmbCheckItems.length - 1) ? "count" : cmbCheckItems[index]);
+		sb.append((index == null) ? "count" : cmbCheckItems[index[0]]);
+
+		if (index != null && index[0] >= 3) {
+			sb.append(" ").append(cmbCheckItemsApp[index[1]]);
+		}
+
 		sb.append(": ").append(checkCount);
 
 		if (addedInfo != null && addedInfo.length == 2) {
@@ -878,7 +906,7 @@ public class BeanViewTable extends JDialog {
 		}
 		sorting(4);
 		setLabelChoosed(beans);
-		updating(-1, null);
+		updating(null, null);
 	}
 
 	private void setLabelChoosed(List<MyBean> beans0) {

@@ -336,7 +336,8 @@ public class EqualSignatureMoveTable extends JDialog {
 		var sb = new StringBuilder();
 		sb.append("Found items for " + typeMoving + ": ").append(checkSet.size());
 
-		sb.append(CommonLib.NEW_LINE_UNIX).append(CommonLib.NEW_LINE_UNIX).append("Start " + typeMoving + " files?");
+		sb.append(CommonLib.NEW_LINE_UNIX).append(CommonLib.NEW_LINE_UNIX).append("Start ").append(typeMoving)
+				.append(" files?");
 
 		var confirm = JOptionPane.showConfirmDialog(this, sb.toString(), typeMoving, JOptionPane.YES_NO_OPTION);
 		if (confirm != JOptionPane.YES_OPTION) {
@@ -410,9 +411,9 @@ public class EqualSignatureMoveTable extends JDialog {
 		var sb2 = new StringBuilder();
 		sb2.append("Moved files: ").append(countMoved).append(" from ").append(checkSet.size())
 				.append(CommonLib.NEW_LINE_UNIX)
-				.append("[if any files has been moved, source base will be updated after closing this window]")
-				.append(CommonLib.NEW_LINE_UNIX).append("[total moved: ").append(getRealMovedCount(false)).append(" / ")
-				.append(beans.size()).append(" ]");
+				.append("[ if any files has been moved, source base will be updated after closing this window ]")
+				.append(CommonLib.NEW_LINE_UNIX).append("[ total moved: ").append(getRealMovedCount(false))
+				.append(" / ").append(beans.size()).append(" ]");
 		JOptionPane.showMessageDialog(this, sb2.toString());
 	}
 

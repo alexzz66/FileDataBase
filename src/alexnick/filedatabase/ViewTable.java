@@ -44,11 +44,12 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 	private List<MyBean> beans;
 	private BeansFourTableDefault myTable;
 
-	private int lastIndex = -1;
-	private String[] cmbCheckItems = new String[] { "all", "exist", "no", "invert", "by BinFolder only",
-			"by Start path only", "by Modified only", "by Result only", "by BinFolder add", "by Start path add",
-			"by Modified add", "by Result add", "by BinFolder sub", "by Start path sub", "by Modified sub",
-			"by Result sub" };
+	private int[] lastIndex = { 0, 0 }; // first as cmbCheckItems index;second as cmbCheckItemsApp
+
+	private String[] cmbCheckItems = new String[] { "all", "no", "invert", "exist", "by BinFolder", "by Start path",
+			"by Modified", "by Result" };
+
+	private String[] cmbCheckItemsApp = new String[] { "only", "add", "sub" };
 
 	private JTextField tfSetCheckAction;
 	private JLabel checkInfo;
@@ -115,7 +116,7 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 				}
 
 				if (e.getClickCount() == 1 && myTable.getSelectedColumn() == 0) {
-					printCount(-1, null, null);
+					printCount(null, null, null);
 					return;
 				}
 
@@ -128,23 +129,30 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 
 //FILL JPANEL
 		var cmbChecking = new JComboBox<String>(cmbCheckItems);
+		var cmbCheckingApp = new JComboBox<String>(cmbCheckItemsApp);
+		cmbCheckingApp.setEnabled(false);
 
-		ActionListener butCheckActionListener = e -> checking(cmbChecking.getSelectedIndex());
+		ActionListener butCheckActionListener = e -> checking(cmbChecking.getSelectedIndex(),
+				cmbCheckingApp.getSelectedIndex());
 
 		cmbChecking.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				tfSetCheckAction.setEnabled(cmbChecking.getSelectedIndex() >= 4);
+				cmbCheckingApp.setEnabled(cmbChecking.getSelectedIndex() >= 3);
 			}
 		});
 
-		cmbChecking.addKeyListener(new KeyAdapter() {
+		var keyAdapterEnter = new KeyAdapter() {
 			public void keyPressed(KeyEvent e) {
 				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-					checking(cmbChecking.getSelectedIndex());
+					checking(cmbChecking.getSelectedIndex(), cmbCheckingApp.getSelectedIndex());
 				}
 			}
-		});
+		};
+
+		cmbChecking.addKeyListener(keyAdapterEnter);
+		cmbCheckingApp.addKeyListener(keyAdapterEnter);
 
 		tfSetCheckAction = new JTextField(FileDataBase.sizeTextField);
 		tfSetCheckAction.addActionListener(butCheckActionListener);
@@ -155,12 +163,13 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 		butCheck.addActionListener(butCheckActionListener);
 
 		checkInfo = new JLabel();
-		printCount(-1, null, null); // set count on start window
+		printCount(null, null, null); // set count on start window
 
-//ADDING (start)		
+//ADDING		
 		JPanel buttons = new JPanel();
 
 		buttons.add(cmbChecking);
+		buttons.add(cmbCheckingApp);
 		buttons.add(tfSetCheckAction);
 		buttons.add(butCheck);
 		buttons.add(checkInfo);
@@ -190,12 +199,6 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 
 		buttons.add(butViewExts);
 
-		JButton butClose = new JButton("Close");
-		butClose.addActionListener(e -> {
-			dispose();
-		});
-		buttons.add(butClose);
-
 		JButton butCompareTwoBin = new JButton("CompareTwoBin");
 		butCompareTwoBin.addActionListener(e -> compareTwoBin());
 		buttons.add(butCompareTwoBin);
@@ -207,27 +210,34 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 
 	}
 
-//0:"all", 1:"exist", 2:"no", 3:"invert",
-//4:"by BinFolder only", 5:"by Start path only", 6:"by Modified only", 7:"by Result only",
-//8:"by BinFolder add", 9:"by Start path add", 10:"by Modified add", 11:"by Result add"
-//12:"by BinFolder sub", 13:"by Start path sub", 14:"by Modified sub", 15:"by Result sub"
-	private void checking(final int index) {
-		if (index < 0 || index >= cmbCheckItems.length || beans.isEmpty()) {
+//0:"all", 1:"no", 2:"invert", 3:"exists" (3 and more: with indexTwo)
+//4:"by BinFolder", 5:"by Start path only", 6:"by Modified ", 7:"by Result"
+//app: 0:"only", 1:"add", 2:"sub" 
+	private void checking(final int indexOne, int indexTwo) {
+		if (beans.isEmpty() || indexOne < 0 || indexOne >= cmbCheckItems.length) {
 			return;
+		}
+
+		var bNeedFilterApp = indexOne >= 3;
+
+		if (indexTwo < 0 || indexTwo >= cmbCheckItemsApp.length) {
+			if (bNeedFilterApp) {
+				return;
+			}
+
+			indexTwo = 0; // for 'all','no','invert' no matter, but in array write correct number
 		}
 
 		int[] addedInfo = new int[2]; // plus and minus info
 		addedInfo[0] = 0;
 		addedInfo[1] = 0;
 
-		boolean bAdd = index >= 8 && index <= 11;
-		boolean bSub = !bAdd && index >= 12 && index <= 15;
-
-		int i = bSub ? index - 8 : bAdd ? index - 4 : index; // 12..15 OR 8..11->4..7
+		boolean bAdd = bNeedFilterApp && indexTwo == 1;
+		boolean bSub = !bAdd && bNeedFilterApp && indexTwo == 2;
 
 		String find = null;
 
-		if (i >= 4) {
+		if (indexOne >= 4) {
 			find = tfSetCheckAction.getText().toLowerCase();
 			if (find.isEmpty()) {
 				updating(lastIndex, null);
@@ -236,46 +246,50 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 		}
 
 		for (var b : beans) {
-			var z = false;
+			var res = false;
 
-			if (i >= 4) { // by column, 4..7->1..4
+			if (bNeedFilterApp) {
 				if ((b.check && bAdd) || (!b.check && bSub)) {
 					continue;
 				}
 
-				z = b.findInColumnLowerCase(i - 3, find, Const.textFieldFindSeparator);
-				if (bSub) {
-					z = !z;
+				if (indexOne == 3) { // exists
+					res = getStartPathExists(b, null);
+				} else { // by column 4,5,6,7; 'find' not null here
+					res = b.findInColumnLowerCase(indexOne - 3, find, Const.textFieldFindSeparator);
 				}
 
-			} else if (i == 0) { // all
-				z = true;
-			} else if (index == 1) { // exist
-				z = getStartPathExists(b, null);
-			} else if (i == 2) { // no
-				z = false;
-			} else if (i == 3) { // invert
-				z = !b.check;
+				if (bSub) {
+					res = !res;
+				}
+
+			} else if (indexOne == 0) { // all
+				res = true;
+			} else if (indexOne == 1) { // no
+				res = false;
+			} else if (indexOne == 2) { // invert
+				res = !b.check;
 			} else {
 				continue; // must not be so...
 			}
 
-			if (b.check != z) {
-				if (z) {
+			if (b.check != res) {
+				if (res) {
 					addedInfo[0]++;
 				} else {
 					addedInfo[1]++;
 				}
-				b.check = z;
+				b.check = res;
 			}
 		}
 
+		int[] index = { indexOne, indexTwo };
 		updating(index, addedInfo);
 	}
 
-	// 'addedInfo' if not null and length == 2, be added info to label
-	// 'index' must be -1 OR as index in 'cmbCheckItems'
-	private void updating(int index, int[] addedInfo) {
+// 'addedInfo' if not null and length == 2, be added info to label
+// 'index' must be null OR as indexes in 'cmbCheckItems', 'cmbCheckItemsApp'
+	private void updating(int index[], int[] addedInfo) {
 		setStandardTitle();
 		lastSortType = SortBeans.sortNoDefined;
 		myTable.updateUI();
@@ -283,14 +297,14 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 	}
 
 	/**
-	 * @param index     'index' (or 'lastIndex') must be -1 OR as index in
-	 *                  'cmbCheckItems'
+	 * @param index     'index' (or 'lastIndex') must be null OR as index in
+	 *                  {'cmbCheckItems','cmbCheckItemsApp'}
 	 * @param extNew    set list for get result
 	 * @param addedInfo if not null and length == 2, be added info to label
 	 * @return null if was errors while counting 'arCheckCount' or countItems
 	 *         (total, arCheckCount[1]) == 0
 	 */
-	private int[] printCount(int index, List<String> extNew, int[] addedInfo) {
+	private int[] printCount(int[] index, List<String> extNew, int[] addedInfo) {
 		lastIndex = index;
 		var arCheckCount = getBeanCountOrNull(extNew);
 
@@ -300,7 +314,12 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 		}
 
 		var sb = new StringBuilder();
-		sb.append((index < 0 || index >= cmbCheckItems.length) ? "count" : cmbCheckItems[index]);
+		sb.append((index == null) ? "count" : cmbCheckItems[index[0]]);
+
+		if (index != null && index[0] >= 3) {
+			sb.append(" ").append(cmbCheckItemsApp[index[1]]);
+		}
+
 		sb.append(": ").append(arCheckCount[0]).append(" / ").append(arCheckCount[1]);
 
 		if (addedInfo != null && addedInfo.length == 2) {
@@ -532,7 +551,7 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 		}
 		beans.remove(row);
 		fillMarkMaps();
-		updating(-1, null);
+		updating(null, null);
 		return false;
 	}
 
