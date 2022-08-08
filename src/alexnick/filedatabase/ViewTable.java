@@ -46,12 +46,16 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 
 	private int[] lastIndex = { 0, 0 }; // first as cmbCheckItems index;second as cmbCheckItemsApp
 
-	private String[] cmbCheckItems = new String[] { "all", "no", "invert", "exist", "by BinFolder", "by Start path",
-			"by Modified", "by Result" };
-
+	private String[] cmbCheckItems = new String[] { "all", "no", "invert", "exist", "no exist", "by BinFolder",
+			"by Start path", "by Modified", "by Result" };
+	// append const indexes from 'cmbCheckItems'
+	private final int cmbAppEnabStartIndex = 3;
+	private final int cmbAppEnabEndIndex = 8;
+	private final int cmbAppEnabStartFindColumnIndex = 5; // endFindColumn == cmbAppEnabEndIndex (find column's last in
+															// 'appEnap' indexes) == cmbAppEnabStartFindColumnIndex + 3
 	private String[] cmbCheckItemsApp = new String[] { "only", "add", "sub" };
 
-	private JTextField tfSetCheckAction;
+	private JTextField tfFindColumn;
 	private JLabel checkInfo;
 	private JButton butMark = null;
 	volatile private int lastSortType = SortBeans.sortNoDefined;
@@ -138,8 +142,9 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 		cmbChecking.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				tfSetCheckAction.setEnabled(cmbChecking.getSelectedIndex() >= 4);
-				cmbCheckingApp.setEnabled(cmbChecking.getSelectedIndex() >= 3);
+				var index = cmbChecking.getSelectedIndex();
+				tfFindColumn.setEnabled(index >= cmbAppEnabStartFindColumnIndex && index <= cmbAppEnabEndIndex);
+				cmbCheckingApp.setEnabled(index >= cmbAppEnabStartIndex && index <= cmbAppEnabEndIndex);
 			}
 		});
 
@@ -154,10 +159,10 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 		cmbChecking.addKeyListener(keyAdapterEnter);
 		cmbCheckingApp.addKeyListener(keyAdapterEnter);
 
-		tfSetCheckAction = new JTextField(FileDataBase.sizeTextField);
-		tfSetCheckAction.addActionListener(butCheckActionListener);
-		tfSetCheckAction.setToolTipText(Const.textFieldBinFolderToolTip);
-		tfSetCheckAction.setEnabled(false);
+		tfFindColumn = new JTextField(FileDataBase.sizeTextField);
+		tfFindColumn.addActionListener(butCheckActionListener);
+		tfFindColumn.setToolTipText(Const.textFieldBinFolderToolTip);
+		tfFindColumn.setEnabled(false);
 
 		var butCheck = new JButton("Set");
 		butCheck.addActionListener(butCheckActionListener);
@@ -170,7 +175,7 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 
 		buttons.add(cmbChecking);
 		buttons.add(cmbCheckingApp);
-		buttons.add(tfSetCheckAction);
+		buttons.add(tfFindColumn);
 		buttons.add(butCheck);
 		buttons.add(checkInfo);
 
@@ -218,7 +223,7 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 			return;
 		}
 
-		var bNeedFilterApp = indexOne >= 3;
+		var bNeedFilterApp = indexOne >= cmbAppEnabStartIndex && indexOne <= cmbAppEnabEndIndex;
 
 		if (indexTwo < 0 || indexTwo >= cmbCheckItemsApp.length) {
 			if (bNeedFilterApp) {
@@ -237,8 +242,8 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 
 		String find = null;
 
-		if (indexOne >= 4) {
-			find = tfSetCheckAction.getText().toLowerCase();
+		if (bNeedFilterApp && indexOne >= cmbAppEnabStartFindColumnIndex) { // by column
+			find = tfFindColumn.getText().toLowerCase();
 			if (find.isEmpty()) {
 				updating(lastIndex, null);
 				return;
@@ -253,10 +258,13 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 					continue;
 				}
 
-				if (indexOne == 3) { // exists
-					res = getStartPathExists(b, null);
-				} else { // by column 4,5,6,7; 'find' not null here
-					res = b.findInColumnLowerCase(indexOne - 3, find, Const.textFieldFindSeparator);
+				if (indexOne == 3 || indexOne == 4) { // exists, no exists
+					res = getStartPathExists(b, null); // exists
+					if (indexOne == 4) { // no exists
+						res = !res;
+					}
+				} else { // by column 5..8->1..4; 'find' not null here
+					res = b.findInColumnLowerCase(indexOne - 4, find, Const.textFieldFindSeparator);
 				}
 
 				if (bSub) {

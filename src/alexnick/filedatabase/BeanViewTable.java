@@ -35,7 +35,7 @@ public class BeanViewTable extends JDialog {
 	private List<MyBean> beansTotal;
 	private BeansFourTableDefault myTable;
 
-	private JTextField tfSetCheckAction;
+	private JTextField tfFindColumn;
 	private JLabel checkInfo;
 	private JButton butMark;
 	private JCheckBox cbFilter;
@@ -49,9 +49,13 @@ public class BeanViewTable extends JDialog {
 
 	private int[] lastIndex = { 0, 0 }; // first as cmbCheckItems index;second as cmbCheckItemsApp
 
-	private String[] cmbCheckItems = new String[] { "all", "no", "invert", "exist", "by BinFolder", "by Signature",
-			"by Modified", "by Path", "remove from table" };// !!! 'remove' must be LAST ITEM
-
+	private String[] cmbCheckItems = new String[] { "all", "no", "invert", "exist", "no exist", "by BinFolder",
+			"by Signature", "by Modified", "by Path", "remove from table" };// !!! 'remove' must be LAST ITEM
+	// append const indexes from 'cmbCheckItems'
+	private final int cmbAppEnabStartIndex = 3;
+	private final int cmbAppEnabEndIndex = 8;
+	private final int cmbAppEnabStartFindColumnIndex = 5; // endFindColumn == cmbAppEnabEndIndex (find column's last in
+															// 'appEnap' indexes) == cmbAppEnabStartFindColumnIndex + 3
 	private String[] cmbCheckItemsApp = new String[] { "only", "add", "sub" };
 
 	private final String caption;
@@ -159,15 +163,15 @@ public class BeanViewTable extends JDialog {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				var index = cmbChecking.getSelectedIndex();
-				tfSetCheckAction.setEnabled(index >= 4 && index < cmbCheckItems.length - 1);
-				cmbCheckingApp.setEnabled(index >= 3 && index < cmbCheckItems.length - 1);
+				tfFindColumn.setEnabled(index >= cmbAppEnabStartFindColumnIndex && index <= cmbAppEnabEndIndex);
+				cmbCheckingApp.setEnabled(index >= cmbAppEnabStartIndex && index <= cmbAppEnabEndIndex);
 			}
 		});
 
-		tfSetCheckAction = new JTextField(FileDataBase.sizeTextField);
-		tfSetCheckAction.addActionListener(butCheckActionListener);
-		tfSetCheckAction.setToolTipText(Const.textFieldBinFolderToolTip);
-		tfSetCheckAction.setEnabled(false);
+		tfFindColumn = new JTextField(FileDataBase.sizeTextField);
+		tfFindColumn.addActionListener(butCheckActionListener);
+		tfFindColumn.setToolTipText(Const.textFieldBinFolderToolTip);
+		tfFindColumn.setEnabled(false);
 
 		var butCheck = new JButton("set");
 		butCheck.addActionListener(butCheckActionListener);
@@ -227,7 +231,7 @@ public class BeanViewTable extends JDialog {
 		buttons.add(cmbChecking);
 		buttons.add(cmbCheckingApp);
 
-		buttons.add(tfSetCheckAction);
+		buttons.add(tfFindColumn);
 		buttons.add(butCheck);
 		buttons.add(checkInfo);
 
@@ -279,7 +283,7 @@ public class BeanViewTable extends JDialog {
 		cmbCheckingApp.addKeyListener(keyAdapterEnter);
 		cmbCheckingApp.addKeyListener(FileDataBase.keyListenerShiftDown);
 
-		tfSetCheckAction.addKeyListener(FileDataBase.keyListenerShiftDown);
+		tfFindColumn.addKeyListener(FileDataBase.keyListenerShiftDown);
 		butCheck.addKeyListener(FileDataBase.keyListenerShiftDown);
 
 		cbFilter.addKeyListener(FileDataBase.keyListenerShiftDown);
@@ -293,21 +297,21 @@ public class BeanViewTable extends JDialog {
 		butAction.addKeyListener(FileDataBase.keyListenerShiftDown);
 	}
 
-//0:"all", 1:"no", 2:"invert", 3:"exists" (3 and more: with indexTwo)
-//4:"by BinFolder", 5:"by Start path only", 6:"by Modified ", 7:"by Result"
-//8:remove from table	
+//0:"all", 1:"no", 2:"invert", 3:"exists" (3 and more: with indexTwo), 4: "no exists"
+//5:"by BinFolder", 6:"by Start path only", 7:"by Modified ", 8:"by Result"
+//9:remove from table (last index)
 //app: 0:"only", 1:"add", 2:"sub" 	
 	private void checking(final int indexOne, int indexTwo) {
 		if (beans.isEmpty() || indexOne < 0 || indexOne >= cmbCheckItems.length) {
 			return;
 		}
 
-		if (indexOne >= cmbCheckItems.length - 1) {
+		if (indexOne >= cmbCheckItems.length - 1) { // last index -> remove
 			removeFromTable();
 			return;
 		}
 
-		var bNeedFilterApp = indexOne >= 3;
+		var bNeedFilterApp = indexOne >= cmbAppEnabStartIndex && indexOne <= cmbAppEnabEndIndex;
 
 		if (indexTwo < 0 || indexTwo >= cmbCheckItemsApp.length) {
 			if (bNeedFilterApp) {
@@ -327,8 +331,8 @@ public class BeanViewTable extends JDialog {
 
 		String find = null;
 
-		if (indexOne >= 4) {
-			find = tfSetCheckAction.getText().toLowerCase();
+		if (bNeedFilterApp && indexOne >= cmbAppEnabStartFindColumnIndex) { // by column
+			find = tfFindColumn.getText().toLowerCase();
 			if (find.isEmpty()) {
 				updating(lastIndex, null);
 				return;
@@ -342,10 +346,13 @@ public class BeanViewTable extends JDialog {
 				if ((b.check && bAdd) || (!b.check && bSub)) {
 					continue;
 				}
-				if (indexOne == 3) { // exists
-					res = !b.isFourPrefixNoExists();
-				} else { // by column 4,5,6,7; 'find' not null here
-					res = b.findInColumnLowerCase(indexOne - 3, find, Const.textFieldFindSeparator);
+				if (indexOne == 3 || indexOne == 4) { // exists, no exists
+					res = b.isFourPrefixNoExists(); // no exists
+					if (indexOne == 3) { // exists
+						res = !res;
+					}
+				} else { // by column 5..8->1..4; find' not null here
+					res = b.findInColumnLowerCase(indexOne - 4, find, Const.textFieldFindSeparator);
 				}
 
 				if (bSub) {
