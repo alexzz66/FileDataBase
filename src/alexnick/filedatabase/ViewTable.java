@@ -135,6 +135,7 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 		var cmbChecking = new JComboBox<String>(cmbCheckItems);
 		var cmbCheckingApp = new JComboBox<String>(cmbCheckItemsApp);
 		cmbCheckingApp.setEnabled(false);
+		cmbCheckingApp.setToolTipText(Const.cmbOnlyAddSubToolTip);
 
 		ActionListener butCheckActionListener = e -> checking(cmbChecking.getSelectedIndex(),
 				cmbCheckingApp.getSelectedIndex());

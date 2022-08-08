@@ -104,6 +104,7 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 			}
 		});
 
+//INIT BEANS		
 		var countFilesFolders = initBeans(listFullPaths);
 		countFiles = countFilesFolders[0];
 		countFolders = countFilesFolders[1];
@@ -863,13 +864,22 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 
 //columns = { "Signature", "<number> <Rename result>", "Modified", "Path" };
 		final String column = (columnIndex >= 1 && columnIndex <= 3) ? columns[columnIndex - 1] : columns[3];
+		final String sortFileSize = " [file size]";
+		final String sortNames = " [names]";
+
 		if (FileDataBase.isShiftDown) {
 			if (columnIndex == 0) {
 				sortType = SortBeans.sortCheck_Shift_ThenFourName;
-				sortCaption = "Checked (Shift) -> " + column + " [names]";
-			} else if (columnIndex == 1) {
-				sortType = SortBeans.sortOne_Shift_CheckOnly;
-				sortCaption = "Checked only (Shift) -> " + column;
+				sortCaption = "Checked (Shift) -> " + column + sortNames;
+			} else if (columnIndex == 1) { // signature / file length
+				if (lastSortType != SortBeans.sortOne_Shift_CheckOnly) {
+					sortType = SortBeans.sortOne_Shift_CheckOnly;
+					sortCaption = "Checked only (Shift) -> " + column;
+				} else {
+					sortType = SortBeans.sortServiceLong_Shift_CheckOnly;
+					sortCaption = "Checked only (Shift) -> " + column + sortFileSize;
+				}
+
 			} else if (columnIndex == 2) {
 				sortType = SortBeans.sortTwo_Shift_CheckOnly;
 				sortCaption = "Checked only (Shift) -> " + column;
@@ -882,17 +892,21 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 					sortCaption = "Checked only (Shift) -> " + column;
 				} else {
 					sortType = SortBeans.sortFourNameLowerCase_Shift_CheckOnly;
-					sortCaption = "Checked only (Shift) -> " + column + " [names]";
+					sortCaption = "Checked only (Shift) -> " + column + sortNames;
 				}
 			}
 		} else {
 			if (columnIndex == 0) {
 				sortType = SortBeans.sortCheck_ThenFour;
 				sortCaption = "Checked -> " + column;
-			} else if (columnIndex == 1) {
-				sortType = SortBeans.sortOne;
-				sortCaption = column;
-				noDubleSort = true;
+			} else if (columnIndex == 1) { // signature/size; noDubleSort no sense ('sortType' always different)
+				if (lastSortType != SortBeans.sortOne) {
+					sortType = SortBeans.sortOne;
+					sortCaption = column;
+				} else {
+					sortType = SortBeans.sortServiceLong;
+					sortCaption = column + sortFileSize;
+				}
 			} else if (columnIndex == 2) {
 				sortType = SortBeans.sortTwo;
 				sortCaption = column;
@@ -901,13 +915,13 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 				sortType = SortBeans.sortThree;
 				sortCaption = column;
 				noDubleSort = true;
-			} else {
+			} else { // four; noDubleSort no sense ('sortType' always different)
 				if (lastSortType != SortBeans.sortFourLowerCase) {
 					sortType = SortBeans.sortFourLowerCase;
 					sortCaption = column;
 				} else {
 					sortType = SortBeans.sortFourNameLowerCase;
-					sortCaption = column + " [names]";
+					sortCaption = column + sortNames;
 				}
 			}
 		}
@@ -1010,6 +1024,13 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 
 		Set<String> equalsPath = new HashSet<String>();
 		int count = 0;
+		int countForInfCount = 0;
+		if (needCalculateCrc) {
+			System.out.println("");
+			System.out.println("start calculate of crc, list size: " + listFullPaths.size());
+			System.out.println("");
+		}
+
 		for (var file : listFullPaths) {
 			try {
 				if (file == null || !file.exists()) {
@@ -1019,15 +1040,23 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 				var bIsDirectory = file.isDirectory();
 				String signature = bIsDirectory ? Const.DIRECTORY_ALIAS : "";
 
+				long fileLength = 0;
+
 				if (!bIsDirectory) {
 					if (needCalculateCrc) {
 						var crc = new CalcCrc(1, "", file.toPath());
 						signature = crc.getCrcResult() <= 0 ? Const.CRC_ERROR_ALIAS : crc.getBinItemSignature();
 						crc = null;
+						countForInfCount++;
+						if ((countForInfCount & 1023) == 0) {
+							System.out.println("...processed files:" + countForInfCount);
+						}
 					} else {
 						signature = Const.CRC_NO_CALCULATED_ALIAS;
 					}
-					signature += " " + CommonLib.bytesToKBMB(false, 0, file.length());
+
+					fileLength = file.length();
+					signature += " " + CommonLib.bytesToKBMB(false, 0, fileLength);
 				}
 
 				if (!equalsPath.add(file.toString().toLowerCase())) {
@@ -1039,8 +1068,8 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 				} else {
 					countFilesFolders[0]++;
 				}
-//!!! bean.fourApp is empty, that is, where be 'filter' as 'ends of path/name', be found 'with extension'
-//!!! after renaming, bean.fourApp will be set as "", and bean.four be set as bean.binPath.toString
+//!!! bean.fourApp is empty, means that where will be 'filter' as 'ends of path/name', will be found 'with extension'
+//!!! after renaming, bean.fourApp will be set as "", and bean.four will be set as bean.binPath.toString
 				var sb = new StringBuilder();
 				count++;
 				sb.append(CommonLib.formatInt(count, 3, Const.BRACE_START, Const.BRACE_END_WITH_SPACE));
@@ -1049,6 +1078,7 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 						file.toString(), "");
 				bean.serviceIntOne = bIsDirectory ? CommonLib.SIGN_FOLDER : CommonLib.SIGN_FILE;
 				bean.serviceIntTwo = count;
+				bean.serviceLong = fileLength; // for sort by file length
 				bean.binPath = file.toPath();
 				beans.add(bean);
 

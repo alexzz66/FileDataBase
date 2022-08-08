@@ -33,6 +33,8 @@ public class SortBeans {
 	final static int sortFourStartNumber = 4000;
 
 	final static int sortServiceLong = 5000;
+	final static int sortServiceLong_Shift_CheckOnly = -5000;
+
 	final static int sortServiceIntOne = 5001;
 	final static int sortServiceIntTwo = 5002;
 	final static int sortServiceString = 5010;
@@ -70,6 +72,7 @@ public class SortBeans {
 		case sortThree_Shift_CheckOnly -> sortThree_Shift_CheckOnly(beans);
 		case sortFourLowerCase_Shift_CheckOnly -> sortFourLowerCase_Shift_CheckOnly(beans);
 		case sortFourNameLowerCase_Shift_CheckOnly -> sortFourNameLowerCase_Shift_CheckOnly(beans);
+		case sortServiceLong_Shift_CheckOnly -> sortServiceLong_Shift_CheckOnly(beans);
 
 		case sortServiceIntOne -> sortServiceIntOne(beans);
 		case sortServiceIntTwo -> sortServiceIntTwo(beans);
@@ -390,6 +393,28 @@ public class SortBeans {
 					return defaultCompare(o1, o2);
 				}
 				return o1.serviceLong > o2.serviceLong ? 1 : -1;
+			}
+		});
+	}
+
+	private void sortServiceLong_Shift_CheckOnly(List<MyBean> beans) {
+		beans.sort(new Comparator<MyBean>() {
+			@Override
+			public int compare(MyBean o1, MyBean o2) {
+				// sort if both checked
+				boolean o1Check = o1.getCheck();
+				if (o1Check == o2.getCheck()) {
+					if (!o1Check) { // both unchecked
+						return 0;
+					}
+
+					if (o1.serviceLong == o2.serviceLong) {
+						return defaultCompare(o1, o2);
+					}
+					return o1.serviceLong > o2.serviceLong ? 1 : -1;
+				}
+
+				return o1Check ? -1 : 1;
 			}
 		});
 	}

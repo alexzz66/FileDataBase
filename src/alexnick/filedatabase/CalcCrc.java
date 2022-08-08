@@ -18,11 +18,14 @@ public class CalcCrc {
 	private String binItemSignature = "";
 
 	/**
-	 * @param needCalcStartBinItemAndID3 if '> 0', be calculate start of bin item;
-	 *                                   there be added 'endBinItem', if not empty';
-	 *                                   if '2', also be calculate ID3property for
-	 *                                   'mp3'; otherwise (if '0'), 'binItem' and
-	 *                                   'signature' be empty;
+	 * @param needCalcStartBinItemAndID3 if '> 0', be calculate start of bin
+	 *                                   item;<br>
+	 *                                   there will be added 'endBinItem', if not
+	 *                                   empty'<br>
+	 *                                   if '2', also will be calculate ID3property
+	 *                                   for 'mp3'<br>
+	 *                                   otherwise (example: '0'), 'binItem' and
+	 *                                   'signature' will be empty
 	 * @param endBinItem
 	 * @param path
 	 */
