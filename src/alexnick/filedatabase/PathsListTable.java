@@ -238,30 +238,49 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 					return;
 				}
 				var clickOnTfFind = e.getActionCommand().equals(Const.textFieldFindPathClick);
-				var find = tfFindPath.getText().toLowerCase();
+				var findLowerCase = tfFindPath.getText().toLowerCase();
 
-				if (!find.equals(lastFind) || clickOnTfFind) {
-					checkNow = find.isEmpty() ? 0 : 1;
-					lastFind = find;
+				if (!findLowerCase.equals(lastFind) || clickOnTfFind) {
+					checkNow = findLowerCase.isEmpty() ? 0 : 1;
+					lastFind = findLowerCase;
 				} else {
 					nextCheckNow(); // 0:no;1:filter(optional);2:files(if > 0);3:folders(if > 0); 4:all
-					if (checkNow == 1 && find.isEmpty()) {// filter, no need if empty
+					if (checkNow == 1 && findLowerCase.isEmpty()) {// filter, no need if empty
+						nextCheckNow();
+					}
+				}
+
+				int findPosition = 0;
+				boolean findByName = false;
+				String find[] = null;
+
+				if (checkNow == 1) {
+					findPosition = cmbFindPosition.getSelectedIndex();
+					findByName = cmbFindFullPathOrName.getSelectedIndex() == 1;
+					find = FileDataBase.getCorrectFindOrNull(findLowerCase);
+					if (find == null) {
 						nextCheckNow();
 					}
 				}
 
 				for (var b : beans) {
-					b.check = (checkNow <= 0) ? false
+					b.check = (checkNow == 1)
+							? findFilter(findPosition,
+									findByName ? b.getNameLowerCaseFromFour() : b.getFourLowerCase(true, true), find, b)
 							: (checkNow >= CHECK_NOW_MAX) ? true
 									: (checkNow == 2) ? b.serviceIntOne == CommonLib.SIGN_FILE
-											: (checkNow == 3) ? b.serviceIntOne == CommonLib.SIGN_FOLDER
-													: b.findInLowerCase(cmbFindPosition.getSelectedIndex(),
-															cmbFindFullPathOrName.getSelectedIndex() == 1
-																	? b.getNameLowerCaseFromFour()
-																	: b.getFourLowerCase(true, true),
-															find, Const.textFieldFindSeparator);// filter
+											: (checkNow == 3) ? b.serviceIntOne == CommonLib.SIGN_FOLDER : false;// <= 0
 				}
 				updating(false, 0);
+			}
+
+			private boolean findFilter(int findPosition, final String stringInLowerCase, String[] find, MyBean b) {
+				if (!find[1].isEmpty() && !b.findInLowerCase(findPosition, stringInLowerCase, find[1],
+						Const.textFieldFindORSeparator)) {
+					return false;
+				}
+
+				return b.findInLowerCase(findPosition, stringInLowerCase, find[0], Const.textFieldFindORSeparator);
 			}
 
 			private void nextCheckNow() {

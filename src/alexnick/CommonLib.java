@@ -627,8 +627,8 @@ public class CommonLib {
 	 * 
 	 * @param writeConsole        writes result of saving on console
 	 * @param skipEmpty           0 (by default) save all lines;<br>
-	 *                            1: empty lines be skipped; <br>
-	 *                            2: TRIMMED empty lines be skipped
+	 *                            1: empty lines will be skipped; <br>
+	 *                            2: TRIMMED empty lines will be skipped
 	 * @param deleteIfExistsMode  if 'path' file is exists:
 	 *                            <p>
 	 * 
@@ -640,15 +640,15 @@ public class CommonLib {
 	 *                            <p>
 	 * 
 	 *                            DeleteIfExists_OLD_RENAME_TO_BAK:old file of
-	 *                            'path' be renamed with add '.bak';<br>
-	 *                            WARNING:will be error if 'path' ends on'.bak';
+	 *                            'path' will be renamed with add '.bak';<br>
+	 *                            WARNING: will be error if 'path' ends on'.bak';
 	 * 
 	 * @param path                full path, to saving 'list'
 	 * @param pathDoubleForSaving if not null, in start this method, will be called
 	 *                            recursively, with 'path' as
 	 *                            'pathDoubleForSaving'<br>
 	 * @param list                String list for saving to 'path'; if 'list' is
-	 *                            null, be saved empty file
+	 *                            null, will be saved empty file
 	 * @return saving result for 'path' in 'list'
 	 */
 	synchronized public static boolean saveToFile(boolean writeConsole, int skipEmpty, int deleteIfExistsMode,

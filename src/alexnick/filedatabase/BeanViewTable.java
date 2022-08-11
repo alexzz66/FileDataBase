@@ -330,11 +330,11 @@ public class BeanViewTable extends JDialog {
 		boolean bAdd = bNeedFilterApp && indexTwo == 1;
 		boolean bSub = !bAdd && bNeedFilterApp && indexTwo == 2;
 
-		String find = null;
+		String find[] = null;
 
 		if (bNeedFilterApp && indexOne >= cmbAppEnabStartFindColumnIndex) { // by column
-			find = tfFindColumn.getText().toLowerCase();
-			if (find.isEmpty()) {
+			find = FileDataBase.getCorrectFindOrNull(tfFindColumn.getText());
+			if (find == null) {
 				updating(lastIndex, null);
 				return;
 			}
@@ -353,7 +353,13 @@ public class BeanViewTable extends JDialog {
 						res = !res;
 					}
 				} else { // by column 5..8->1..4; find' not null here
-					res = b.findInColumnLowerCase(indexOne - 4, find, Const.textFieldFindSeparator);
+					res = true;
+					if (!find[1].isEmpty()) { // first finding by AND, if true, will be finding by find[0]
+						res = b.findInColumnLowerCase(indexOne - 4, find[1], Const.textFieldFindORSeparator);
+					}
+					if (res) {
+						res = b.findInColumnLowerCase(indexOne - 4, find[0], Const.textFieldFindORSeparator);
+					}
 				}
 
 				if (bSub) {
@@ -840,7 +846,6 @@ public class BeanViewTable extends JDialog {
 	}
 
 	private void showChoosedItems() { // press '>>'
-		String substringInLowerCase = "";
 		boolean isFilter = cbFilter.isSelected();
 
 		// findPosition:any,starts,ends
@@ -858,9 +863,17 @@ public class BeanViewTable extends JDialog {
 		boolean withExt = (isFilter && findFullPathOrName <= 1);
 		String tmpLastSearchHash = "";
 
+		String find[] = null;
+
 		if (isFilter) {
+			String substringInLowerCase = "";
 			substringInLowerCase = tfFindPath.getText().toLowerCase();
 			if (substringInLowerCase.isEmpty()) {
+				return;
+			}
+
+			find = FileDataBase.getCorrectFindOrNull(substringInLowerCase);
+			if (find == null) {
 				return;
 			}
 
@@ -868,6 +881,7 @@ public class BeanViewTable extends JDialog {
 					+ cmbFindPosition.getItemAt(findPosition) + ","
 					+ cmbFindFullPathOrName.getItemAt(findFullPathOrName);
 			tmpLastSearchHash += Const.BRACE_END;
+
 		} else { // no filter
 			tmpLastSearchHash = "<no filter>";
 		}
@@ -889,21 +903,27 @@ public class BeanViewTable extends JDialog {
 		} else {
 			for (var b : beansTotal) {
 				try {
-					var pathString = b.getFourLowerCase(true, withExt);
-					if (pathString.isEmpty()) {
+					var stringInLowerCase = b.getFourLowerCase(true, withExt);
+					if (stringInLowerCase.isEmpty()) {
 						continue;
 					}
 					// findArea:fullPath,name,parent
 					if (findFullPathOrName > 0) {
-						var sep = pathString.lastIndexOf(File.separator);
+						var sep = stringInLowerCase.lastIndexOf(File.separator);
 						if (sep < 0) {
 							continue;
 						}
-						pathString = findFullPathOrName == 1 ? pathString.substring(sep + 1)
-								: pathString.substring(0, sep);
+						stringInLowerCase = findFullPathOrName == 1 ? stringInLowerCase.substring(sep + 1)
+								: stringInLowerCase.substring(0, sep);
 					}
-					if (!b.findInLowerCase(findPosition, pathString, substringInLowerCase,
-							Const.textFieldFindSeparator)) {
+					if (!find[1].isEmpty()) { // first finding by AND, if true, will be finding by find[0]
+						if (!b.findInLowerCase(findPosition, stringInLowerCase, find[1],
+								Const.textFieldFindORSeparator)) {
+							continue;
+						}
+					}
+
+					if (!b.findInLowerCase(findPosition, stringInLowerCase, find[0], Const.textFieldFindORSeparator)) {
 						continue;
 					}
 					beans.add(b);

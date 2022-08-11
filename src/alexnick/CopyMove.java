@@ -126,7 +126,7 @@ public class CopyMove {
 	/**
 	 * Renamed 'path' with append 'appendString';<br>
 	 * will be error if path already ends on 'appendString';<br>
-	 * old back file 'path' + 'appendString' be deleted, if exists
+	 * old back file 'path' + 'appendString' will be deleted, if exists
 	 * 
 	 * @param path         if no exists: error; otherwise be renamed with
 	 * @param appendString be TRIMMED, after it, not must be empty, ends on '.' and
@@ -156,7 +156,7 @@ public class CopyMove {
 	}
 
 	/**
-	 * Append to 'path' string '.bak'; if this file exists, be deleted;<br>
+	 * Append to 'path' string '.bak'; if this file exists, will be deleted;<br>
 	 * NB: 'path' must not end with '.bak'; character case does not matter
 	 * 
 	 * @param path
@@ -283,13 +283,14 @@ public class CopyMove {
 	 *                          QUERY_CONFIRM_EACH: simple confirm ('1' for
 	 *                          'YES');<br>
 	 *                          QUERY_CONFIRM_LIST: list confirm
-	 *                          (YES,YES_TO_ALL,NO,NO_TO_ALL), user select be in
-	 *                          result string in '< >';<br>
-	 *                          for 'YES_TO_ALL', be set as QUERY_YES_TO_ALL ,<br>
-	 *                          for 'NO_TO_ALL' be set as QUERY_NO_TO_ALL;
+	 *                          (YES,YES_TO_ALL,NO,NO_TO_ALL), user select will be
+	 *                          in result string in '< >';<br>
+	 *                          for 'YES_TO_ALL', will be set as QUERY_YES_TO_ALL
+	 *                          ,<br>
+	 *                          for 'NO_TO_ALL' will be set as QUERY_NO_TO_ALL;
 	 * @param source            path of source file, must exists
 	 * @param dest              path of destination file. If path to 'dest' no
-	 *                          exists, be created directories
+	 *                          exists, will be created directories
 	 * @return string for writing log about result copying
 	 */
 	synchronized public String copyMoveFile(int queryCopyMoveInit, Path source, Path dest) {

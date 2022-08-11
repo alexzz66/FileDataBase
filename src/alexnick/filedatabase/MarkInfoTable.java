@@ -138,25 +138,41 @@ public class MarkInfoTable extends JDialog {
 				}
 
 				var clickOnTfFindBindFolder = e.getActionCommand().equals(Const.textFieldBinFolderClick);
-				var findMark = tfFindMark.getText().toLowerCase();
+				var findLowerCase = tfFindMark.getText().toLowerCase();
 
-				if (!findMark.equals(lastFindMark) || clickOnTfFindBindFolder) {
-					checkNow = findMark.isEmpty() ? 0 : 1;
-					lastFindMark = findMark;
+				if (!findLowerCase.equals(lastFindMark) || clickOnTfFindBindFolder) {
+					checkNow = findLowerCase.isEmpty() ? 0 : 1;
+					lastFindMark = findLowerCase;
 				} else { // 0:no;1:filter(optional);2:exists;3:all
 					checkNow = (checkNow <= 0) ? 1 : (checkNow >= CHECK_NOW_MAX) ? 0 : checkNow + 1;
 
-					if (checkNow == 1 && findMark.isEmpty()) {// filter, no need if empty
+					if (checkNow == 1 && findLowerCase.isEmpty()) {// filter, no need if empty
+						checkNow = 2;
+					}
+				}
+
+				String find[] = null;
+
+				if (checkNow == 1) {
+					find = FileDataBase.getCorrectFindOrNull(findLowerCase);
+					if (find == null) {
 						checkNow = 2;
 					}
 				}
 
 				for (var b : beans) {
-					b.check = (checkNow <= 0) ? false
-							: (checkNow >= CHECK_NOW_MAX) ? true
-									: b.findInColumnLowerCase(1, findMark, Const.textFieldFindSeparator);// filter
+					b.check = (checkNow == 1) ? findFilter(find, b) : (checkNow >= CHECK_NOW_MAX) ? true : false; // <=0
+
 				}
 				updating(false);
+			}
+
+			private boolean findFilter(String[] find, MyBean b) {
+				if (!find[1].isEmpty() && !b.findInColumnLowerCase(1, find[1], Const.textFieldFindORSeparator)) {
+					return false;
+				}
+
+				return b.findInColumnLowerCase(1, find[0], Const.textFieldFindORSeparator);
 			}
 		};
 

@@ -146,7 +146,7 @@ public class CompareFolders {
 				confirmList.add("NO COPY");
 				confirmList.add("'backUp method'");
 				confirmList.add("'backUp method' with offer creating new folder");
-				confirmList.add("'exchange method', 'source start path' be changed on 'dest start path");
+				confirmList.add("'exchange method', 'source start path' will be changed on 'dest start path");
 				copyMode = CommonLib.pauseQueryList(confirmList, null);
 				if (copyMode < 0 || copyMode > 3) {
 					copyMode = 0;

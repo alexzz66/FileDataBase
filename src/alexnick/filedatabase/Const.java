@@ -180,10 +180,12 @@ public class Const {
 	static final String textFieldFindPathClick = "findPath";
 	static final String textFieldFindMarkClick = "findMark";
 
-	static final String textFieldFindSeparator = "??";
+	static final String textFieldFindORSeparator = "??";
+	static final String textFieldLastANDSeparator = ">>";
 
 	private final static String tfTipPrefix = "find substring in column '";
-	private final static String tfTipPostfix = "', for several items, use separator '" + textFieldFindSeparator + "'";
+	private final static String tfTipPostfix = "', for several items, use separator '" + textFieldFindORSeparator
+			+ "', AND filter at the end after '" + textFieldLastANDSeparator + "'";
 
 	static final String textFieldBinFolderToolTip = tfTipPrefix + "<set in combobox>" + tfTipPostfix;
 	static final String textFieldPathToolTip = tfTipPrefix + "Path" + tfTipPostfix;

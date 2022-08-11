@@ -1045,6 +1045,30 @@ public class FileDataBase {
 		b.setOne(sb.toString());
 	}
 
+	/**
+	 * @param s row string, may be any
+	 * @return null if error OR correct string array in LOWER case, length 2:<br>
+	 *         first not null/empty<br>
+	 *         second must not be null, can be empty, that string after LAST
+	 *         textFieldLastANDSeparator
+	 */
+	synchronized static String[] getCorrectFindOrNull(String s) {
+		if (nullEmptyString(s)) {
+			return null;
+		}
+		s = s.toLowerCase();
+		String sAND = "";
+
+		int lastIndexAND = s.lastIndexOf(Const.textFieldLastANDSeparator);
+//'lastIndexAND' must be > 0 (s in result must not be empty)
+		if (lastIndexAND > 0) {
+			sAND = s.substring(lastIndexAND + Const.textFieldLastANDSeparator.length());
+			s = s.substring(0, lastIndexAND);
+		}
+
+		return s.isEmpty() ? null : new String[] { s, sAND };
+	}
+
 } // of main class
 
 class InputTextGUI {
