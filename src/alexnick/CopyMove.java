@@ -188,9 +188,9 @@ public class CopyMove {
 	 */
 	public static Path createNewFolder(Path oldFolder, List<String> log) {
 		Path newFolder = Path.of(oldFolder.toString(), getPrefixName(true));
-		if (CommonLib.pauseQueryOne(
-				"Create new directory? " + newFolder + CommonLib.NEW_LINE_UNIX + " if 'cancel', be " + oldFolder)) {
-			CommonLib.addLog("Be copy/move to folder " + newFolder, false, log);
+		if (CommonLib.pauseQueryOne("Create new directory? " + newFolder + CommonLib.NEW_LINE_UNIX
+				+ " if 'cancel', will be " + oldFolder)) {
+			CommonLib.addLog("Copy/move to folder " + newFolder, false, log);
 		} else {
 			newFolder = oldFolder;
 		}

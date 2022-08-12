@@ -355,10 +355,10 @@ public class BeanViewTable extends JDialog {
 				} else { // by column 5..8->1..4; find' not null here
 					res = true;
 					if (!find[1].isEmpty()) { // first finding by AND, if true, will be finding by find[0]
-						res = b.findInColumnLowerCase(indexOne - 4, find[1], Const.textFieldFindORSeparator);
+						res = b.findInColumnLowerCase(indexOne - 4, find[1]);
 					}
 					if (res) {
-						res = b.findInColumnLowerCase(indexOne - 4, find[0], Const.textFieldFindORSeparator);
+						res = b.findInColumnLowerCase(indexOne - 4, find[0]);
 					}
 				}
 

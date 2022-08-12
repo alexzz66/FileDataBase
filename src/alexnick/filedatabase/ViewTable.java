@@ -242,7 +242,7 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 		boolean bSub = !bAdd && bNeedFilterApp && indexTwo == 2;
 
 		String find[] = null;
-		
+
 		if (bNeedFilterApp && indexOne >= cmbAppEnabStartFindColumnIndex) { // by column
 			find = FileDataBase.getCorrectFindOrNull(tfFindColumn.getText());
 			if (find == null) {
@@ -267,10 +267,10 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 				} else { // by column 5..8->1..4; 'find' not null here
 					res = true;
 					if (!find[1].isEmpty()) { // first finding by AND, if true, will be finding by find[0]
-						res = b.findInColumnLowerCase(indexOne - 4, find[1], Const.textFieldFindORSeparator);
+						res = b.findInColumnLowerCase(indexOne - 4, find[1]);
 					}
 					if (res) {
-						res = b.findInColumnLowerCase(indexOne - 4, find[0], Const.textFieldFindORSeparator);
+						res = b.findInColumnLowerCase(indexOne - 4, find[0]);
 					}
 				}
 
@@ -302,8 +302,8 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 		updating(index, addedInfo);
 	}
 
-// 'addedInfo' if not null and length == 2, be added info to label
-// 'index' must be null OR as indexes in 'cmbCheckItems', 'cmbCheckItemsApp'
+//'addedInfo' if not null and length == 2, be added info to label	
+//'index' must be null OR as indexes in 'cmbCheckItems', 'cmbCheckItemsApp'
 	private void updating(int index[], int[] addedInfo) {
 		setStandardTitle();
 		lastSortType = SortBeans.sortNoDefined;

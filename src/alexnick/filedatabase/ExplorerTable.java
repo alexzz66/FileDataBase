@@ -3,6 +3,10 @@ package alexnick.filedatabase;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
@@ -19,8 +23,11 @@ import java.util.concurrent.Callable;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -52,6 +59,20 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 	private List<String> previousKeys = null;// keys in lower case
 	private List<String> nextKeys = null;// keys in lower case
 	private boolean filesCanExist;
+
+//COMPONENTS for checking, toList	
+	private JTextField tfFindColumn;
+	private JLabel checkInfo;
+	private int[] lastIndex = { 0, 0 }; // first as cmbCheckItems index;second as cmbCheckItemsApp
+
+	private String[] cmbCheckItems = new String[] { "all", "no", "invert", "by Type, size", "by Name",
+			"by ExtInfo, mark", "by Full path", "toList all/paths", "toList pathsNoRoot" };
+	// append const indexes from 'cmbCheckItems'
+	private final int cmbAppEnabStartIndex = 3;
+	private final int cmbAppEnabEndIndex = 6;
+	private final int cmbAppEnabStartFindColumnIndex = 3; // endFindColumn == cmbAppEnabEndIndex (find column's last in
+															// 'appEnap' indexes) == cmbAppEnabStartFindColumnIndex + 3
+	private String[] cmbCheckItemsApp = new String[] { "only", "add", "sub" };
 
 	/**
 	 * @param frame           may be 'null' or 'this' in case calling from some
@@ -125,7 +146,7 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 				columns[1], columns[2], columns[3], beans);
 		initComponents();
 
-//'initBeans()' after 'initTable()'
+		// 'initBeans()' after 'initTable()'
 		initBeans(false, false, s2.isEmpty() ? pathForBeansRoot : s2);
 		setStandardTitle();
 		var t = Toolkit.getDefaultToolkit().getScreenSize();
@@ -135,11 +156,38 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 		setVisible(true);
 	}
 
+//INIT COMPONENTS	
 	private void initComponents() { // on constructor
 		Box contents = new Box(BoxLayout.Y_AXIS);
 
-//FILL JPANEL		
-		JPanel buttons = new JPanel();
+//FILL JPANEL
+		var cmbChecking = new JComboBox<String>(cmbCheckItems);
+		var cmbCheckingApp = new JComboBox<String>(cmbCheckItemsApp);
+		cmbCheckingApp.setEnabled(false);
+		cmbCheckingApp.setToolTipText(Const.cmbOnlyAddSubToolTip);
+
+		ActionListener butCheckActionListener = e -> checking(cmbChecking.getSelectedIndex(),
+				cmbCheckingApp.getSelectedIndex());
+
+		cmbChecking.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				var index = cmbChecking.getSelectedIndex();
+				tfFindColumn.setEnabled(index >= cmbAppEnabStartFindColumnIndex && index <= cmbAppEnabEndIndex);
+				cmbCheckingApp.setEnabled(index >= cmbAppEnabStartIndex && index <= cmbAppEnabEndIndex);
+			}
+		});
+
+		tfFindColumn = new JTextField(FileDataBase.sizeTextField);
+		tfFindColumn.addActionListener(butCheckActionListener);
+		tfFindColumn.setToolTipText(Const.textFieldBinFolderToolTip);
+		tfFindColumn.setEnabled(false);
+
+		var butCheck = new JButton("set");
+		butCheck.addActionListener(butCheckActionListener);
+
+		checkInfo = new JLabel();
+		printCount(null, false, null); // check on show window
 
 		butUp = new JButton("Up");
 		butUp.setToolTipText("Shift + click: open root folder");
@@ -172,24 +220,56 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 				if (e.getButton() != 1) {
 					return;
 				}
+
 				if (myTable.getSelectedColumn() == 0) {
+					if (e.getClickCount() == 1) {
+						printCount(null, false, null);
+					}
 					return;
 				}
+
 				if (e.getClickCount() == 2) {
 					doMyTableDoubleClick();
 				}
 			}
 		});
 
-//SHIFT DOWN
+//SHIFT DOWN AND KEYADAPTER 
+		var keyAdapterEnter = new KeyAdapter() {
+			public void keyPressed(KeyEvent e) {
+				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+					checking(cmbChecking.getSelectedIndex(), cmbCheckingApp.getSelectedIndex());
+				}
+			}
+		};
+
 		myTable.addKeyListener(FileDataBase.keyListenerShiftDown);
+
+		cmbChecking.addKeyListener(keyAdapterEnter);
+		cmbChecking.addKeyListener(FileDataBase.keyListenerShiftDown);
+
+		cmbCheckingApp.addKeyListener(keyAdapterEnter);
+		cmbCheckingApp.addKeyListener(FileDataBase.keyListenerShiftDown);
+
+		tfFindColumn.addKeyListener(FileDataBase.keyListenerShiftDown);
+		butCheck.addKeyListener(FileDataBase.keyListenerShiftDown);
+
 		butUp.addKeyListener(FileDataBase.keyListenerShiftDown);
 		butPrevious.addKeyListener(FileDataBase.keyListenerShiftDown);
 		butNext.addKeyListener(FileDataBase.keyListenerShiftDown);
 
 		tfPathForBeans.addKeyListener(FileDataBase.keyListenerShiftDown);
 
-//ADDING		
+//ADDING	
+		JPanel buttons = new JPanel();
+
+		buttons.add(cmbChecking);
+		buttons.add(cmbCheckingApp);
+
+		buttons.add(tfFindColumn);
+		buttons.add(butCheck);
+		buttons.add(checkInfo);
+
 		buttons.add(butUp);
 		buttons.add(butPrevious);
 		buttons.add(butNext);
@@ -207,6 +287,92 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 		var scrollPan = new JScrollPane(buttons, ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER,
 				ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		getContentPane().add(scrollPan, BorderLayout.SOUTH);
+	}
+
+//0:"all", 1:"no", 2:"invert"
+//3:"by Type, size", 4:"by Name", 5:"by ExtInfo, mark",	6:"by Full path"
+//7:"toList all/paths", 8:"toList pathsNoRoot" (last indexes)
+	private void checking(final int indexOne, int indexTwo) {
+		if (beans.isEmpty() || indexOne < 0 || indexOne >= cmbCheckItems.length) {
+			return;
+		}
+
+		if (indexOne >= cmbCheckItems.length - 2) { // last indexes -> to list
+			// if not 'filesCanExist', no checking on existing files
+			FileDataBase.beansToList(!filesCanExist, indexOne >= cmbCheckItems.length - 1 ? 3 : 2, null, beans);
+			return;
+		}
+
+		var bNeedFilterApp = indexOne >= cmbAppEnabStartIndex && indexOne <= cmbAppEnabEndIndex;
+
+		if (indexTwo < 0 || indexTwo >= cmbCheckItemsApp.length) {
+			if (bNeedFilterApp) {
+				return;
+			}
+
+			indexTwo = 0; // for 'all','no','invert' no matter, but in array write correct number
+		}
+
+		int[] addedInfo = new int[2]; // plus and minus info
+		addedInfo[0] = 0;
+		addedInfo[1] = 0;
+
+		boolean bAdd = bNeedFilterApp && indexTwo == 1;
+		boolean bSub = !bAdd && bNeedFilterApp && indexTwo == 2;
+
+		String find[] = null;
+
+		if (bNeedFilterApp && indexOne >= cmbAppEnabStartFindColumnIndex) { // by column
+			find = FileDataBase.getCorrectFindOrNull(tfFindColumn.getText());
+			if (find == null) {
+				updating(lastIndex, null);
+				return;
+			}
+		}
+
+		for (var b : beans) {
+			var res = false;
+
+			if (bNeedFilterApp) {
+				if ((b.check && bAdd) || (!b.check && bSub)) {
+					continue;
+				}
+
+				// by column 3..6->1..4; 'find' not null here
+				res = true;
+				if (!find[1].isEmpty()) { // first finding by AND, if true, will be finding by find[0]
+					res = b.findInColumnLowerCase(indexOne - 2, find[1]);
+				}
+				if (res) {
+					res = b.findInColumnLowerCase(indexOne - 2, find[0]);
+				}
+
+				if (bSub) {
+					res = !res;
+				}
+
+			} else if (indexOne == 0) { // all
+				res = true;
+			} else if (indexOne == 1) { // no
+				res = false;
+			} else if (indexOne == 2) { // invert
+				res = !b.check;
+			} else {
+				continue; // must not be so...
+			}
+
+			if (b.check != res) {
+				if (res) {
+					addedInfo[0]++;
+				} else {
+					addedInfo[1]++;
+				}
+				b.check = res;
+			}
+		}
+
+		int[] index = { indexOne, indexTwo };
+		updating(index, addedInfo);
 	}
 
 	private void previousNext(boolean next) {
@@ -285,10 +451,46 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 		return y;
 	}
 
-	private void updating() {
+//'addedInfo' if not null and length == 2, be added info to label	
+//'index' must be null OR as indexes in 'cmbCheckItems', 'cmbCheckItemsApp'
+	private void updating(int index[], int[] addedInfo) {
 		setStandardTitle();
 		lastSortType = SortBeans.sortNoDefined;
 		myTable.updateUI();
+		printCount(index, false, addedInfo);
+	}
+
+//'addedInfo' if not null and length == 2, be added info to label	
+//'index' must be null OR as indexes in 'cmbCheckItems', 'cmbCheckItemsApp'	
+	private int printCount(int[] index, boolean messageIfNoChecked, int[] addedInfo) {
+		lastIndex = index;
+
+		int checkCount = 0;
+		for (var b : beans) {
+			if (!b.check) {
+				continue;
+			}
+			checkCount++;
+		}
+
+		var sb = new StringBuilder();
+		sb.append((index == null) ? "count" : cmbCheckItems[index[0]]);
+
+		if (index != null && index[0] >= 3) {
+			sb.append(" ").append(cmbCheckItemsApp[index[1]]);
+		}
+
+		sb.append(": ").append(checkCount);
+
+		if (addedInfo != null && addedInfo.length == 2) {
+			sb.append(" (+").append(addedInfo[0]).append("/-").append(addedInfo[1]).append(")");
+		}
+
+		checkInfo.setText(sb.toString());
+		if (checkCount == 0 && messageIfNoChecked) {
+			JOptionPane.showMessageDialog(this, "No checked items");
+		}
+		return checkCount;
 	}
 
 	private void setNewTitle(String s) {
@@ -436,8 +638,7 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 			beans.add(bean);
 		}
 
-		updating();
-
+		updating(null, null);
 	}
 
 	private boolean canUp(String key) {

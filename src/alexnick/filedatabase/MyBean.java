@@ -141,43 +141,42 @@ public class MyBean {
 	}
 
 	/**
-	 * Finds 'substringInLowerCase' in MyBean.one
+	 * Finds 'substringInLowerCase' in MyBean.one<br>
+	 * Separator will be set as Const.textFieldFindORSeparator<br>
+	 * Find position will be set as 'any place'
 	 * 
 	 * @param columnNumber         set 1:'one', 2:'two', 3:'three',
 	 *                             4:'four'+'fourApp'; 5:'four only' <br>
 	 *                             else return false
 	 * @param substringInLowerCase substring for finding, must not be null/empty,
 	 *                             MUST BE IN LOWER CASE
-	 * @param separatorInLowerCase if not null/empty, MUST BE IN LOWER CASE:
-	 *                             'findInLowerCase' will be divided on separate
-	 *                             strings, finding be in each
 	 * 
-	 * @return 'true' if found 'findLowerCase' in defined 'columnNumber'
+	 * @return 'true' if found 'substringInLowerCase' in defined 'columnNumber'
 	 */
-	boolean findInColumnLowerCase(int columnNumber, String substringInLowerCase, String separatorInLowerCase) {
+	boolean findInColumnLowerCase(int columnNumber, String substringInLowerCase) {
 		String s = columnNumber == 1 ? one
 				: columnNumber == 2 ? two
 						: columnNumber == 3 ? three
 								: columnNumber == 4 ? getFour(false, true)
 										: columnNumber == 5 ? getFour(false, false) : "";
-		return s.isEmpty() ? false : findInLowerCase(0, s.toLowerCase(), substringInLowerCase, separatorInLowerCase);
+		return s.isEmpty() ? false
+				: findInLowerCase(0, s.toLowerCase(), substringInLowerCase, Const.textFieldFindORSeparator);
 	}
 
 	/**
 	 * Finds in 'stringInLowerCase', substring 'findInLowerCase'
 	 * 
-	 * @param findPosition         1:find in starts; 2:find in ends; else (example
-	 *                             0): any place 'stringInLowerCase'
-	 * @param stringInLowerCase    string for finding, not must be null/empty, MUST
-	 *                             BE IN LOWER CASE
-	 * @param substringInLowerCase substring for finding, not must be null/empty,
-	 *                             MUST BE IN LOWER CASE
+	 * @param findPosition           1:find in starts; 2:find in ends; else (example
+	 *                               0): any place 'stringInLowerCase'
+	 * @param stringInLowerCase      string for finding, not must be null/empty,
+	 *                               MUST BE IN LOWER CASE
+	 * @param substringInLowerCase   substring for finding, not must be null/empty,
+	 *                               MUST BE IN LOWER CASE
+	 * @param 'separatorInLowerCase' if not null/empty, MUST BE IN LOWER CASE:
+	 *                               'findInLowerCase' will be divided on separate
+	 *                               strings, finding be in each
 	 * 
-	 * @param separatorInLowerCase if not null/empty, MUST BE IN LOWER CASE:
-	 *                             'findInLowerCase' will be divided on separate
-	 *                             strings, finding be in each
-	 * 
-	 * @return
+	 * @return 'true' if found 'substringInLowerCase' in 'stringInLowerCase'
 	 */
 	boolean findInLowerCase(int findPosition, final String stringInLowerCase, String substringInLowerCase,
 			final String separatorInLowerCase) {

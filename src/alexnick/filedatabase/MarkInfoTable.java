@@ -168,11 +168,11 @@ public class MarkInfoTable extends JDialog {
 			}
 
 			private boolean findFilter(String[] find, MyBean b) {
-				if (!find[1].isEmpty() && !b.findInColumnLowerCase(1, find[1], Const.textFieldFindORSeparator)) {
+				if (!find[1].isEmpty() && !b.findInColumnLowerCase(1, find[1])) {
 					return false;
 				}
 
-				return b.findInColumnLowerCase(1, find[0], Const.textFieldFindORSeparator);
+				return b.findInColumnLowerCase(1, find[0]);
 			}
 		};
 
