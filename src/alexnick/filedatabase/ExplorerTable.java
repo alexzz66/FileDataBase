@@ -65,13 +65,11 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 	private JLabel checkInfo;
 	private int[] lastIndex = { 0, 0 }; // first as cmbCheckItems index;second as cmbCheckItemsApp
 
-	private String[] cmbCheckItems = new String[] { "all", "no", "invert", "by Type, size", "by Name",
-			"by ExtInfo, mark", "by Full path", "toList all/paths", "toList pathsNoRoot" };
+	private final String[] cmbCheckItems; // init in constructor
 	// append const indexes from 'cmbCheckItems'
-	private final int cmbAppEnabStartIndex = 3;
-	private final int cmbAppEnabEndIndex = 6;
-	private final int cmbAppEnabStartFindColumnIndex = 3; // endFindColumn == cmbAppEnabEndIndex (find column's last in
-															// 'appEnap' indexes) == cmbAppEnabStartFindColumnIndex + 3
+	private final int cmbAppEnabStartIndex;
+	private final int cmbAppEnabEndIndex;
+	private final int cmbAppEnabStartFindColumnIndex;
 	private String[] cmbCheckItemsApp = new String[] { "only", "add", "sub" };
 
 	/**
@@ -96,6 +94,22 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 		if (binPath == null || !binPath.toFile().exists() || binPath.toFile().isDirectory()) {
 			startPathString = "";
 		}
+
+		// String[] tmp= new String[] { "all", "no", "invert", "by Type, size", "by
+		// Name", "by ExtInfo, mark","by Full path", "toList all/paths", "toList
+		// pathsNoRoot"};
+		List<String> cmbItemsList = List.of("all", "no", "invert", "by Type, size", "by Name", "by ExtInfo, mark",
+				"by Full path", "toList all/paths", "toList pathsNoRoot", "check exists");
+		int endIndex = cmbItemsList.size() - 1;
+		if (!filesCanExist) {
+			endIndex--;
+		}
+
+		cmbCheckItems = CommonLib.getArrayFromListOrNullByIndexes(0, endIndex, cmbItemsList);
+		cmbAppEnabStartIndex = 3;
+		cmbAppEnabEndIndex = 6;
+// endFindColumn == cmbAppEnabEndIndex (find column's last in 'appEnap' indexes) == cmbAppEnabStartFindColumnIndex + 3
+		cmbAppEnabStartFindColumnIndex = 3;
 
 		columns = new String[] { "Type / Size", "Name",
 				"Extensions info / Crc,modified" + (viewNoMark ? "" : " **mark"), "Full path" };
@@ -291,15 +305,15 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 
 //0:"all", 1:"no", 2:"invert"
 //3:"by Type, size", 4:"by Name", 5:"by ExtInfo, mark",	6:"by Full path"
-//7:"toList all/paths", 8:"toList pathsNoRoot" (last indexes)
+//7:"toList all/paths", 8:"toList pathsNoRoot", 9:"check exists" (optional)
 	private void checking(final int indexOne, int indexTwo) {
 		if (beans.isEmpty() || indexOne < 0 || indexOne >= cmbCheckItems.length) {
 			return;
 		}
 
-		if (indexOne >= cmbCheckItems.length - 2) { // last indexes -> to list
+		if (indexOne == 7 || indexOne == 8) { // last indexes -> to list
 			// if not 'filesCanExist', no checking on existing files
-			FileDataBase.beansToList(!filesCanExist, indexOne >= cmbCheckItems.length - 1 ? 3 : 2, null, beans);
+			FileDataBase.beansToList(!filesCanExist, indexOne == 8 ? 3 : 2, null, beans);
 			return;
 		}
 
@@ -357,6 +371,12 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 				res = false;
 			} else if (indexOne == 2) { // invert
 				res = !b.check;
+			} else if (indexOne == 9) { // check exists (optional)
+				try {
+					res = Path.of(b.getFour(false, true)).toFile().exists();
+				} catch (Exception e) {
+					res = false;
+				}
 			} else {
 				continue; // must not be so...
 			}
@@ -476,7 +496,7 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 		var sb = new StringBuilder();
 		sb.append((index == null) ? "count" : cmbCheckItems[index[0]]);
 
-		if (index != null && index[0] >= 3) {
+		if (index != null && index[0] >= cmbAppEnabStartIndex && index[0] <= cmbAppEnabEndIndex) {
 			sb.append(" ").append(cmbCheckItemsApp[index[1]]);
 		}
 

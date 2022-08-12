@@ -828,7 +828,7 @@ public class BeanViewTable extends JDialog {
 		var sb = new StringBuilder();
 		sb.append((index == null) ? "count" : cmbCheckItems[index[0]]);
 
-		if (index != null && index[0] >= 3) {
+		if (index != null && index[0] >= cmbAppEnabStartIndex && index[0] <= cmbAppEnabEndIndex) {
 			sb.append(" ").append(cmbCheckItemsApp[index[1]]);
 		}
 

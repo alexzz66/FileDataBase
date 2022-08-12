@@ -71,3 +71,8 @@ More parameters: '-e' or '-p', if defined option 'autoNoExtract'
 Mode '-dd', '-deleteDirectories'. Must be ONE exists folder; will be found and removed EMPTY subfolders
 
 -------
+
+Mode '-s', '-sync', '-syncBin'. Synchronization own repository '~bin~data~repository' with selected on other disk with the same name
+
+-------
+

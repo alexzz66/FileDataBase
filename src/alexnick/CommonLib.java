@@ -735,6 +735,24 @@ public class CommonLib {
 		}
 		return result;
 	}
+	
+	/**
+	 * @param startIndex must be 0 or more, but no greater 'endIndex'
+	 * @param endIndex must be end list index (size-1) or less
+	 * @param list if null/empty, return null
+	 * @return array of string, size equals list.size, filled by items from 'list'
+	 */
+	synchronized public static String[] getArrayFromListOrNullByIndexes(int startIndex, int endIndex, List<String> list) {
+		if (nullEmptyList(list) || startIndex < 0 || endIndex >= list.size() || startIndex > endIndex) {
+			return null;
+		}
+
+		String[] result = new String[endIndex - startIndex + 1];
+		for (int i = startIndex; i <= endIndex; i++) {
+			result[i] = list.get(i);
+		}
+		return result;
+	}
 
 	/**
 	 * @param toLowerCase if 'true', each element in 'list' will be set to result in

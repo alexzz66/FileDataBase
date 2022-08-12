@@ -47,14 +47,23 @@ public class Program {
 		}
 
 		this.options = options;
-		int needCalcID3 = readGlobalOptions(mode == Const.MODE_EXTRACT);
 
-		if (!checkRepositoryPath(mode == Const.MODE_VIEW, this.options.contains(Const.OPTIONS_DOUBLE_REPO))) {
+		// for 'MODE_SYNC_BIN' no matter (no TEMP mode, no ID3 etc...)
+		int needCalcID3 = (mode == Const.MODE_SYNC_BIN) ? 0 : readGlobalOptions(mode == Const.MODE_EXTRACT);
+
+		boolean needInitDoubleRepo = (mode == Const.MODE_SYNC_BIN) ? false
+				: this.options.contains(Const.OPTIONS_DOUBLE_REPO);
+		if (!checkRepositoryPath(mode == Const.MODE_VIEW, needInitDoubleRepo)) {
 			errorArgument("Error checking repository and options directory on disk " + FileDataBase.diskMain);
 		}
 
 		if (mode == Const.MODE_EXTRACT) {// before 'isTemp'
 			showExtract(parameters);
+			return;
+		}
+
+		if (mode == Const.MODE_SYNC_BIN) {// before 'isTemp'
+			syncBin(parameters);
 			return;
 		}
 
@@ -101,6 +110,15 @@ public class Program {
 		createBin(needCalcID3, mode, parameters.get(0), null);
 	}
 
+	private void syncBin(List<String> parameters) {// TODO sync bin
+		String anotherRepo = getAnotherRepoOrNull(false, true, FileDataBase.diskMain);
+		if (nullEmptyString(anotherRepo)) {
+			System.out.println("Error: undefined ANOTHER repository");
+			return;
+		}
+		System.out.println("sync bin will be here soon");
+	}
+
 	private void deleteEmptyDir(List<String> parameters) {
 		final String errorMessage = "For deleting empty folders required ONE folder in parameters";
 		List<MyBean> beans = null;
@@ -132,7 +150,7 @@ public class Program {
 		showDeleteEmptyFolders(startFolderFile, beans);
 	}
 
-	private void showDeleteEmptyFolders(File startFolderFile, List<MyBean> beans) { // TODO delete empty dir
+	private void showDeleteEmptyFolders(File startFolderFile, List<MyBean> beans) {
 		if (nullEmptyList(beans) || startFolderFile == null) {
 			System.out.println("Delete empty folders: not found empty folders");
 			return;
@@ -985,6 +1003,8 @@ public class Program {
 			info = "COMPARE_BIN";
 		} else if (value == Const.MODE_DELETE_EMPTY_DIR) {
 			info = "DELETE_EMPTY_DIR";
+		} else if (value == Const.MODE_SYNC_BIN) {
+			info = "SYNC_BIN, synchronize OWN repository with a repository on ANOTHER disk";
 		} else {
 			return Const.MODE_NO_DEFINED;
 		}
@@ -1224,7 +1244,8 @@ public class Program {
 			if (FileDataBase.repositoryPathStandard == null) {
 				FileDataBase.repositoryPathStandard = path.toString();
 
-				String diskDoubleRepo = needInitDoubleRepo ? initDiskMainDoubleOrNull(FileDataBase.diskMain) : null;
+				String diskDoubleRepo = needInitDoubleRepo ? getAnotherRepoOrNull(true, false, FileDataBase.diskMain)
+						: null;
 
 				if (diskDoubleRepo != null) {
 					Path doubleRepoPath = Path.of(diskDoubleRepo, Const.binFolderRepositorySignature);
@@ -1261,9 +1282,9 @@ public class Program {
 		return false;
 	}
 
-	// finds disk for dublicate repository, confirm about, that must not be
-	// 'diskMain'
-	private String initDiskMainDoubleOrNull(String diskMain) {
+// finds disk for dublicate repository, confirm about, that must not be 'diskMain'
+//'doubleRepo' if false, will be written 'ANOTHER REPO'; else 'DOUBLE REPO'
+	private String getAnotherRepoOrNull(boolean doubleRepo, boolean existDirCheck, String diskMain) {
 		try {
 			var disks = getEqualFoldersOnOtherDisks(true, diskMain, null);
 			if (nullEmptyList(disks)) {
@@ -1272,14 +1293,24 @@ public class Program {
 			List<String> list = new ArrayList<String>();
 			for (var s : disks) {
 				Path path = Path.of(s, Const.binFolderRepositorySignature);
-				String exist = path.toFile().isDirectory() ? " exists: " + Const.binFolderRepositorySignature : "";
+				boolean isDirectory = path.toFile().isDirectory();
+
+				if (existDirCheck) {
+					if (isDirectory) {
+						list.add(path.toString());
+					}
+					continue;
+				}
+
+				String exist = isDirectory ? " exists: " + Const.binFolderRepositorySignature : "";
 				list.add(s + exist);
 			}
 
-			if (list.size() != disks.size()) {
+			if (list.isEmpty()) {
 				return null;
 			}
-			System.out.println("Choose disk for DOUBLE REPO:");
+
+			System.out.println("Choose disk with " + (doubleRepo ? "DOUBLE" : "ANOTHER") + " REPO:");
 			var confirm = pauseQueryList(list, null);
 			if (confirm < 0) {
 				return null;

@@ -242,6 +242,8 @@ public class FileDataBase {
 		console("Mode '-cb', '-compareBin'. Must be TWO *.bin files for comparing; not renaming, not copy/move. Text result only");
 		addLog(ADDLOG_SEP, true, null);
 		console("Mode '-dd', '-deleteDirectories'. Must be ONE exists folder; will be found and removed EMPTY subfolders");
+		addLog(ADDLOG_SEP, true, null);
+		console("Mode '-s', '-sync', '-syncBin'. Synchronization own repository '~bin~data~repository' with selected on other disk with the same name");
 		console("");
 	}
 
@@ -278,6 +280,10 @@ public class FileDataBase {
 
 		if (firstArg.equals("dd") || firstArg.equals("deletedirectories")) {
 			return Const.MODE_DELETE_EMPTY_DIR;
+		}
+
+		if (firstArg.equals("s") || firstArg.equals("sync") || firstArg.equals("syncbin")) {
+			return Const.MODE_SYNC_BIN;
 		}
 
 		final boolean bAutoMode = firstArg.equals("a") || firstArg.equals("auto");
