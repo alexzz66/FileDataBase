@@ -862,7 +862,7 @@ public class CompareFolders {
 		}
 		sb.append("date, diff msec: ").append(diff);
 		if (diffAbs >= 1000) { // more 'second'
-			sb.append(",").append(CommonLib.getDifferentTime(diffAbs));
+			sb.append(",").append(CommonLib.getDifferentTimeOrEmpty(diffAbs));
 		}
 		sb.append(Const.BRACE_END_WITH_SLASH_SPACE); // need for extract path
 		sb.append(ConverterBinFunc.getPathStringFromBinItem(null, "", s1, sub, null, null, null, null));

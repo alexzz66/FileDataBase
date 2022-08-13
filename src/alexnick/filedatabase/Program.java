@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -15,6 +16,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.FutureTask;
 
+import alexnick.CommonLib;
 import alexnick.CopyMove;
 
 import static alexnick.CopyMove.*;
@@ -44,6 +46,10 @@ public class Program {
 		}
 		if (FileDataBase.diskMain == null) {
 			FileDataBase.diskMain = arrDiskAndBinFolder[0];
+
+			// must be less 1 symbol ID (after Const.binFolderStartSignature) or empty
+			FileDataBase.binFolderMainREPO_ID = getSubstringFromIndexOrEmpty(arrDiskAndBinFolder[1],
+					Const.binFolderStartSignature.length());
 		}
 
 		this.options = options;
@@ -111,12 +117,20 @@ public class Program {
 	}
 
 	private void syncBin(List<String> parameters) {// TODO sync bin
-		String anotherRepo = getAnotherRepoOrNull(false, true, FileDataBase.diskMain);
-		if (nullEmptyString(anotherRepo)) {
+		Path anotherRepoPath = getAnotherRepoOrNull(false, true, FileDataBase.diskMain);
+		if (anotherRepoPath == null || !anotherRepoPath.toFile().isDirectory()) {
 			System.out.println("Error: undefined ANOTHER repository");
 			return;
 		}
-		System.out.println("sync bin will be here soon");
+		setInfo(2, "Another REPO", anotherRepoPath.toString(), null, null);
+		var binFinder = new BinFinder(Path.of(FileDataBase.repositoryPathCurrent));
+
+		List<MyBean> beansOwn = binFinder.getBeansOrNull();
+		if (CommonLib.nullEmptyList(beansOwn)) {
+			System.out.println("No found corrected *.bin for view");
+			return;
+		}
+
 	}
 
 	private void deleteEmptyDir(List<String> parameters) {
@@ -217,7 +231,7 @@ public class Program {
 
 // define real 'startPath' from '.dat' or set by default
 //!!! anyway 'startPath' not checked on existing, because here not uses ROOTLIST (Map realBinDir)
-			String[] stuff = new String[4]; // minimum 4, need index == 3 (real start path from '.dat')
+			String[] stuff = new String[6]; // minimum 6, need index == 3 (real start path from '.dat')
 
 			Path oneDat = FileDataBase.getDatPathForBinOrNull(one);
 			String oneStartPath = "A:/";
@@ -434,9 +448,20 @@ public class Program {
 		binInf.add("<bin>");
 		addLog(Const.ALIAS_DATE, false, binInf);
 		addLog(ADDLOG_DATE, true, binInf);
+		addLog(Const.ALIAS_DATE_ID, false, binInf);
+
+		var ins = Instant.now().toEpochMilli();
+		addLog("" + ins, false, binInf);
+
+		if (!FileDataBase.binFolderMainREPO_ID.isEmpty()) {
+			addLog(Const.ALIAS_REPO_ID, false, binInf);
+			addLog(FileDataBase.binFolderMainREPO_ID, false, binInf);
+		}
+
 		addLog(Const.ALIAS_START_SEARCH, false, binInf);
 		addLog(startFolderFile.toString(), true, binInf);
 
+//ALIAS_FOUND_EXT must be before '</bin'> this's label for search extInfo until ALIAS_FOUND_FILES
 		binInf.add(Const.ALIAS_FOUND_EXT);
 		binInf.add("</bin>");
 
@@ -1244,11 +1269,10 @@ public class Program {
 			if (FileDataBase.repositoryPathStandard == null) {
 				FileDataBase.repositoryPathStandard = path.toString();
 
-				String diskDoubleRepo = needInitDoubleRepo ? getAnotherRepoOrNull(true, false, FileDataBase.diskMain)
+				Path doubleRepoPath = needInitDoubleRepo ? getAnotherRepoOrNull(true, false, FileDataBase.diskMain)
 						: null;
 
-				if (diskDoubleRepo != null) {
-					Path doubleRepoPath = Path.of(diskDoubleRepo, Const.binFolderRepositorySignature);
+				if (doubleRepoPath != null) {
 					if (!doubleRepoPath.toFile().exists()) {
 						try {
 							Files.createDirectory(doubleRepoPath);
@@ -1257,6 +1281,7 @@ public class Program {
 					}
 					if (doubleRepoPath.toFile().isDirectory()) {
 						FileDataBase.repositoryPathStandardDouble = doubleRepoPath.toString();
+						setInfo(2, "Double REPO", doubleRepoPath.toString(), null, null);
 					}
 				}
 			}
@@ -1284,13 +1309,15 @@ public class Program {
 
 // finds disk for dublicate repository, confirm about, that must not be 'diskMain'
 //'doubleRepo' if false, will be written 'ANOTHER REPO'; else 'DOUBLE REPO'
-	private String getAnotherRepoOrNull(boolean doubleRepo, boolean existDirCheck, String diskMain) {
+	private Path getAnotherRepoOrNull(boolean doubleRepo, boolean existDirCheck, String diskMain) {
 		try {
 			var disks = getEqualFoldersOnOtherDisks(true, diskMain, null);
 			if (nullEmptyList(disks)) {
 				return null;
 			}
-			List<String> list = new ArrayList<String>();
+			List<String> list = new ArrayList<>();
+			List<Path> listResult = new ArrayList<>();
+
 			for (var s : disks) {
 				Path path = Path.of(s, Const.binFolderRepositorySignature);
 				boolean isDirectory = path.toFile().isDirectory();
@@ -1298,15 +1325,17 @@ public class Program {
 				if (existDirCheck) {
 					if (isDirectory) {
 						list.add(path.toString());
+						listResult.add(path);
 					}
 					continue;
 				}
 
 				String exist = isDirectory ? " exists: " + Const.binFolderRepositorySignature : "";
 				list.add(s + exist);
+				listResult.add(path);
 			}
 
-			if (list.isEmpty()) {
+			if (list.isEmpty() || list.size() != listResult.size()) {
 				return null;
 			}
 
@@ -1316,7 +1345,7 @@ public class Program {
 				return null;
 			}
 
-			return disks.get(confirm);
+			return listResult.get(confirm);
 		} catch (Exception e) {
 		}
 		return null;

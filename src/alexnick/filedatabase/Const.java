@@ -157,6 +157,10 @@ public class Const {
 
 	static final String ALIAS_DATE = "<date>";
 	static final String ALIAS_START_SEARCH = "<startSearch>";
+
+	static final String ALIAS_DATE_ID = "<dateID>";
+	static final String ALIAS_REPO_ID = "<repoID>";
+
 	static final String ALIAS_FOUND_FILES = "Found files:";
 	static final String ALIAS_FOUND_EXT = "<ResultBinInfo>";
 

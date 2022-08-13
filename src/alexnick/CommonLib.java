@@ -10,6 +10,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -42,8 +45,9 @@ public class CommonLib {
 	public static final String PRINTDELIMITER = "-------";
 	public static final String ADDLOG_SEP = "%sep%";
 	public static final String ADDLOG_DATE = "%date%";
-	public static final SimpleDateFormat formatter = new SimpleDateFormat("yyyy.MM.dd_HH:mm:ss (E)");
 
+	// formatter 'yyyy.MM.dd_HH:mm:ss' no change, this is constant for extract date
+	public static final SimpleDateFormat formatter = new SimpleDateFormat("yyyy.MM.dd_HH:mm:ss (E)");
 	private static SimpleDateFormat formatterFileName = null;// uses in 'getFormatDateForFileName' only
 
 //when 'start java' in power shell, need set focus if is command 'pause' below
@@ -272,43 +276,156 @@ public class CommonLib {
 		return formatter.format(date);
 	}
 
+	// s as '2022.08.13_15:03:56 (ñá)'; formatter 'yyyy.MM.dd_HH:mm:ss'
+	synchronized public static LocalDateTime getLocalDateFromFormatterOrNull(String s) {
+		if (nullEmptyString(s)) {
+			return null;
+		}
+		int[] dt = new int[6];
+		Arrays.fill(dt, -1);
+		int index = 0;
+		String sub = "";
+		try {
+			for (var i = 0; i < s.length(); i++) {
+				char c = getDigitOrMinus(s.charAt(i));
+				if (c != '-') {
+					sub += c;
+					continue;
+				}
+
+				if (sub.isEmpty()) {
+					continue;
+				}
+
+				dt[index] = Integer.valueOf(sub);
+				sub = "";
+				index++;
+				if (index >= dt.length) {
+					break;
+				}
+			}
+
+			if (index < dt.length) { // no fill array
+				return null;
+			}
+
+			return LocalDateTime.of(dt[0], dt[1], dt[2], dt[3], dt[4], dt[5]);
+
+		} catch (Exception e) {
+		}
+		return null;
+	}
+
+	synchronized public static long LocalDateToEpochSecondOrNil(LocalDateTime ldt) {
+		long result = 0;
+		try {
+			result = ldt.toEpochSecond(ZoneOffset.systemDefault().getRules().getOffset(Instant.now()));
+		} catch (Exception e) {
+			result = 0;
+		}
+		return result < 0 ? 0 : result;
+	}
+
+	synchronized public static char getDigitOrMinus(char charAt) {
+		return switch (charAt) {
+		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> charAt;
+		default -> '-';
+		};
+	}
+
+	/**
+	 * Returns different string (sec,min,hours), from mSec
+	 * 
+	 * @param mSec if less '999' - be added '-' in result; if (-999..999) -> returns
+	 *             empty string
+	 * @return formatted string "h:m:s"
+	 */
+	synchronized public static String getDifferentTimeOrEmpty(long mSec) {
+		StringBuilder sb = new StringBuilder();
+		if (mSec < 0) {
+			mSec = -mSec;
+			sb.append("-");
+		}
+
+		long sec = mSec / 1000;
+		if (sec <= 0) {
+			return "";
+		}
+
+		long min = sec < 60 ? 0 : sec / 60;
+		long hours = min < 60 ? 0 : min / 60;
+
+		sb.append(hours).append(":").append(sec < 60 ? min : min % 60).append(":").append(sec < 60 ? sec : sec % 60);
+		return sb.toString();
+	}
+
 	/**
 	 * Formats seconds to string, 25 second, like '0:25'; but if 'withHour defined:
 	 * '0:00:25'
 	 * 
-	 * @param time    count of second to transform
-	 * @param prefix  if not null/empty, will be added before result
-	 * @param postfix if not null/empty, will be added after result
+	 * @param needDays 0 (by default): no write days<br>
+	 *                 1: write days, if time >= 86400 <br>
+	 *                 2: write days anyway<br>
+	 *                 If written days, withHour will be set as 'true'
+	 * 
+	 * @param withHour if true AND time < 3600, will be as '0:mm:ss'
+	 * @param time     count of second to transform
+	 * @param prefix   if not null/empty, will be added before result
+	 * @param postfix  if not null/empty, will be added after result
 	 * @return 'prefix' + 'formatted seconds' + 'postfix'
 	 */
-	synchronized public static String secondsToString(boolean withHour, int time, String prefix, String postfix) {
+	synchronized public static String secondsToString(int needDays, boolean withHour, int time, String prefix,
+			String postfix) { // TODO
 		if (time == Integer.MIN_VALUE) {
 			time++; // no correct for 'Integer.MIN_VALUE'
 		}
+
+		if (needDays < 0 || needDays > 2) {
+			needDays = 0;
+		}
+
+		final int daySeconds = 86400;
+
 		var sb = new StringBuilder();
 		appendNotNullEmpty(prefix, sb);
+
 		if (time < 0) {
 			sb.append("-");
 			time = -time;
 		}
+
+		if ((needDays == 1 && time >= daySeconds) || (needDays == 2)) {
+			withHour = true;
+			int days = 0;
+			if (time >= daySeconds) {
+				days = time / daySeconds;
+				time = time % daySeconds;
+			}
+			sb.append("Days ").append(days).append("; ");
+		}
+
 		int s = time % 60; // get seconds
 		time = time / 60; // time in minute now
 		int m = time % 60; // get minutes
 
 		time = time / 60; // time in hours now
 		boolean needCheckMinuteNil = false;
+
 		if (withHour || time > 0) {
 			sb.append(time).append(":");
 			needCheckMinuteNil = true;
 		}
+
 		if (needCheckMinuteNil && m < 10) {
 			sb.append("0");
 		}
+
 		sb.append(m).append(":");
 
 		if (s < 10) {
 			sb.append("0");
 		}
+
 		sb.append(s);
 		appendNotNullEmpty(postfix, sb);
 		return sb.toString();
@@ -735,14 +852,15 @@ public class CommonLib {
 		}
 		return result;
 	}
-	
+
 	/**
 	 * @param startIndex must be 0 or more, but no greater 'endIndex'
-	 * @param endIndex must be end list index (size-1) or less
-	 * @param list if null/empty, return null
+	 * @param endIndex   must be end list index (size-1) or less
+	 * @param list       if null/empty, return null
 	 * @return array of string, size equals list.size, filled by items from 'list'
 	 */
-	synchronized public static String[] getArrayFromListOrNullByIndexes(int startIndex, int endIndex, List<String> list) {
+	synchronized public static String[] getArrayFromListOrNullByIndexes(int startIndex, int endIndex,
+			List<String> list) {
 		if (nullEmptyList(list) || startIndex < 0 || endIndex >= list.size() || startIndex > endIndex) {
 			return null;
 		}
@@ -1106,32 +1224,6 @@ public class CommonLib {
 		if (parent != null && !parent.toFile().isDirectory()) {
 			Files.createDirectories(parent);
 		}
-	}
-
-	/**
-	 * Returns different string (sec,min,hours), from mSec
-	 * 
-	 * @param mSec if less '999' - be added '-' in result; if (-999..999) -> returns
-	 *             empty string
-	 * @return formatted string "h:m:s"
-	 */
-	synchronized public static String getDifferentTime(long mSec) {
-		String minus = (mSec < 0) ? "-" : "";
-		if (mSec < 0) {
-			mSec = -mSec;
-		}
-		long sec = mSec / 1000;
-		if (sec <= 0) {
-			return "";
-		}
-
-		long min = sec < 60 ? 0 : sec / 60;
-		long hours = min < 60 ? 0 : min / 60;
-
-		StringBuilder sb = new StringBuilder();
-		appendNotNullEmpty(minus, sb);
-		sb.append(hours).append(":").append(sec < 60 ? min : min % 60).append(":").append(sec < 60 ? sec : sec % 60);
-		return sb.toString();
 	}
 
 	/**
@@ -1571,7 +1663,7 @@ public class CommonLib {
 	 * 
 	 * @param limit   must be from 10 to 200 symbols; by default will be set 100
 	 * @param newName must be not null/empty, must be without extension
-	 * @return formatter string, or empty string, if error
+	 * @return formatted string, or empty string, if error
 	 */
 	synchronized public static String getCorrectFileNameToRename(int limit, String newName) {
 		if (nullEmptyString(newName)) {
@@ -1889,6 +1981,13 @@ public class CommonLib {
 
 		return true;
 
+	}
+
+	synchronized public static String getSubstringFromIndexOrEmpty(String source, int index) {
+		if (nullEmptyString(source) || index >= source.length()) {
+			return "";
+		}
+		return source.substring(index);
 	}
 
 }

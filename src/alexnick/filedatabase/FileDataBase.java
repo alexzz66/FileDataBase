@@ -42,6 +42,8 @@ public class FileDataBase {
 	static String repositoryPathStandard = null; // full path to repository, init on start
 	static String repositoryPathCurrent = null; // if isTEMP, repository set in 'repositoryPathStandard'
 	static String diskMain = null;
+	static String binFolderMainREPO_ID = "";// writes as repoID to '.dat'; empty as default
+
 	static String repositoryPathStandardDouble = null;
 
 // 'true' by default; if true - files with '0' length, be skipped, while creating '*.bin';'true' recommended
@@ -609,7 +611,7 @@ public class FileDataBase {
 //'mapCountExtForReturn' if created, will be cleared and filled extension info; ALSO MEANS defining checkSum
 	synchronized static int getCountBinItemsOrNil(String realDiskInBraceOrEmpty, Path fDat,
 			Map<String, Integer> mapCountExtForReturn, String[] stuffForReturn) {
-		if (stuffForReturn == null || stuffForReturn.length < 4) {
+		if (stuffForReturn == null || stuffForReturn.length < 6) {
 			return 0;
 		}
 
@@ -622,15 +624,23 @@ public class FileDataBase {
 		String x2 = e;
 		String x3 = e;
 		String x4 = e;
+		String dateId = ""; // dateID optional, empty if no found; no counted
+		String repoID = ""; // repoID optional, empty if no found; no counted
 		String realStartPath = null;
 
 		int count = 0;
 		int indexExtBegin = 0;
 		int indexExtEnd = 0;
-		for (int i = 0; i < datList.size(); i++) {
+		for (int i = 0; i < datList.size() - 1; i++) {// 'i < size - 1', for safe bounds
 			var s = datList.get(i);
-			if (count >= 4)
+			if (count >= 4) {
 				break;
+			}
+
+			/*
+			 * last of stuff (4,5) ALIAS_DATE_ID = "<dateID>" and ALIAS_REPO_ID = "<repoID>"
+			 * may be not defined (old versions); placed in '.dat' below ALIAS_DATE
+			 */
 			switch (s) {
 			case Const.ALIAS_START_SEARCH -> {
 				if (x2.equals(e)) {
@@ -665,6 +675,7 @@ public class FileDataBase {
 					count++;
 				}
 			}
+
 			case Const.ALIAS_DATE -> {
 				if (x3.equals(e)) {
 					// 'x3' set as 2022.04.24_17:36:37 (вс)
@@ -672,12 +683,26 @@ public class FileDataBase {
 					count++;
 				}
 			}
+
+			case Const.ALIAS_DATE_ID -> {
+				if (dateId.isEmpty()) {
+					dateId = datList.get(i + 1);
+				}
+			}
+
+			case Const.ALIAS_REPO_ID -> {
+				if (repoID.isEmpty()) {
+					repoID = datList.get(i + 1);
+				}
+			}
+
 			case Const.ALIAS_FOUND_EXT -> {
 				if (indexExtBegin == 0) {
 					indexExtBegin = i + 2;
 					count++;
 				}
 			}
+
 			case Const.ALIAS_FOUND_FILES -> {
 				if (x4.equals(e)) {
 					x4 = datList.get(i + 1);
@@ -685,7 +710,7 @@ public class FileDataBase {
 					count++;
 				}
 			}
-			}
+			} // of switch
 		}
 
 		if (indexExtBegin == 0 || indexExtBegin >= indexExtEnd) {
@@ -713,6 +738,8 @@ public class FileDataBase {
 		stuffForReturn[1] = x3;
 		stuffForReturn[2] = x4;
 		stuffForReturn[3] = realStartPath;
+		stuffForReturn[4] = dateId;
+		stuffForReturn[5] = repoID;
 
 //CHECKSUM
 		if (mapCountExtForReturn == null) {

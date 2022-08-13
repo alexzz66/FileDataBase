@@ -99,7 +99,7 @@ public class CalcCrc {
 
 			File file = path.toFile();
 			var id3 = new Mp3File(file);
-			String id3LengthValue = CommonLib.secondsToString(false, (int) id3.getLengthInSeconds(),
+			String id3LengthValue = CommonLib.secondsToString(0, false, (int) id3.getLengthInSeconds(),
 					id3LengthStartValue, "; ");
 
 			String res = "";
