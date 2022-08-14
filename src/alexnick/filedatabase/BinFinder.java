@@ -62,30 +62,32 @@ public class BinFinder {
 		return false;
 	}
 
-	private MyBean fillMyBean(Path path, Map<String, String> realBinDir) {
+	private MyBean fillMyBean(final Path path, Map<String, String> realBinDir) {
 		var fDat = FileDataBase.getDatPathForBinOrNull(path);
 		if (fDat == null) {
 			return null;
 		}
-		// columns: binFolder, startPath, date, result -> all, except 'binfolder', be
-		// taken from '*.dat'
-		// 'x1': name of parent folder, example
-		// bin~data~results~F-GB-14,43-1805ca431af-flash
+
+// columns: binFolder, startPath, date, result -> all, except 'binfolder', will be taken from '*.dat'
+// 'x1': name of parent folder, example bin~data~results~F-GB-14,43-1805ca431af-flash
 		final String parentName = path.getParent().toFile().getName();
 
 		if (!parentName.startsWith(Const.binFolderStartSignature)) {
 			return null;
 		}
 
-		// example 'realBinDir': 'key':~bin~data~results~F-GB-14,43-1805ca431af-flash
-		// and 'value':'<K:\> '
+// example 'realBinDir': 'key':~bin~data~results~F-GB-14,43-1805ca431af-flash and 'value':'<K:\> '
 		String realDiskInBraceOrEmpty = realBinDir.getOrDefault(parentName.toLowerCase(), "");
 
-		// ~bin~data~results~F-GB-14,43-1805ca431af-flash
-		// => will be after: F-GB-14,43-1805ca431af-flash
-		// result for exist disk (column 'BinFolder'): <K:\>
-		// F-GB-14,43-1805ca431af-flash
-		final String x1 = realDiskInBraceOrEmpty.concat(parentName.replace(Const.binFolderStartSignature, ""));
+// ~bin~data~results~F-GB-14,43-1805ca431af-flash => will be after: F-GB-14,43-1805ca431af-flash
+		String keyForSyncBin = parentName.replace(Const.binFolderStartSignature, ""); // begin init 'key'
+
+// result for exist disk (column 'BinFolder'): <K:\> F-GB-14,43-1805ca431af-flash
+		final String x1 = realDiskInBraceOrEmpty.concat(keyForSyncBin);
+
+		// end init 'key'
+		keyForSyncBin = keyForSyncBin.concat(File.separator).concat(path.toFile().getName());
+
 		String[] stuff = new String[6]; // minimum 6
 		Map<String, Integer> mapCountExt = new HashMap<String, Integer>();
 
@@ -94,12 +96,12 @@ public class BinFinder {
 			return null;
 		}
 
-		// serviceIntTwo uses for 'id' in 'ViewTable'; fourApp uses for total count
-		// 'mark' in base
+// serviceIntTwo uses for 'id' in 'ViewTable'; fourApp uses for total count 'mark' in base
 		var bean = new MyBean(x1, stuff[0], stuff[1], stuff[2], "");
 		bean.serviceIntOne = countBinItems;
 		bean.binPath = path;
 		bean.mapCountExt = mapCountExt;
+		bean.serviceString = keyForSyncBin;
 		return bean;
 	}
 

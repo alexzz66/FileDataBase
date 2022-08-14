@@ -632,11 +632,11 @@ public class FileDataBase {
 		int indexExtBegin = 0;
 		int indexExtEnd = 0;
 		for (int i = 0; i < datList.size() - 1; i++) {// 'i < size - 1', for safe bounds
-			var s = datList.get(i);
 			if (count >= 4) {
 				break;
 			}
-
+			
+			var s = datList.get(i);
 			/*
 			 * last of stuff (4,5) ALIAS_DATE_ID = "<dateID>" and ALIAS_REPO_ID = "<repoID>"
 			 * may be not defined (old versions); placed in '.dat' below ALIAS_DATE

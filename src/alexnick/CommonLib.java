@@ -375,7 +375,7 @@ public class CommonLib {
 	 * @return 'prefix' + 'formatted seconds' + 'postfix'
 	 */
 	synchronized public static String secondsToString(int needDays, boolean withHour, int time, String prefix,
-			String postfix) { // TODO
+			String postfix) {
 		if (time == Integer.MIN_VALUE) {
 			time++; // no correct for 'Integer.MIN_VALUE'
 		}

@@ -118,19 +118,189 @@ public class Program {
 
 	private void syncBin(List<String> parameters) {// TODO sync bin
 		Path anotherRepoPath = getAnotherRepoOrNull(false, true, FileDataBase.diskMain);
+
 		if (anotherRepoPath == null || !anotherRepoPath.toFile().isDirectory()) {
 			System.out.println("Error: undefined ANOTHER repository");
 			return;
 		}
 		setInfo(2, "Another REPO", anotherRepoPath.toString(), null, null);
-		var binFinder = new BinFinder(Path.of(FileDataBase.repositoryPathCurrent));
 
+		System.out.println("start search in OWN repo... " + FileDataBase.repositoryPathStandard);
+		var binFinder = new BinFinder(Path.of(FileDataBase.repositoryPathStandard));
 		List<MyBean> beansOwn = binFinder.getBeansOrNull();
-		if (CommonLib.nullEmptyList(beansOwn)) {
-			System.out.println("No found corrected *.bin for view");
+
+		List<MyBean> beansAnother = null;
+
+		if (notNullEmptyList(beansOwn)) { // correct OWN
+			System.out.println("start search in ANOTHER repo... " + anotherRepoPath);
+			binFinder = new BinFinder(anotherRepoPath);
+			beansAnother = binFinder.getBeansOrNull();
+
+			if (nullEmptyList(beansOwn)) { // not correct ANOTHER, return with message
+				System.out.println("No found corrected *.bin for view");
+				return;
+			}
+		}
+		// comparing beans
+		System.out.println(NEW_LINE_UNIX + "Found size. OWN: " + beansOwn.size() + ". ANOTHER: " + beansAnother.size());
+		System.out.println(NEW_LINE_UNIX + "start comparing...");
+		Map<String, Integer> anotherIndexMap = new HashMap<String, Integer>();
+		int countError = 0;
+
+		for (var i = 0; i < beansAnother.size(); i++) {
+			var keyForSyncBin = beansAnother.get(i).serviceString;
+			if (nullEmptyString(keyForSyncBin)) {
+				countError++;
+				System.out.println("error, another repo, bin: " + beansAnother.get(i).binPath);
+				continue;
+			}
+
+			anotherIndexMap.put(keyForSyncBin.toLowerCase(), i);
+		}
+
+		if (anotherIndexMap.isEmpty()) {
+			System.out.println("No found *.bin in ANOTHER repository " + anotherRepoPath);
 			return;
 		}
 
+		final String[] typeForColumnOne = new String[] { "-> import new", "-> import update", "<- export new",
+				"<- export update" };
+
+		int count = 0; // total count of added
+		int countEqual = 0;
+
+		List<MyBean> beansImportNew = new ArrayList<MyBean>();
+		List<MyBean> beansImportUpdate = new ArrayList<MyBean>();
+		List<MyBean> beansExportNew = new ArrayList<MyBean>();
+		List<MyBean> beansExportUpdate = new ArrayList<MyBean>();
+
+//columns: type, own bin, another bin, diff (modified)
+		for (int i = 0; i < beansOwn.size(); i++) {
+			var b = beansOwn.get(i);
+			var keyForSyncBin = b.serviceString;
+
+			if (nullEmptyString(keyForSyncBin)) {
+				countError++;
+				System.out.println("error, own repo, bin: " + b.binPath);
+				continue;
+			}
+
+			String dateModifiedOwn = b.getThree();
+
+			if (!anotherIndexMap.containsKey(keyForSyncBin.toLowerCase())) { // NEW IMPORT
+				count++;
+				int type = 0;
+				var bean = new MyBean(typeForColumnOne[type], b.serviceIntOne + "; " + keyForSyncBin, "",
+						dateModifiedOwn, "");
+
+				bean.serviceIntOne = b.serviceIntOne; // countBinItems own
+				bean.serviceIntTwo = 0; // countBinItems another
+				bean.serviceIntThree = type;
+
+				bean.binPath = b.binPath;
+				beansImportNew.add(bean);
+				continue;
+			}
+
+			// UPDATE IMPORT EXPORT, comparing
+			int x = anotherIndexMap.remove(keyForSyncBin.toLowerCase()); // must be correct
+			var beanAnotherFound = beansAnother.get(x);
+
+			var ldtOwn = getLocalDateFromFormatterOrNull(dateModifiedOwn);
+
+			String dateModifiedAnother = beanAnotherFound.getThree();
+			var ldtAnother = getLocalDateFromFormatterOrNull(dateModifiedAnother);
+
+			long dateModifiedOwnToSec = 0;
+			long dateModifiedAnotherToSec = 0;
+
+			if (ldtOwn != null && ldtAnother != null) {
+				dateModifiedOwnToSec = LocalDateToEpochSecondOrNil(ldtOwn);
+				dateModifiedAnotherToSec = LocalDateToEpochSecondOrNil(ldtAnother);
+			}
+
+			if (dateModifiedOwnToSec <= 0 || dateModifiedAnotherToSec <= 0) {
+				countError++;
+				System.out.println("error define LocalDateTime");
+				continue;
+			}
+
+			int time = (int) (dateModifiedOwnToSec - dateModifiedAnotherToSec);
+			if (time == 0) {
+				countEqual++;
+				continue; // the same? if not, this strange error
+			}
+
+			var sb = new StringBuilder();
+			sb.append(CommonLib.secondsToString(1, true, time, null, null));
+			sb.append(" [").append(dateModifiedOwn).append(" - ").append(dateModifiedAnother).append("]");
+
+			count++;
+			int type = time > 0 ? 1 : 3; // import or export update
+
+			var bean = new MyBean(typeForColumnOne[type], b.serviceIntOne + "; " + keyForSyncBin,
+					beanAnotherFound.serviceIntOne + "; " + beanAnotherFound.serviceString, sb.toString(), "");
+
+			bean.serviceIntOne = b.serviceIntOne; // countBinItems own
+			bean.serviceIntTwo = beanAnotherFound.serviceIntOne; // countBinItems another
+			bean.serviceIntThree = type;
+
+			var bTmp = type == 1 ? b : beanAnotherFound;
+			bean.binPath = bTmp.binPath;
+
+			if (type == 1) {
+				beansImportUpdate.add(bean);
+			} else { // type == 3
+				beansExportUpdate.add(bean);
+			}
+		}
+
+		// remain NEW EXPORT
+		for (var keyForSyncBin : anotherIndexMap.keySet()) {
+			var b = beansOwn.get(anotherIndexMap.get(keyForSyncBin));
+			count++;
+			int type = 2;
+			var bean = new MyBean(typeForColumnOne[type], "", b.serviceIntOne + "; " + b.serviceString, b.getThree(),
+					"");
+
+			bean.serviceIntOne = 0; // countBinItems own
+			bean.serviceIntTwo = b.serviceIntOne; // countBinItems another
+			bean.serviceIntThree = type;
+
+			bean.binPath = b.binPath;
+			beansExportNew.add(bean);
+		}
+
+		System.out.println(NEW_LINE_UNIX + "Compare *.bin finished, error count: " + countError
+				+ "; the same base creation time: " + countEqual);
+
+		if (count == 0) {
+			System.out.println(NEW_LINE_UNIX + "No found *.bin for import/export");
+			return;
+		}
+
+		System.out.println(NEW_LINE_UNIX + "Result, total found: " + count);
+		System.out.println(NEW_LINE_UNIX + "import new: " + beansImportNew.size());
+		for (var b : beansImportNew) {
+			System.out.println(b.binPath + " " + b.getFour(false, false));
+			System.out.println("own: " + b.getOne() + "; two: " + b.getTwo() + "; three: " + b.getThree());
+		}
+
+		System.out.println(NEW_LINE_UNIX + "import update: " + beansImportUpdate.size());
+		for (var b : beansImportUpdate) {
+			System.out.println(b.binPath + " " + b.getFour(false, false));
+			System.out.println("own: " + b.getOne() + "; two: " + b.getTwo() + "; three: " + b.getThree());
+		}
+		System.out.println(NEW_LINE_UNIX + "export new: " + beansExportNew.size());
+		for (var b : beansExportNew) {
+			System.out.println(b.binPath + " " + b.getFour(false, false));
+			System.out.println("own: " + b.getOne() + "; two: " + b.getTwo() + "; three: " + b.getThree());
+		}
+		System.out.println(NEW_LINE_UNIX + "export update: " + beansExportUpdate.size());
+		for (var b : beansExportUpdate) {
+			System.out.println(b.binPath + " " + b.getFour(false, false));
+			System.out.println("own: " + b.getOne() + "; two: " + b.getTwo() + "; three: " + b.getThree());
+		}
 	}
 
 	private void deleteEmptyDir(List<String> parameters) {
