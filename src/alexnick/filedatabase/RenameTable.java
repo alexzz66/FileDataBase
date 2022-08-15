@@ -323,7 +323,7 @@ public class RenameTable extends JDialog {
 			if (checkForRename) {
 				for (var b : beans) {
 					b.check = false;
-					b.serviceString = null;
+					b.serviceStringOne = null;
 				}
 			}
 
@@ -360,7 +360,7 @@ public class RenameTable extends JDialog {
 								}
 							} else {
 								b.check = true;
-								b.serviceString = path.toString();
+								b.serviceStringOne = path.toString();
 								checkCount++;
 							}
 						}

@@ -15,6 +15,7 @@ public class CopyMove {
 	public static final int QUERY_YES_TO_ALL = 0;
 	public static final int QUERY_CONFIRM_EACH = 1;
 	public static final int QUERY_CONFIRM_LIST = 2;
+	public static final int QUERY_CONFIRM_LIST_YES_NO_TOALL = 3; // only yes to all/no to all
 
 	private static int queryCopyMove = QUERY_CONFIRM_LIST;
 
@@ -57,7 +58,8 @@ public class CopyMove {
 	 * @return
 	 */
 	synchronized public static boolean queryCopyMoveDefined(boolean confirmOnly) {
-		var confirm = queryCopyMove == QUERY_CONFIRM_EACH || queryCopyMove == QUERY_CONFIRM_LIST;
+		var confirm = queryCopyMove == QUERY_CONFIRM_EACH || queryCopyMove == QUERY_CONFIRM_LIST
+				|| queryCopyMove == QUERY_CONFIRM_LIST_YES_NO_TOALL;
 		var result = confirmOnly ? confirm : (confirm || queryCopyMove == QUERY_YES_TO_ALL);
 		return result;
 	}
@@ -89,20 +91,26 @@ public class CopyMove {
 		if (queryCopyMove == QUERY_CONFIRM_EACH) {
 			return CommonLib.pauseQueryOne(confirmCapt) ? CONFIRM_YES : CONFIRM_NO;
 		}
+
 		System.out.println(confirmCapt);
 		List<String> confirmList = new ArrayList<String>();
-		confirmList.add(CONFIRM_YES); // 0
-		confirmList.add(CONFIRM_YES_TO_ALL);// 1
-		confirmList.add(CONFIRM_NO);// 2
-		confirmList.add(CONFIRM_NO_TO_ALL);// 3
+
+		confirmList.add(CONFIRM_YES_TO_ALL);// 0
+		confirmList.add(CONFIRM_NO_TO_ALL);// 1
+
+		if (queryCopyMove != QUERY_CONFIRM_LIST_YES_NO_TOALL) {
+			confirmList.add(CONFIRM_YES);
+			confirmList.add(CONFIRM_NO);
+		}
 
 		int confirm = CommonLib.pauseQueryList(confirmList, null);
 		if (confirm < 0) {
-			confirm = confirmList.size() - 1;
+			confirm = confirmList.size() - 1; // NO or NO_TO_ALL
 		}
-		if (confirm == 1) {
+
+		if (confirm == 0) {
 			queryCopyMove = QUERY_YES_TO_ALL; // no more confirm
-		} else if (confirm == 3) {
+		} else if (confirm == 1) {
 			queryCopyMove = QUERY_NO_TO_ALL;
 		}
 		return confirmList.get(confirm);
@@ -201,18 +209,18 @@ public class CopyMove {
 
 	/**
 	 * @param deleteIfExistsMode be called 'copyFile' method with one;
-	 * 
+	 *                           <p>
 	 *                           if 'destination' file is exists:
-	 * 
+	 *                           <p>
 	 *                           DeleteIfExists_ERROR (by default) :error operation;
-	 * 
+	 *                           <p>
 	 *                           DeleteIfExists_OLD_DELETE:deletes 'destination'
 	 *                           file before operation;
-	 * 
+	 *                           <p>
 	 *                           DeleteIfExists_OLD_RENAME_TO_BAK:old file of
 	 *                           'destination' be renamed with add '.bak';
 	 *                           WARNING:be error if 'destination' ends on '.bak';
-	 * 
+	 *                           <p>
 	 *                           DeleteIfExists_NEW_SAVE_WITH_OTHER_NAME:'destination'
 	 *                           file not changes, but 'source' file get new name
 	 *                           with prefix ("~FDB~" + current date-time)
@@ -285,8 +293,11 @@ public class CopyMove {
 	 *                          QUERY_CONFIRM_LIST: list confirm
 	 *                          (YES,YES_TO_ALL,NO,NO_TO_ALL), user select will be
 	 *                          in result string in '< >';<br>
+	 *                          QUERY_CONFIRM_LIST_YES_NO_TOALL: list confirm
+	 *                          (YES_TO_ALL,NO_TO_ALL), user select will be in
+	 *                          result string in '< >';<br>
 	 *                          for 'YES_TO_ALL', will be set as QUERY_YES_TO_ALL
-	 *                          ,<br>
+	 *                          <br>
 	 *                          for 'NO_TO_ALL' will be set as QUERY_NO_TO_ALL;
 	 * @param source            path of source file, must exists
 	 * @param dest              path of destination file. If path to 'dest' no
@@ -323,6 +334,10 @@ public class CopyMove {
 			}
 
 			if (dest.toFile().exists()) {
+				if (dest.equals(source)) {
+					throw new IllegalArgumentException("Same 'source' and 'dest' paths");
+				}
+
 				var nullLength = dest.toFile().length() == 0;
 				if (deleteIfExistsMode == DeleteIfExists_OLD_DELETE || nullLength) {
 					tryDelete(nullLength, true, dest, sb);
@@ -347,6 +362,7 @@ public class CopyMove {
 						+ CommonLib.bytesToKBMB(false, 2, source.toFile().length()) + "; " + source.toString() + capt
 						+ dest.toString();
 				queryResult = getQueryResult(confirmCapt);
+
 				if (!checkQueryResultYesOrYesToAll(queryResult)) {
 					throw new IOException(CANCELLED_BY_USER);
 				}
@@ -425,10 +441,15 @@ public class CopyMove {
 	 *                                      for 'YES');<br>
 	 *                                      QUERY_CONFIRM_LIST: list confirm
 	 *                                      (YES,YES_TO_ALL,NO,NO_TO_ALL), user
-	 *                                      select be in result string in '< >';<br>
-	 *                                      for 'YES_TO_ALL', be set as
-	 *                                      QUERY_YES_TO_ALL ,<br>
-	 *                                      for 'NO_TO_ALL' be set as
+	 *                                      select will be in result string in '<
+	 *                                      >';<br>
+	 *                                      QUERY_CONFIRM_LIST_YES_NO_TOALL: list
+	 *                                      confirm (YES_TO_ALL,NO_TO_ALL), user
+	 *                                      select will be in result string in '<
+	 *                                      >';<br>
+	 *                                      for 'YES_TO_ALL', will be set as
+	 *                                      QUERY_YES_TO_ALL <br>
+	 *                                      for 'NO_TO_ALL' will be set as
 	 *                                      QUERY_NO_TO_ALL;
 	 * 
 	 * @param writeSourceListBeforeCopying  0 (by default): no write
@@ -436,24 +457,21 @@ public class CopyMove {
 	 *                                      1:write on console only;<br>
 	 *                                      2: write in log (if log != null);<br>
 	 *                                      3: write on console and log;<br>
-	 *                                      NB: 'sourceList' be sorted;
+	 *                                      NB: 'sourceList' will be sorted;
 	 * 
-	 *                                      Recommended values:<br>
-	 *                                      0:only copy;<br>
-	 *                                      3:only move;<br>
-	 *                                      1:auto(copy or move).
 	 * @param checkDestEqualPathIfOtherDisk example for 'destFolder' "d:/1" and
 	 *                                      source file:<br>
 	 *                                      "c:/1/2.txt" -><br>
 	 *                                      if false:"d:/1/1/2.txt";<br>
 	 *                                      if true: "d:/1/2.txt"
+	 * 
 	 * @param caption                       short info about copying, example "New
 	 *                                      files";
-	 * @param removeFromSourceForExchange   if >= 3, be defined EXCHANGE method:
-	 *                                      from start each path in 'sourceList'
-	 *                                      will be removed specified count of
-	 *                                      symbols;<br>
-	 *                                      and end of this path, be added to
+	 * @param removeFromSourceForExchange   if >= 3, will be defined EXCHANGE
+	 *                                      method: from start each path in
+	 *                                      'sourceList' will be removed specified
+	 *                                      count of symbols;<br>
+	 *                                      and end of this path, will be added to
 	 *                                      'destFolder';<br>
 	 *                                      in other words, that's length of
 	 *                                      'sourceFolder' with '\';<br>
@@ -461,12 +479,12 @@ public class CopyMove {
 	 *                                      'checkDestEqualPathIfOtherDisk' does not
 	 *                                      matter
 	 * @param destFolder                    folder, where been copying files, if not
-	 *                                      exists, be created; must be root, in
-	 *                                      that case be confirm
+	 *                                      exists, will be created; must be root,
+	 *                                      in that case will be confirmation
 	 * @param sourceList                    must be created and no empty; must
 	 *                                      contains paths files only
-	 * @param log                           if not null, be wrote all details of
-	 *                                      this method
+	 * @param log                           if not null, will be wrote all details
+	 *                                      of this method
 	 * @return count copied files, 0 or more
 	 */
 	synchronized public int backUpCopyMoveFiles(int queryCopyMoveInit, int writeSourceListBeforeCopying,

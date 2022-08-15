@@ -19,7 +19,8 @@ public class MyBean {
 	int serviceIntTwo = 0;
 	int serviceIntThree = 0;
 	long serviceLong = 0;
-	String serviceString = null;
+	String serviceStringOne = null;
+	String serviceStringTwo = null;
 
 	Path binPath = null;
 	Map<String, Integer> mapCountExt = null;

@@ -179,7 +179,7 @@ public class ConverterBinFunc {
 		var bean = new MyBean(crc, size, modified, name, ext);
 		bean.binPath = binPath;
 		if (extendedBinItem != null) {
-			bean.serviceString = extendedBinItem.isEmpty() ? binItem : extendedBinItem;
+			bean.serviceStringOne = extendedBinItem.isEmpty() ? binItem : extendedBinItem;
 		}
 
 		beans.add(bean);

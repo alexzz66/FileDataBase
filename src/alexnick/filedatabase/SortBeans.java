@@ -37,7 +37,12 @@ public class SortBeans {
 
 	final static int sortServiceIntOne = 5001;
 	final static int sortServiceIntTwo = 5002;
-	final static int sortServiceString = 5010;
+	final static int sortServiceIntThreeThenBinPathNoCheckForNull = 5003;
+
+	final static int sortServiceStringOneNoCheckForNull = 5011;
+	final static int sortServiceStringTwoNoCheckForNull = 5012;
+
+	final static int sortBinPathNoCheckForNull = 6000; // in lower case
 
 	private final static String initAppendCaption = ", sorted by ";
 
@@ -45,7 +50,9 @@ public class SortBeans {
 	private boolean isAppCaptionInQuotes = false;
 
 	public SortBeans(int sortType, String sortCaption, List<MyBean> beans) {
-		sorting(sortType, sortCaption, beans);
+		if (beans != null && beans.size() > 1) {
+			sorting(sortType, sortCaption, beans);
+		}
 	}
 
 	private void sorting(int sortType, String sortCaption, List<MyBean> beans) {
@@ -76,8 +83,11 @@ public class SortBeans {
 
 		case sortServiceIntOne -> sortServiceIntOne(beans);
 		case sortServiceIntTwo -> sortServiceIntTwo(beans);
+		case sortServiceIntThreeThenBinPathNoCheckForNull -> sortServiceIntThreeThenBinPathNoCheckForNull(beans);
 		case sortServiceLong -> sortServiceLong(beans);
-		case sortServiceString -> sortServiceString(beans);
+		case sortServiceStringOneNoCheckForNull -> sortServiceStringOneNoCheckForNull(beans);
+		case sortServiceStringTwoNoCheckForNull -> sortServiceStringTwoNoCheckForNull(beans);
+		case sortBinPathNoCheckForNull -> sortBinPathNoCheckForNull(beans);
 		default -> isSortType = false;
 		}
 		;
@@ -385,6 +395,64 @@ public class SortBeans {
 		});
 	}
 
+	private void sortServiceStringOneNoCheckForNull(List<MyBean> beans) {
+		beans.sort(new Comparator<MyBean>() {
+			@Override
+			public int compare(MyBean o1, MyBean o2) {
+				var s1 = o1.serviceStringOne;
+				var s2 = o2.serviceStringOne;
+				if (s1.equals(s2)) {
+					return defaultCompare(o1, o2);
+				}
+				return s1.compareTo(s2);
+			}
+		});
+	}
+
+	private void sortServiceStringTwoNoCheckForNull(List<MyBean> beans) {
+		beans.sort(new Comparator<MyBean>() {
+			@Override
+			public int compare(MyBean o1, MyBean o2) {
+				var s1 = o1.serviceStringTwo;
+				var s2 = o2.serviceStringTwo;
+				if (s1.equals(s2)) {
+					return defaultCompare(o1, o2);
+				}
+				return s1.compareTo(s2);
+			}
+		});
+	}
+
+	private int compareBinPathNoCheckForNull(MyBean o1, MyBean o2) {
+		var s1 = o1.binPath.toString().toLowerCase();
+		var s2 = o2.binPath.toString().toLowerCase();
+		if (s1.equals(s2)) {
+			return defaultCompare(o1, o2);
+		}
+		return s1.compareTo(s2);
+	}
+
+	private void sortBinPathNoCheckForNull(List<MyBean> beans) {
+		beans.sort(new Comparator<MyBean>() {
+			@Override
+			public int compare(MyBean o1, MyBean o2) {
+				return compareBinPathNoCheckForNull(o1, o2);
+			}
+		});
+	}
+
+	private void sortServiceIntThreeThenBinPathNoCheckForNull(List<MyBean> beans) {
+		beans.sort(new Comparator<MyBean>() {
+			@Override
+			public int compare(MyBean o1, MyBean o2) {
+				if (o1.serviceIntThree == o2.serviceIntThree) {
+					return compareBinPathNoCheckForNull(o1, o2);
+				}
+				return o1.serviceIntThree - o2.serviceIntThree;
+			}
+		});
+	}
+
 	private void sortServiceLong(List<MyBean> beans) {
 		beans.sort(new Comparator<MyBean>() {
 			@Override
@@ -415,20 +483,6 @@ public class SortBeans {
 				}
 
 				return o1Check ? -1 : 1;
-			}
-		});
-	}
-
-	private void sortServiceString(List<MyBean> beans) {
-		beans.sort(new Comparator<MyBean>() {
-			@Override
-			public int compare(MyBean o1, MyBean o2) {
-				var s1 = o1.serviceString;
-				var s2 = o2.serviceString;
-				if (s1.equals(s2)) {
-					return defaultCompare(o1, o2);
-				}
-				return s1.compareTo(s2);
 			}
 		});
 	}

@@ -75,6 +75,7 @@ public class Const {
 	static final String dirSeparator = "~$$~";
 
 	static final String extSeparator = " : ";
+	static final String countSeparator = "; ";
 	static final String skipInfoPrefix = "Skip: ";
 
 	// DEFINED EXTENSIONS:

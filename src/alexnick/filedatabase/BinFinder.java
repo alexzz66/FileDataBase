@@ -101,7 +101,7 @@ public class BinFinder {
 		bean.serviceIntOne = countBinItems;
 		bean.binPath = path;
 		bean.mapCountExt = mapCountExt;
-		bean.serviceString = keyForSyncBin;
+		bean.serviceStringOne = keyForSyncBin;
 		return bean;
 	}
 

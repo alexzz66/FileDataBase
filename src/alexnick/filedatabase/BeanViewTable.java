@@ -447,12 +447,12 @@ public class BeanViewTable extends JDialog {
 				continue;
 			}
 
-			if (CommonLib.nullEmptyString(b.serviceString)) {
+			if (CommonLib.nullEmptyString(b.serviceStringOne)) {
 				errorNumbersSet.add(i);
 				continue;
 			}
 
-			if (!beansSet.add(b.serviceString)) {
+			if (!beansSet.add(b.serviceStringOne)) {
 				errorNumbersSet.add(i);
 				continue;
 			}

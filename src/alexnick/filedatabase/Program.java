@@ -116,7 +116,7 @@ public class Program {
 		createBin(needCalcID3, mode, parameters.get(0), null);
 	}
 
-	private void syncBin(List<String> parameters) {// TODO sync bin
+	private void syncBin(List<String> parameters) {
 		Path anotherRepoPath = getAnotherRepoOrNull(false, true, FileDataBase.diskMain);
 
 		if (anotherRepoPath == null || !anotherRepoPath.toFile().isDirectory()) {
@@ -125,8 +125,10 @@ public class Program {
 		}
 		setInfo(2, "Another REPO", anotherRepoPath.toString(), null, null);
 
-		System.out.println("start search in OWN repo... " + FileDataBase.repositoryPathStandard);
-		var binFinder = new BinFinder(Path.of(FileDataBase.repositoryPathStandard));
+		Path ownRepoPath = Path.of(FileDataBase.repositoryPathStandard);
+
+		System.out.println("start search in OWN repo... " + ownRepoPath);
+		var binFinder = new BinFinder(ownRepoPath);
 		List<MyBean> beansOwn = binFinder.getBeansOrNull();
 
 		List<MyBean> beansAnother = null;
@@ -141,17 +143,26 @@ public class Program {
 				return;
 			}
 		}
-		// comparing beans
-		System.out.println(NEW_LINE_UNIX + "Found size. OWN: " + beansOwn.size() + ". ANOTHER: " + beansAnother.size());
-		System.out.println(NEW_LINE_UNIX + "start comparing...");
+
+//START filling logList		
+		List<String> logList = new ArrayList<String>();
+		addLog(ADDLOG_DATE, true, logList);
+		addLog("OWN repository: " + ownRepoPath, true, logList);
+		addLog("ANOTHER repository: " + anotherRepoPath, true, logList);
+
+// comparing beans
+		addLog(NEW_LINE_UNIX + "Found size. OWN: " + beansOwn.size() + ". ANOTHER: " + beansAnother.size(), true,
+				logList);
+		addLog(NEW_LINE_UNIX + "start comparing...", true, logList);
+
 		Map<String, Integer> anotherIndexMap = new HashMap<String, Integer>();
 		int countError = 0;
 
 		for (var i = 0; i < beansAnother.size(); i++) {
-			var keyForSyncBin = beansAnother.get(i).serviceString;
+			var keyForSyncBin = beansAnother.get(i).serviceStringOne;
 			if (nullEmptyString(keyForSyncBin)) {
 				countError++;
-				System.out.println("error, another repo, bin: " + beansAnother.get(i).binPath);
+				addLog("error, another repo, bin: " + beansAnother.get(i).binPath, true, logList);
 				continue;
 			}
 
@@ -159,51 +170,48 @@ public class Program {
 		}
 
 		if (anotherIndexMap.isEmpty()) {
-			System.out.println("No found *.bin in ANOTHER repository " + anotherRepoPath);
+			addLog("No found *.bin in ANOTHER repository " + anotherRepoPath, true, logList);
 			return;
 		}
 
-		final String[] typeForColumnOne = new String[] { "-> import new", "-> import update", "<- export new",
-				"<- export update" };
+		int[] expNewUpd_ImpNewUpd_count = new int[] { 0, 0, 0, 0 }; // type's count
 
-		int count = 0; // total count of added
 		int countEqual = 0;
-
-		List<MyBean> beansImportNew = new ArrayList<MyBean>();
-		List<MyBean> beansImportUpdate = new ArrayList<MyBean>();
-		List<MyBean> beansExportNew = new ArrayList<MyBean>();
-		List<MyBean> beansExportUpdate = new ArrayList<MyBean>();
+		List<MyBean> beans = new ArrayList<MyBean>();
 
 //columns: type, own bin, another bin, diff (modified)
 		for (int i = 0; i < beansOwn.size(); i++) {
 			var b = beansOwn.get(i);
-			var keyForSyncBin = b.serviceString;
+			var keyForSyncBinOwn = b.serviceStringOne;
 
-			if (nullEmptyString(keyForSyncBin)) {
+			if (nullEmptyString(keyForSyncBinOwn)) {
 				countError++;
-				System.out.println("error, own repo, bin: " + b.binPath);
+				addLog("error, own repo, bin: " + b.binPath, true, logList);
 				continue;
 			}
 
 			String dateModifiedOwn = b.getThree();
 
-			if (!anotherIndexMap.containsKey(keyForSyncBin.toLowerCase())) { // NEW IMPORT
-				count++;
+			if (!anotherIndexMap.containsKey(keyForSyncBinOwn.toLowerCase())) { // NEW EXPORT
 				int type = 0;
-				var bean = new MyBean(typeForColumnOne[type], b.serviceIntOne + "; " + keyForSyncBin, "",
-						dateModifiedOwn, "");
+				var bean = new MyBean("", "", "", dateModifiedOwn, "");
 
 				bean.serviceIntOne = b.serviceIntOne; // countBinItems own
 				bean.serviceIntTwo = 0; // countBinItems another
+
 				bean.serviceIntThree = type;
 
+				bean.serviceStringOne = keyForSyncBinOwn;
+				bean.serviceStringTwo = "";
+
 				bean.binPath = b.binPath;
-				beansImportNew.add(bean);
+				expNewUpd_ImpNewUpd_count[type]++;
+				beans.add(bean);
 				continue;
 			}
 
-			// UPDATE IMPORT EXPORT, comparing
-			int x = anotherIndexMap.remove(keyForSyncBin.toLowerCase()); // must be correct
+// UPDATE EXPORT IMPORT , comparing
+			int x = anotherIndexMap.remove(keyForSyncBinOwn.toLowerCase()); // must be correct
 			var beanAnotherFound = beansAnother.get(x);
 
 			var ldtOwn = getLocalDateFromFormatterOrNull(dateModifiedOwn);
@@ -221,7 +229,7 @@ public class Program {
 
 			if (dateModifiedOwnToSec <= 0 || dateModifiedAnotherToSec <= 0) {
 				countError++;
-				System.out.println("error define LocalDateTime");
+				addLog("error define LocalDateTime", true, logList);
 				continue;
 			}
 
@@ -235,72 +243,132 @@ public class Program {
 			sb.append(CommonLib.secondsToString(1, true, time, null, null));
 			sb.append(" [").append(dateModifiedOwn).append(" - ").append(dateModifiedAnother).append("]");
 
-			count++;
-			int type = time > 0 ? 1 : 3; // import or export update
+			int type = time > 0 ? 1 : 3; // export or import update
 
-			var bean = new MyBean(typeForColumnOne[type], b.serviceIntOne + "; " + keyForSyncBin,
-					beanAnotherFound.serviceIntOne + "; " + beanAnotherFound.serviceString, sb.toString(), "");
+			var bean = new MyBean("", "", "", sb.toString(), "");
 
 			bean.serviceIntOne = b.serviceIntOne; // countBinItems own
 			bean.serviceIntTwo = beanAnotherFound.serviceIntOne; // countBinItems another
+
 			bean.serviceIntThree = type;
+
+			bean.serviceStringOne = keyForSyncBinOwn;
+			bean.serviceStringTwo = beanAnotherFound.serviceStringOne;
 
 			var bTmp = type == 1 ? b : beanAnotherFound;
 			bean.binPath = bTmp.binPath;
-
-			if (type == 1) {
-				beansImportUpdate.add(bean);
-			} else { // type == 3
-				beansExportUpdate.add(bean);
-			}
+			expNewUpd_ImpNewUpd_count[type]++;
+			beans.add(bean);
 		}
 
-		// remain NEW EXPORT
+		// remain NEW IMPORT
 		for (var keyForSyncBin : anotherIndexMap.keySet()) {
-			var b = beansOwn.get(anotherIndexMap.get(keyForSyncBin));
-			count++;
+			var bAnother = beansAnother.get(anotherIndexMap.get(keyForSyncBin));
 			int type = 2;
-			var bean = new MyBean(typeForColumnOne[type], "", b.serviceIntOne + "; " + b.serviceString, b.getThree(),
-					"");
+			var bean = new MyBean("", "", "", bAnother.getThree(), "");
 
 			bean.serviceIntOne = 0; // countBinItems own
-			bean.serviceIntTwo = b.serviceIntOne; // countBinItems another
+			bean.serviceIntTwo = bAnother.serviceIntOne; // countBinItems another
+
 			bean.serviceIntThree = type;
 
-			bean.binPath = b.binPath;
-			beansExportNew.add(bean);
+			bean.serviceStringOne = "";
+			bean.serviceStringTwo = bAnother.serviceStringOne;
+
+			bean.binPath = bAnother.binPath;
+			expNewUpd_ImpNewUpd_count[type]++;
+			beans.add(bean);
 		}
 
-		System.out.println(NEW_LINE_UNIX + "Compare *.bin finished, error count: " + countError
-				+ "; the same base creation time: " + countEqual);
+		addLog(NEW_LINE_UNIX + "Compare *.bin finished, error count: " + countError + "; the same base creation time: "
+				+ countEqual, true, logList);
 
-		if (count == 0) {
-			System.out.println(NEW_LINE_UNIX + "No found *.bin for import/export");
+		if (beans.isEmpty()) {
+			addLog(NEW_LINE_UNIX + "No found *.bin for export/import", true, logList);
 			return;
 		}
 
-		System.out.println(NEW_LINE_UNIX + "Result, total found: " + count);
-		System.out.println(NEW_LINE_UNIX + "import new: " + beansImportNew.size());
-		for (var b : beansImportNew) {
-			System.out.println(b.binPath + " " + b.getFour(false, false));
-			System.out.println("own: " + b.getOne() + "; two: " + b.getTwo() + "; three: " + b.getThree());
+//SHOW SyncBinTable	
+		Map<Path, Integer> pathsToCopy = null;
+		FileDataBase.showFrameInfo("Sync *.bin table");
+		var syncBinTable = new SyncBinTable(ownRepoPath, anotherRepoPath, expNewUpd_ImpNewUpd_count, beans);
+		var ft = new FutureTask<>(syncBinTable);
+		new Thread(ft).start();
+		try {
+			int showViewResult = ft.get();
+			if (showViewResult == Const.MR_COPY_MOVE) {
+				pathsToCopy = syncBinTable.getPathsToCopyOrNull();
+			}
+
+		} catch (Exception e) {
+			addLog("error while show SyncBinTable...", true, logList);
 		}
 
-		System.out.println(NEW_LINE_UNIX + "import update: " + beansImportUpdate.size());
-		for (var b : beansImportUpdate) {
-			System.out.println(b.binPath + " " + b.getFour(false, false));
-			System.out.println("own: " + b.getOne() + "; two: " + b.getTwo() + "; three: " + b.getThree());
+		if (nullEmptyMap(pathsToCopy)) {
+			return;
 		}
-		System.out.println(NEW_LINE_UNIX + "export new: " + beansExportNew.size());
-		for (var b : beansExportNew) {
-			System.out.println(b.binPath + " " + b.getFour(false, false));
-			System.out.println("own: " + b.getOne() + "; two: " + b.getTwo() + "; three: " + b.getThree());
+
+		addLog("Total chosen *.bin files for export/import: " + pathsToCopy.size() + " (*.dat will be added later)",
+				true, logList);
+		addLog(ADDLOG_SEP, true, logList);
+
+		List<Path> listImport = new ArrayList<Path>();
+		List<Path> listExport = new ArrayList<Path>();
+
+		for (var e : pathsToCopy.entrySet()) {
+			var fDat = FileDataBase.getDatPathForBinOrNull(e.getKey());
+			if (fDat == null) {
+				continue;
+			}
+
+			List<Path> tmp = switch (e.getValue()) {
+			case 0, 1 -> listExport;
+			case 2, 3 -> listImport;
+			default -> null;
+			};
+
+			if (tmp != null) {
+				tmp.add(e.getKey());
+				tmp.add(fDat);
+			}
 		}
-		System.out.println(NEW_LINE_UNIX + "export update: " + beansExportUpdate.size());
-		for (var b : beansExportUpdate) {
-			System.out.println(b.binPath + " " + b.getFour(false, false));
-			System.out.println("own: " + b.getOne() + "; two: " + b.getTwo() + "; three: " + b.getThree());
+
+		var bCM = new CopyMove(DeleteIfExists_OLD_DELETE, true, false);
+
+//EXPORT
+		int countExport = 0;
+		if (!listExport.isEmpty()) { // 'ownRepoPath' >> 'anotherRepoPath'
+			addLog("Start EXPORT, files: " + listExport.size(), true, logList);
+
+			var tmp = fileSeparatorAddIfNeed(false, true, ownRepoPath.toString());
+
+			countExport = bCM.backUpCopyMoveFiles(QUERY_CONFIRM_LIST_YES_NO_TOALL, 3, true, "'->EXPORT' files, copying",
+					tmp.length(), anotherRepoPath, listExport, logList);
+
+			addLog(ADDLOG_SEP, true, logList);
 		}
+
+// IMPORT
+		int countImport = 0;
+		if (!listImport.isEmpty()) { // 'anotherRepoPath' >> 'ownRepoPath'
+			addLog("Start IMPORT, files: " + listImport.size(), true, logList);
+
+			var tmp = fileSeparatorAddIfNeed(false, true, anotherRepoPath.toString());
+
+			countImport = bCM.backUpCopyMoveFiles(QUERY_CONFIRM_LIST_YES_NO_TOALL, 3, true, "'<-IMPORT' files, copying",
+					tmp.length(), ownRepoPath, listImport, logList);
+
+			addLog(ADDLOG_SEP, true, logList);
+		}
+
+		int countCopyTotal = countExport + countImport;
+		int sumSizes = listExport.size() + listImport.size();
+		addLog("Total copy result: " + countCopyTotal + " from " + sumSizes, true, logList);
+		var sb = new StringBuilder();
+		sb.append("Sync *.bin, RESULT: export ").append(countExport).append(" / ").append(listExport.size());
+		sb.append("; import ").append(countImport).append(" / ").append(listImport.size());
+		addLog(sb.toString(), true, logList);
+		saveAndShowList(true, 1, FileDataBase.getTempPath("SyncBinResult.txt"), logList);
 	}
 
 	private void deleteEmptyDir(List<String> parameters) {
@@ -1734,13 +1802,13 @@ public class Program {
 		var bCM = new CopyMove(DeleteIfExists_NEW_SAVE_WITH_OTHER_NAME, copying, moving);
 
 		// other disk, copying if not 'moveOnly' defined
-		int countOther = (sourcePathListOtherDisk.isEmpty()) ? 0
+		int countOther = (nullEmptyList(sourcePathListOtherDisk)) ? 0
 				: bCM.backUpCopyMoveFiles(QUERY_CONFIRM_LIST, 3, false, copying ? copyString : moveString, 0,
 						newDestFolder, sourcePathListOtherDisk, logList);
 
 		// the same disk, moving if not 'copyOnly' defined
 		int countSame = 0;
-		if (queryCopyMoveDefined(false) && !sourcePathListSameDisk.isEmpty()) {
+		if (queryCopyMoveDefined(false) && notNullEmptyList(sourcePathListSameDisk)) {
 			countSame = bCM.backUpCopyMoveFiles(getQueryCopyMove(), 3, false, moving ? moveString : copyString, 0,
 					newDestFolder, sourcePathListSameDisk, logList);
 		}

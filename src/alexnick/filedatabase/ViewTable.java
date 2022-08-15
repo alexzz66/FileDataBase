@@ -60,7 +60,7 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 	private JButton butMark = null;
 	volatile private int lastSortType = SortBeans.sortNoDefined;
 	private final String captionPrefix;
-	private String caption = "";
+	private String standardTitle = "";
 	private int sizeInCaption = 0;
 	private Path pathForUpdate = null;
 
@@ -469,7 +469,7 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 		lastSortType = sortType;
 		setStandardTitle();
 		var sortBeans = new SortBeans(sortType, sortCaption, beans);
-		setNewTitle(caption.concat(sortBeans.getAppendCaption()));
+		setNewTitle(standardTitle.concat(sortBeans.getAppendCaption()));
 	}
 
 	private void setNewTitle(String s) {
@@ -481,9 +481,9 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 	private void setStandardTitle() {
 		if (beans.size() != sizeInCaption) {
 			sizeInCaption = beans.size();
-			caption = captionPrefix + " (" + beans.size() + ")";
+			standardTitle = captionPrefix + " (" + beans.size() + ")";
 		}
-		setNewTitle(caption);
+		setNewTitle(standardTitle);
 	}
 
 	private void showExplorerTableOrDeleteBin() {

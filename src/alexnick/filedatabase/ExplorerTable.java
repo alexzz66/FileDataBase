@@ -172,8 +172,6 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 
 //INIT COMPONENTS	
 	private void initComponents() { // on constructor
-		Box contents = new Box(BoxLayout.Y_AXIS);
-
 //FILL JPANEL
 		var cmbChecking = new JComboBox<String>(cmbCheckItems);
 		var cmbCheckingApp = new JComboBox<String>(cmbCheckItemsApp);
@@ -289,11 +287,14 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 		buttons.add(butNext);
 
 		buttons.add(tfPathForBeans);
+
 		JTextArea area = new JTextArea(3, 0); // add 'buttons' height
 		area.setBackground(buttons.getBackground());
 		area.setEditable(false);
 		buttons.add(area);
 		buttons.setLayout(new FlowLayout(FlowLayout.LEADING));
+
+		Box contents = new Box(BoxLayout.Y_AXIS);
 
 		contents.add(new JScrollPane(myTable));
 		getContentPane().add(contents, BorderLayout.CENTER);
@@ -544,7 +545,7 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 			noDubleSort = true;
 		} else if (columnIndex == 2) {
 			if (lastSortType == SortBeans.sortTwoLowerCase) {
-				sortType = SortBeans.sortServiceString;
+				sortType = SortBeans.sortServiceStringOneNoCheckForNull;
 				sortCaption = "Name's extensions";
 			} else {
 				sortType = SortBeans.sortTwoLowerCase;
@@ -636,7 +637,7 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 
 			var bean = new MyBean(one, two, sbThree.toString(), four, "");
 			bean.serviceIntOne = CommonLib.SIGN_FOLDER;
-			bean.serviceString = "";
+			bean.serviceStringOne = "";
 			bean.serviceLong = Long.MAX_VALUE - subDirInfo.sizeTotalFiles >>> 6;
 			beans.add(bean);
 		}
@@ -653,7 +654,7 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 
 			var bean = new MyBean(one, two, three, four, "");
 			bean.serviceIntOne = CommonLib.SIGN_FILE;
-			bean.serviceString = fileInfo.getExtForFourApp();
+			bean.serviceStringOne = fileInfo.getExtForFourApp();
 			bean.serviceLong = fileInfo.getDate();
 			beans.add(bean);
 		}

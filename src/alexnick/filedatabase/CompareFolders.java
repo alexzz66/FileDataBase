@@ -4,7 +4,6 @@ import java.io.File;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -50,25 +49,27 @@ public class CompareFolders {
 	 * @param program               class, not must be null
 	 * @param compareLogType        0 (by default):new, newer and newerEqualSize in
 	 *                              log; other lists in short format (no more limit,
-	 *                              just like writes on console); 1: also be added
-	 *                              before in full format, old and older; 2: also be
-	 *                              added before in full format, equals and
-	 *                              equalsSign;
-	 * @param copyMode              0 (by default):no copying files; 1:copy by
-	 *                              'backUp' method, 2: the same with offer creating
-	 *                              new folder; 3: 'exchange' method, just
-	 *                              'sourceStartPath' be changed on 'destStartPath';
+	 *                              just like writes on console);<br>
+	 *                              1: also be added before in full format, old and
+	 *                              older;<br>
+	 *                              2: also be added before in full format, equals
+	 *                              and equalsSign;
+	 * @param copyMode              0 (by default):no copying files;<br>
+	 *                              1:copy by 'backUp' method,<br>
+	 *                              2: the same with offer creating new folder;<br>
+	 *                              3: 'exchange' method, just 'sourceStartPath' be
+	 *                              changed on 'destStartPath';<br>
 	 *                              4: choose method;
 	 * @param sourceStartPathString must not be null/empty
-	 * @param sourceBinPath         if 'null', be updated '*.bin' file; else: must
-	 *                              be exists
+	 * @param sourceBinPath         if 'null', be updated '*.bin' file;<br>
+	 *                              else: must be exists
 	 * @param destStartPathString   must not be null/empty
-	 * @param destBinPathFile       if 'null', be updated '*.bin' file; else: must
-	 *                              be exists
+	 * @param destBinPathFile       if 'null', be updated '*.bin' file;<br>
+	 *                              else: must be exists
 	 * @param sourceStartPathExists for 'copyMode' == 0 => if 'true' (call from
 	 *                              'CompareTwoBin' of ViewTable), and
-	 *                              'equalSignList' not empty, may be show EqualSign
-	 *                              Table for renaming
+	 *                              'equalSignList' not empty,<br>
+	 *                              may be showed EqualSign Table for renaming
 	 * @throws Exception if any errors
 	 */
 //method called with  'copymode' > 0 -> for Const.MODE_STOP_FOUR (when 'bin created')
@@ -455,7 +456,7 @@ public class CompareFolders {
 							equalNamesBean.serviceIntTwo = 0;// for format 'one'; from 0; no need here, always '0'
 							equalNamesBean.serviceIntThree = 0; // for format 'one'; defined later, it is 'id'
 							equalNamesBean.serviceLong = sourceFile.length(); // for format 'one'
-							equalNamesBean.serviceString = sign; // for format 'one', it's signature
+							equalNamesBean.serviceStringOne = sign; // for format 'one', it's signature
 
 							equalNamesBean.binPath = canonicalSourceFile.toPath(); // need for define move or undo_move
 						} catch (Exception e) {
@@ -525,7 +526,7 @@ public class CompareFolders {
 					b.serviceIntTwo = equalSignIdDestCount;// for format 'one'; from 0;
 					b.serviceIntThree = equalSignId; // for format 'one'
 					b.serviceLong = sourceFile.length(); // for format 'one'
-					b.serviceString = sign; // for format 'one'
+					b.serviceStringOne = sign; // for format 'one'
 
 					FileDataBase.formatBeanOneForEqualTable(null, b);
 					beans.add(b);
@@ -571,20 +572,8 @@ public class CompareFolders {
 			return -1;
 		}
 
-		if (beans.size() > 1) { // sort
-			beans.sort(new Comparator<MyBean>() {
-				@Override
-				public int compare(MyBean o1, MyBean o2) {
-//'countBinItems (serviceIntOne)': 0:newList; 1:newerList; 2: newerListEqualSize
-					var c1 = o1.serviceIntOne;
-					var c2 = o2.serviceIntOne;
-					if (c1 != c2) {
-						return c1 - c2;
-					}
-					return o1.getFourLowerCase(false, false).compareTo(o2.getFourLowerCase(false, false));
-				}
-			});
-		}
+//sort: 'countBinItems (serviceIntOne)': 0:newList; 1:newerList; 2: newerListEqualSize
+		new SortBeans(SortBeans.sortServiceIntOne, "", beans);
 
 		int countNew = 0;
 		int countNewer = 0;
@@ -636,6 +625,7 @@ public class CompareFolders {
 				copyCount += bCM.backUpCopyMoveFiles(QUERY_CONFIRM_LIST, 3, true, "New files, copying",
 						removeFromSourceForExchange, newDestStartPath, list, compareLog);
 			}
+
 			if (doBakToCopyMove) {
 				setInfo(2, "mode", "OLD_EXISTS_RENAME_TO_BAK", null, null);
 			}
@@ -643,7 +633,7 @@ public class CompareFolders {
 			int deleteIfExistsMode = doBakToCopyMove ? DeleteIfExists_OLD_RENAME_TO_BAK : DeleteIfExists_OLD_DELETE;
 			bCM.setDeleteIfExistsMode(deleteIfExistsMode);
 
-			if (queryCopyMoveDefined(false)) { // that is, no been chosen 'NOT_FOR_ALL'
+			if (queryCopyMoveDefined(false)) { // means, no been chosen 'NOT_FOR_ALL'
 				list = getPathsFromMapOrEmpty(1, map);
 				if (!list.isEmpty()) {
 					totalCountForCopy += list.size();
@@ -652,7 +642,7 @@ public class CompareFolders {
 				}
 			}
 
-			if (queryCopyMoveDefined(false)) { // that is, no been chosen 'NOT_FOR_ALL'
+			if (queryCopyMoveDefined(false)) { // means, no been chosen 'NOT_FOR_ALL'
 				list = getPathsFromMapOrEmpty(2, map);
 				if (!list.isEmpty()) {
 					totalCountForCopy += list.size();

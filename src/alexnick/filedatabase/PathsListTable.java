@@ -697,11 +697,11 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 					break;
 				}
 
-				if (!beanRen.check || CommonLib.nullEmptyString(beanRen.serviceString)) {
+				if (!beanRen.check || CommonLib.nullEmptyString(beanRen.serviceStringOne)) {
 					continue;
 				}
 
-				Path newPath = Path.of(beanRen.serviceString);
+				Path newPath = Path.of(beanRen.serviceStringOne);
 				Path oldPath = beanRen.binPath;
 
 				if (newPath != null && setCheckedPaths.contains(oldPath)) {

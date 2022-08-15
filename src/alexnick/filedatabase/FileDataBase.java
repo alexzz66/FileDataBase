@@ -1066,7 +1066,7 @@ public class FileDataBase {
 			sb.append("--" + b.serviceIntTwo);
 		}
 
-		sb.append("; ").append(b.serviceString);
+		sb.append("; ").append(b.serviceStringOne);
 
 		if (b.getTwo().equals(b.getThree())) {// sourceName.equals(destName)
 			sb.append("; equals");
