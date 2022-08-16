@@ -7,10 +7,10 @@ import java.util.concurrent.FutureTask;
 
 import alexnick.CommonLib;
 
-public class InitShowViewTable {
+public class ViewTableInit {
 	private int showViewResult = Const.MR_NO_CHOOSED;
 
-	public InitShowViewTable(Program program) {
+	public ViewTableInit(Program program) {
 		var binFinder = new BinFinder(Path.of(FileDataBase.repositoryPathCurrent));
 
 		List<MyBean> beans0 = binFinder.getBeansOrNull();

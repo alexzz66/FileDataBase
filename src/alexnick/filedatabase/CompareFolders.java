@@ -104,9 +104,10 @@ public class CompareFolders {
 		if (CommonLib.nullEmptyString(startPathString)) {
 			throw new IllegalArgumentException("Start path must not be null/empty");
 		}
+
 		File binPathFile = null;
 		File startPathFile = copyMode == 0 ? null
-				: Path.of(startPathString).toAbsolutePath().toFile().getCanonicalFile();
+				: Path.of(startPathString).toAbsolutePath().normalize().toFile().getCanonicalFile();
 
 		if (binPath == null && copyMode != 0) {
 			if (!startPathFile.exists()) {
@@ -120,7 +121,7 @@ public class CompareFolders {
 			}
 
 		} else {
-			binPathFile = binPath.toFile();
+			binPathFile = binPath.toAbsolutePath().normalize().toFile();
 		}
 
 		if (!binPathFile.exists() || binPathFile.isDirectory()) {

@@ -1,7 +1,7 @@
 @echo off
 cd /d %~d0%~p0
 cd ../bin
-start /b /high java alexnick.filedatabase.FileDataBase -p:finalPause;temp;tempYes;bigSize;plCrcNo;plOneFolderYes;  %*
+start /b /high java alexnick.filedatabase.FileDataBase -v:finalPause;temp;tempYes;bigSize;plCrcNo;plOneFolderYes;  %*
 
 :FOR ALL MODES >>
 :option register (bigsize,bigSize,bIGSIZE) no matter; all option must be separated by ";", example -a:tempYes;bigsize;finalPause

@@ -320,7 +320,7 @@ public class FileDataBase {
 				return Const.MODE_PATHSLIST;
 			}
 
-			File startPath = Path.of(secondArg).toFile().getCanonicalFile();
+			File startPath = Path.of(secondArg).toAbsolutePath().normalize().toFile().getCanonicalFile();
 			if (!startPath.isDirectory()) {
 				return Const.MODE_NO_DEFINED;
 			}
@@ -635,7 +635,7 @@ public class FileDataBase {
 			if (count >= 4) {
 				break;
 			}
-			
+
 			var s = datList.get(i);
 			/*
 			 * last of stuff (4,5) ALIAS_DATE_ID = "<dateID>" and ALIAS_REPO_ID = "<repoID>"

@@ -1398,7 +1398,7 @@ public class CommonLib {
 				minLengthFileString = 1;
 			}
 			if (fileString.length() >= minLengthFileString) {
-				File f = Path.of(fileString).toAbsolutePath().toFile();
+				File f = Path.of(fileString).toAbsolutePath().normalize().toFile();
 				if (!f.exists()) {
 					return null;
 				}
@@ -1564,7 +1564,7 @@ public class CommonLib {
 		sourceDisk = fileSeparatorAddIfNeed(false, true, sourceDisk);
 		if (!excludeSourceDisk) {
 			Path sourceFolderPath = (sourceFolder.isEmpty()) ? Path.of(sourceDisk)
-					: Path.of(sourceDisk, sourceFolder).toAbsolutePath();
+					: Path.of(sourceDisk, sourceFolder).toAbsolutePath().normalize();
 
 			if (sourceFolderPath.toFile().isDirectory()) {
 				equalFolders.add(sourceFolderPath.toFile().getCanonicalFile().toString());
@@ -1584,7 +1584,7 @@ public class CommonLib {
 				continue;
 			}
 
-			File f = Path.of(cur, sourceFolder).toAbsolutePath().toFile();
+			File f = Path.of(cur, sourceFolder).toAbsolutePath().normalize().toFile();
 			if (!f.isDirectory()) {
 				continue;
 			}

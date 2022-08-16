@@ -69,7 +69,7 @@ public class Program {
 		}
 
 		if (mode == Const.MODE_SYNC_BIN) {// before 'isTemp'
-			syncBin(parameters);
+			syncBin();
 			return;
 		}
 
@@ -94,7 +94,7 @@ public class Program {
 		}
 
 		if (mode == Const.MODE_VIEW) {
-			var showView = new InitShowViewTable(this);
+			var showView = new ViewTableInit(this);
 			var result = showView.getShowViewResult();
 			if (result == Const.MR_COPY_MOVE) {
 				doCopyMoveNew();
@@ -116,7 +116,7 @@ public class Program {
 		createBin(needCalcID3, mode, parameters.get(0), null);
 	}
 
-	private void syncBin(List<String> parameters) {
+	private void syncBin() {
 		Path anotherRepoPath = getAnotherRepoOrNull(false, true, FileDataBase.diskMain);
 
 		if (anotherRepoPath == null || !anotherRepoPath.toFile().isDirectory()) {
@@ -378,8 +378,7 @@ public class Program {
 		try {
 			var res = false;
 			if (parameters.size() == 1) {
-				var path = Path.of(parameters.get(0)).toAbsolutePath();
-				startFolderFile = path.toFile().getCanonicalFile();
+				startFolderFile = Path.of(parameters.get(0)).toFile().getCanonicalFile();
 				res = startFolderFile.isDirectory();
 			}
 			if (!res) {
@@ -1338,7 +1337,7 @@ public class Program {
 					options += Const.OPTIONS_ONE_PATHSLIST_YES;
 				}
 				try {
-					file = file.getAbsoluteFile().getCanonicalFile();
+					file = file.getCanonicalFile();
 					createBin(Const.ID3_EXTRACT_NO, Const.MODE_STOP_ONE, file.toString(), null);
 				} catch (Exception e) {
 				}
@@ -1412,7 +1411,7 @@ public class Program {
 		int totalCount = 0;
 		for (int i = 0; i < parameters.size(); i++) {
 			try {
-				var file = Path.of(parameters.get(i)).toAbsolutePath().toFile().getCanonicalFile();
+				var file = Path.of(parameters.get(i)).toFile().getCanonicalFile();
 				if (!file.exists()) {
 					errorArgument("no found: " + file);
 				}
@@ -1841,7 +1840,7 @@ public class Program {
 				if (sTrimmed.length() < 3) {
 					throw new IllegalArgumentException("string too short");
 				}
-				File file = Path.of(sTrimmed).toAbsolutePath().toFile().getCanonicalFile();
+				File file = Path.of(sTrimmed).toFile().getCanonicalFile();
 
 				var fLowerCase = file.toString().toLowerCase();
 				if (fLowerCase.startsWith(destFolderLowerCase)) {

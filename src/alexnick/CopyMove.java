@@ -306,13 +306,18 @@ public class CopyMove {
 	 */
 	synchronized public String copyMoveFile(int queryCopyMoveInit, Path source, Path dest) {
 		StringBuilder sb = new StringBuilder();
-		sb.append(source.toString()).append(" >> ");
-		String prefix = "";
-		setQueryCopyMove(queryCopyMoveInit);
+
 		String queryResult = ""; // if not empty, be added in result string;
 		boolean isMove = false; // false: copying; true: moving
-		boolean equalsSourceDestRoots = source.getRoot().toString().equalsIgnoreCase(dest.getRoot().toString());
+
 		try {
+			source = source.toRealPath();
+			dest = dest.toAbsolutePath().normalize();
+
+			sb.append(source.toString()).append(" >> ");
+			setQueryCopyMove(queryCopyMoveInit);
+
+			boolean equalsSourceDestRoots = source.getRoot().toString().equalsIgnoreCase(dest.getRoot().toString());
 			if (copyMoveMode == CopyMove_COPY_ONLY) {
 				isMove = false;
 			} else if (copyMoveMode == CopyMove_MOVE_ONLY_ATOMIC || copyMoveMode == CopyMove_MOVE_ONLY_NO_ATOMIC) {
@@ -334,6 +339,8 @@ public class CopyMove {
 			}
 
 			if (dest.toFile().exists()) {
+				dest = dest.toRealPath();
+
 				if (dest.equals(source)) {
 					throw new IllegalArgumentException("Same 'source' and 'dest' paths");
 				}
@@ -345,10 +352,7 @@ public class CopyMove {
 					renameToBack(dest); // after 'dest' not be exists, or throw
 					sb.append("[OLD_RENAMED_TO_BAK] ");
 				} else if (deleteIfExistsMode == DeleteIfExists_NEW_SAVE_WITH_OTHER_NAME) {
-					if (prefix.isEmpty()) {
-						prefix = getPrefixName(false);
-					}
-					dest = Path.of(dest.getParent().toString(), prefix + dest.toFile().getName());
+					dest = Path.of(dest.getParent().toString(), getPrefixName(false) + dest.toFile().getName());
 					sb.append("[PREFIX_NEW_NAME] ");
 				} else {
 					throw new IOException("destination file is exists");
@@ -496,7 +500,7 @@ public class CopyMove {
 			if (sourceList.isEmpty()) {
 				throw new IllegalArgumentException("source list is empty");
 			}
-			destFolder = destFolder.toAbsolutePath();
+			destFolder = destFolder.toAbsolutePath().normalize();
 			if (!destFolder.toFile().exists()) {
 				Files.createDirectories(destFolder);
 			} else if (!destFolder.toFile().isDirectory()) {
@@ -555,7 +559,7 @@ public class CopyMove {
 			setQueryCopyMove(queryCopyMoveInit); // first initialization 'queryCopyMove'
 
 			for (int i = 0; i < sourceList.size(); i++) {
-				Path sourceFile = sourceList.get(i).toAbsolutePath();
+				Path sourceFile = sourceList.get(i).toAbsolutePath().normalize();
 				var sourceFileString = sourceFile.toString();
 
 				// exclude equals (by ignore case string) paths
