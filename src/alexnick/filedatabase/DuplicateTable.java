@@ -1,6 +1,7 @@
 package alexnick.filedatabase;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
 
 import alexnick.CommonLib;
 
@@ -71,6 +72,25 @@ public class DuplicateTable extends JDialog implements Callable<List<String>> {
 				if (e.getClickCount() == 2) {
 					FileDataBase.openDirectory(1, FileDataBase.isShiftDown, myTable, beans);
 				}
+			}
+		});
+
+		myTable.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
+					boolean hasFocus, int row, int column) {
+				final Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row,
+						column);
+
+				MyBean bean = beans.get(row);
+				if (bean.serviceIntThree % 2 == 0) {
+					c.setBackground(Const.LIGHT_COLOR);
+				} else {
+					c.setBackground(Color.WHITE);
+				}
+				return c;
 			}
 		});
 

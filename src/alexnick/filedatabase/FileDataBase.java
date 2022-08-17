@@ -320,7 +320,7 @@ public class FileDataBase {
 				return Const.MODE_PATHSLIST;
 			}
 
-			File startPath = Path.of(secondArg).toAbsolutePath().normalize().toFile().getCanonicalFile();
+			File startPath = Path.of(secondArg).toRealPath().toFile();
 			if (!startPath.isDirectory()) {
 				return Const.MODE_NO_DEFINED;
 			}

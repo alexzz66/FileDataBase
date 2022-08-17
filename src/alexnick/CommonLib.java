@@ -1241,7 +1241,7 @@ public class CommonLib {
 	 */
 	synchronized public static int deleteFiles(int needFileDirectory, Path saveResultTo, List<String> list,
 			List<String> log) {
-		List<File> fileList = getFileListOrNull(false, needFileDirectory, list);
+		List<File> fileList = getFileListOrNull(needFileDirectory, list);
 		if (nullEmptyList(fileList)) {
 			System.out.println("error: no found correct paths for deleting");
 			return 0;
@@ -1352,8 +1352,6 @@ public class CommonLib {
 	}
 
 	/**
-	 * @param needCanonicalFile if 'true', result file try transform to 'canonical'
-	 *                          name, with correct symbols register
 	 * @param needFileDirectory SIGN_FILE:must be file;<br>
 	 *                          SIGN_FOLDER:must be directory;<br>
 	 *                          else (SIGN_FILE_OR_FOLDER):no matter
@@ -1364,22 +1362,18 @@ public class CommonLib {
 	 *                          file
 	 * @return list of existing file in absolute path
 	 */
-	private static List<File> getFileListOrNull(final boolean needCanonicalFile, final int needFileDirectory,
-			List<String> list) {
+	private static List<File> getFileListOrNull(final int needFileDirectory, List<String> list) {
 		if (nullEmptyList(list)) {
 			System.out.println("error: list of paths is empty");
 			return null;
 		}
-		return list.stream().unordered()
-				.map(fileString -> getCorrectFileOrNull(needCanonicalFile, 2, needFileDirectory, fileString))
+		return list.stream().unordered().map(fileString -> getCorrectFileOrNull(2, needFileDirectory, fileString))
 				.filter(Objects::nonNull).toList();
 	}
 
 	/**
 	 * Creates and checks existing file in absolute path (no canonical)
 	 * 
-	 * @param needCanonicalFile   if 'true', result file try transform to
-	 *                            'canonical' name, with correct symbols register
 	 * @param minLengthFileString minimal length 'fileString' for create file; if
 	 *                            less than '1', will be set as '1'; recommended
 	 *                            '2', example '/x' <br>
@@ -1390,21 +1384,20 @@ public class CommonLib {
 	 *                            null/empty
 	 * @return existing file path; or null
 	 */
-	synchronized public static File getCorrectFileOrNull(boolean needCanonicalFile, int minLengthFileString,
-			final int needFileDirectory, String fileString) {
+	synchronized public static File getCorrectFileOrNull(int minLengthFileString, final int needFileDirectory,
+			String fileString) {
 		try {
 			fileString = removeEndStringAfterSpecificRestrictedWindowsChars(fileString);
 			if (minLengthFileString < 1) {
 				minLengthFileString = 1;
 			}
 			if (fileString.length() >= minLengthFileString) {
-				File f = Path.of(fileString).toAbsolutePath().normalize().toFile();
+				File f = Path.of(fileString).toRealPath().toFile();
+
 				if (!f.exists()) {
 					return null;
 				}
-				if (needCanonicalFile) {
-					f = f.getCanonicalFile();
-				}
+
 				if (needFileDirectory == SIGN_FILE) {
 					return f.isDirectory() ? null : f;
 				}
@@ -1419,8 +1412,6 @@ public class CommonLib {
 	}
 
 	/**
-	 * @param needCanonicalFile  if 'true', result file try transform to 'canonical'
-	 *                           name, with correct symbols register
 	 * @param needFileDirectory: SIGN_FILE:must be file;<br>
 	 *                           SIGN_FOLDER:must be directory; <br>
 	 *                           else (SIGN_FILE_OR_FOLDER):no matter
@@ -1433,7 +1424,7 @@ public class CommonLib {
 			return null;
 		}
 		List<String> list = readFile(2, 0, file.toPath());
-		return getFileListOrNull(needCanonicalFile, needFileDirectory, list);
+		return getFileListOrNull(needFileDirectory, list);
 	}
 
 	/**
@@ -1558,7 +1549,7 @@ public class CommonLib {
 
 		sourceDisk = Path.of(sourceDisk).getRoot().toFile().toString().toUpperCase();
 		if (nullEmptyString(sourceDisk)) {
-			throw new IllegalArgumentException("source disk not must be null or empty");
+			throw new IllegalArgumentException("source disk must not be null or empty");
 		}
 
 		sourceDisk = fileSeparatorAddIfNeed(false, true, sourceDisk);

@@ -784,7 +784,7 @@ public class CompareFolders {
 
 	private void extractToEqualSignMap(boolean source, int i, String sign, String startPath, String binItem,
 			List<String> binList, List<String> equalSignList) {
-		var s = ConverterBinFunc.getPathStringFromBinItem(null, startPath, binItem, "", null, null, null, null);
+		var s = ConverterBinFunc.getPathStringFromBinItem(null, startPath, binItem, "", null, null, null, null, 0);
 		equalSignList.add(s + " " + ConverterBinFunc.getAppendInf(binItem));
 		binList.set(i, "");
 
@@ -825,7 +825,7 @@ public class CompareFolders {
 		var sub = s2.substring(0, s2.indexOf('*'));
 		if (arrDateSizeCrc1[0] == 0 || arrDateSizeCrc2[0] == 0 || sub.length() < 20) {
 			equalList.add("<error compare> "
-					+ ConverterBinFunc.getPathStringFromBinItem(null, "", s1, "", null, null, null, null));
+					+ ConverterBinFunc.getPathStringFromBinItem(null, "", s1, "", null, null, null, null, 0));
 			return;
 		}
 
@@ -856,7 +856,7 @@ public class CompareFolders {
 			sb.append(",").append(CommonLib.getDifferentTimeOrEmpty(diffAbs));
 		}
 		sb.append(Const.BRACE_END_WITH_SLASH_SPACE); // need for extract path
-		sb.append(ConverterBinFunc.getPathStringFromBinItem(null, "", s1, sub, null, null, null, null));
+		sb.append(ConverterBinFunc.getPathStringFromBinItem(null, "", s1, sub, null, null, null, null, 0));
 
 		if (bIsEqual) {
 			// refer to equals, if equals sizes and crc

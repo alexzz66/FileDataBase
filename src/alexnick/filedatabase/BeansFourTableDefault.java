@@ -3,6 +3,7 @@ package alexnick.filedatabase;
 import javax.swing.*;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableModel;
+
 import java.util.List;
 import java.util.Objects;
 
@@ -56,7 +57,6 @@ public class BeansFourTableDefault extends JTable {
 
 		getColumnModel().getColumn(4).setMinWidth(50);
 	}
-
 }
 
 final class BeansFourTableModel implements TableModel {

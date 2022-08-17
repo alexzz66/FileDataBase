@@ -648,7 +648,7 @@ public class Program {
 			errorArgument("no defined 'mode' for creating *.bin");
 		}
 
-		File startFolderFile = getCorrectFileOrNull(true, 2, SIGN_FOLDER, rowStartFolder);
+		File startFolderFile = getCorrectFileOrNull(2, SIGN_FOLDER, rowStartFolder);
 		if (startFolderFile == null) {
 			errorArgument("not defined start folder for creating *.bin");
 		}
@@ -932,12 +932,12 @@ public class Program {
 					dupInfoList.add(prev);
 					// if returns empty?
 					dupGroupPathsList.add(NEW_LINE_UNIX
-							+ getPathStringFromBinItem(null, startPath, prev, "", null, null, duplicatesBeans, null));
+							+ getPathStringFromBinItem(null, startPath, prev, "", null, null, duplicatesBeans, null, group));
 					bNew = false;
 				}
 				dupInfoList.add(s);
 				dupGroupPathsList
-						.add(getPathStringFromBinItem(null, startPath, s, "", null, null, duplicatesBeans, null));
+						.add(getPathStringFromBinItem(null, startPath, s, "", null, null, duplicatesBeans, null, group));
 			} else {
 				if (!bNew) {
 					dupInfoList.addAll(dupGroupPathsList);
@@ -1283,8 +1283,8 @@ public class Program {
 		if (nullEmptyList(listFullPaths)) { // filling if empty
 			if (notNullEmptyList(parameters)) {
 				listFullPaths = new ArrayList<File>();
-				for (int i = 0; i < parameters.size(); i++) { // need Canonical files, because remaining may be
-					File f = getCorrectFileOrNull(true, 1, SIGN_FILE_OR_FOLDER, parameters.get(i));
+				for (int i = 0; i < parameters.size(); i++) {
+					File f = getCorrectFileOrNull(1, SIGN_FILE_OR_FOLDER, parameters.get(i));
 					if (f == null) {
 						continue;
 					}

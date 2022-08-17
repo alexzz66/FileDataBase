@@ -736,7 +736,7 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 
 				columnBinFolderId3Mark[0] = b.getOne();
 				ConverterBinFunc.getPathStringFromBinItem(columnBinFolderId3Mark, startPath, s, "", b.binPath, setExts,
-						beans0, checkSetLowerCase);
+						beans0, checkSetLowerCase, 0);
 			}
 		}
 		return beans0;
@@ -790,7 +790,7 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 			for (var s : bin) {
 				columnBinFolderId3Mark[0] = b.getOne();
 				ConverterBinFunc.getPathStringFromBinItem(columnBinFolderId3Mark, startPath, s, "", b.binPath, setExts,
-						beans0, checkSetLowerCase);
+						beans0, checkSetLowerCase, 0);
 			}
 		}
 		return beans0;

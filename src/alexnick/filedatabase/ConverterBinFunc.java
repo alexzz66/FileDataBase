@@ -35,36 +35,39 @@ import alexnick.CommonLib;
 public class ConverterBinFunc {
 
 	/**
-	 * @param columnBinFolderId3Mark if not null, be info for table columns
-	 *                               'BinFolder [ID3] **mark'| Size,Signature'
-	 *                               instead of 'CRC | Size'; <br>
-	 *                               in same time, initialized
-	 *                               BinCreator.id3IsProperty
-	 * @param startPath              disk/folder must be not empty for write inf
-	 *                               about duplicates to binInf, else must be
-	 *                               null/empty
-	 * @param binItem                string from *.bin file, not must be empty
-	 * @param appendInf              must be null/empty, but if length == 1 (example
-	 *                               "1") then be written info about size and date
-	 *                               modified (be taken from 'binItem'); if length >
-	 *                               1 and correct 'appendInf', be also added after
-	 *                               ' : ' info (be taken from 'appendInf')
-	 * @param binPath                must be null, but if beans is filling, and
-	 *                               binPath not null - be added
-	 * @param setExts                initialized where need set extension only,
-	 *                               empty as Const.EXTEMPTY
-	 * @param beans                  if not null, be filling
-	 * @param checkSetLowerCase      if not null and beans not null, be checked, if
-	 *                               that set contains current path, it not be added
-	 *                               to beans; <br>
-	 *                               If set not contains current path, it will be
-	 *                               added to set
+	 * @param columnBinFolderId3Mark   if not null, be info for table columns
+	 *                                 'BinFolder [ID3] **mark'| Size,Signature'
+	 *                                 instead of 'CRC | Size'; <br>
+	 *                                 in same time, initialized
+	 *                                 BinCreator.id3IsProperty
+	 * @param startPath                disk/folder must be not empty for write inf
+	 *                                 about duplicates to binInf, else must be
+	 *                                 null/empty
+	 * @param binItem                  string from *.bin file, not must be empty
+	 * @param appendInf                must be null/empty, but if length == 1
+	 *                                 (example "1") then be written info about size
+	 *                                 and date modified (be taken from 'binItem');
+	 *                                 if length > 1 and correct 'appendInf', be
+	 *                                 also added after ' : ' info (be taken from
+	 *                                 'appendInf')
+	 * @param binPath                  must be null, but if beans is filling, and
+	 *                                 binPath not null - be added
+	 * @param setExts                  initialized where need set extension only,
+	 *                                 empty as Const.EXTEMPTY
+	 * @param beans                    if not null, be filling
+	 * @param checkSetLowerCase        if not null and beans not null, be checked,
+	 *                                 if that set contains current path, it not be
+	 *                                 added to beans; <br>
+	 *                                 If set not contains current path, it will be
+	 *                                 added to set
+	 * @param serviceIntThreeToAddBean if beans not null, this parameter will be set
+	 *                                 as 'serviceIntThree'; as default must be '0'
 	 * @return extracted path string from 'binItem', be added startPath, if no
 	 *         empty, and appendInf if not null/empty
 	 */
 	synchronized static String getPathStringFromBinItem(String[] columnBinFolderId3Mark, String startPath,
 			String binItem, String appendInf, Path binPath, Set<String> setExts, List<MyBean> beans,
-			Set<String> checkSetLowerCase) {
+			Set<String> checkSetLowerCase, int serviceIntThreeToAddBean) {
 		if (binItem.isEmpty()) {
 			return "";
 		}
@@ -123,13 +126,15 @@ public class ConverterBinFunc {
 				}
 			}
 
-			fillBeans(name, extendedBinItem.toString(), binItem, columnBinFolderId3Mark, ext, binPath, beans);
+			fillBeans(name, extendedBinItem.toString(), binItem, columnBinFolderId3Mark, ext, binPath, beans,
+					serviceIntThreeToAddBean);
 		}
 		return sbPathString.toString();
 	}
 
 	private static void fillBeans(final String name, final String extendedBinItem, final String binItem,
-			String[] columnBinFolderId3Mark, String ext, Path binPath, List<MyBean> beans) {
+			String[] columnBinFolderId3Mark, String ext, Path binPath, List<MyBean> beans,
+			int serviceIntThreeToAddBean) {
 
 		long[] arrInf = getDecodeDateSizeCrc(binItem);
 		String crc, size, modified;
@@ -178,6 +183,7 @@ public class ConverterBinFunc {
 		}
 		var bean = new MyBean(crc, size, modified, name, ext);
 		bean.binPath = binPath;
+		bean.serviceIntThree = serviceIntThreeToAddBean;
 		if (extendedBinItem != null) {
 			bean.serviceStringOne = extendedBinItem.isEmpty() ? binItem : extendedBinItem;
 		}
@@ -217,13 +223,13 @@ public class ConverterBinFunc {
 		}
 		for (var s : rowList) {
 			if (!s.isEmpty()) {
-				resultList.add(getPathStringFromBinItem(null, startPath, s, appendInf, null, null, null, null));
+				resultList.add(getPathStringFromBinItem(null, startPath, s, appendInf, null, null, null, null, 0));
 			}
 		}
 	}
 
 	synchronized static Path getPathFromBinItemOrNull(String startPath, String binItem) {
-		var pathString = getPathStringFromBinItem(null, "", binItem, "", null, null, null, null);
+		var pathString = getPathStringFromBinItem(null, "", binItem, "", null, null, null, null, 0);
 		return pathString.isEmpty() ? null : Path.of(startPath, pathString);
 	}
 
