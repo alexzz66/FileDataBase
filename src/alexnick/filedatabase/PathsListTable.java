@@ -10,6 +10,8 @@ import java.awt.dnd.DropTarget;
 import java.awt.dnd.DropTargetDropEvent;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
@@ -48,7 +50,6 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 	final private static String[] columns = { "Signature", "<number> <Rename result>", "Modified", "Path" };
 
 	private BeansFourTableDefault myTable;
-	private JTextField tfFindPath;
 	private JLabel checkInfo;
 
 	private int isCheckResult = Const.MR_NO_CHOOSED;
@@ -56,9 +57,6 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 
 	private int countFolders; // RECOUNT, if was a removing
 	private int countFiles;
-
-	private int checkNow = -1; // '-1' that is 'no defined' else
-	private final int CHECK_NOW_MAX = 4; // minimum == 0
 
 	// are dependent on each other
 	private Set<Integer> setChecked = new HashSet<>();
@@ -74,13 +72,26 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 	volatile private int lastSortType = SortBeans.sortNoDefined;
 	private boolean needCalculateCrc;
 
-	private String lastFind = "";
 	private boolean replaceNoSubstringError;
 	private int renameNumber = 0; // increases before rename/undo
 
 	private List<String> renameLog = new ArrayList<String>();
 	private final Path pathSaveRenameLog;
 	private JCheckBox cbShowRenameLog;
+
+	private JTextField tfFindSubstrings;
+	private String[] cmbCheckItemsApp = new String[] { "only", "add", "sub", "onlyCase", "addCase", "subCase" };
+	private String[] cmbCheckItemsAppPosition = new String[] { "any", "starts", "ends" };
+
+	private int[] lastIndex = { 0, 0, 0 }; // cmbCheckItems, cmbCheckItemsApp, cmbFindPosition indexes
+
+	private String[] cmbCheckItems = new String[] { "all", "no", "invert", "by Signature", "by Number,result",
+			"by Modified", "by Path", "by Name", "textSearch" }; // textSearch LAST index
+
+// append const indexes from 'cmbCheckItems'; enabled together cmbCheckItemsApp, cmbFindPosition
+	private final int cmbAppEnabStartIndex = 3;
+	private final int cmbAppEnabEndIndex = 7;
+	private final int textSearchIndex = 8; // cmbApp enabled, but cmbAppPos not enabled
 
 	/**
 	 * @param options          Program options
@@ -110,7 +121,6 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 		countFolders = countFilesFolders[1];
 		setNewStandardTitle();
 
-		Box contents = new Box(BoxLayout.Y_AXIS);
 //by default, set SINGLE_SELECTION, and there are other options
 		var singleOnly = options.contains(Const.OPTIONS_PATHSLIST_SINGLE_ONLY);// no 'multiSelect'
 		var startSetMulti = options.contains(Const.OPTIONS_PATHSLIST_SET_MULTI);// by default,'multiSelect'
@@ -120,8 +130,20 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 		}
 		myTable = new BeansFourTableDefault(
 				startSetMulti ? ListSelectionModel.MULTIPLE_INTERVAL_SELECTION : ListSelectionModel.SINGLE_SELECTION,
-				false, false, true, columns[0], columns[1], columns[2], columns[3], beans);
+				true, false, true, columns[0], columns[1], columns[2], columns[3], beans);
 
+		initComponents(singleOnly, startSetMulti, options);
+
+		var t = Toolkit.getDefaultToolkit().getScreenSize();
+		setBounds(0, 0, t.width - 200, t.height - 200);
+		setLocationRelativeTo(null);
+		sorting(4);
+		printCount(null, null, 0, null);// set count on start window
+		setVisible(true);
+	}
+
+//INIT COMPONENTS	
+	private void initComponents(boolean singleOnly, boolean startSetMulti, String options) {
 		myTable.setDropTarget(new DropTarget() {
 			private static final long serialVersionUID = 1L;
 
@@ -132,7 +154,6 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 			}
 		});
 
-		myTable.addKeyListener(FileDataBase.keyListenerShiftDown);
 		myTable.getTableHeader().addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
@@ -150,7 +171,7 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 				}
 				if (myTable.getSelectedColumn() == 0) {
 					if (e.getClickCount() == 1) {
-						printCount(true, 0, null);
+						printCount(null, null, 0, null);
 					}
 					return;
 				}
@@ -160,12 +181,12 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 			}
 		});
 
-//FILLING JPANEL
+// FILLING JPANEL	
 		JPanel buttons = new JPanel();
 		JCheckBox cbDrag = new JCheckBox("drag");
 		cbDrag.setToolTipText("allow row dragging");
-		cbDrag.addActionListener(new ActionListener() {
 
+		cbDrag.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				myTable.setDragEnabled(cbDrag.isSelected());
@@ -178,15 +199,12 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 		}
 
 		buttons.add(cbDrag);
-		cbDrag.addKeyListener(FileDataBase.keyListenerShiftDown);
 
 		if (!singleOnly) {
 			JComboBox<String> cmbSingleMulti = new JComboBox<>(new String[] { "single", "multi" });
 			cmbSingleMulti.setToolTipText("set 'single' or 'multi' selection");
 			cmbSingleMulti.setSelectedIndex(startSetMulti ? 1 : 0);
-
 			cmbSingleMulti.addActionListener(new ActionListener() {
-
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					var listSelectionModel = cmbSingleMulti.getSelectedIndex() == 1
@@ -201,127 +219,49 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 
 			JCheckBox select = new JCheckBox("select");
 			select.setToolTipText("check/uncheck selected items");
-			select.addActionListener(new ActionListener() {
+			select.addActionListener(e -> checkSelect(select.isSelected()));
 
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					var rows = myTable.getSelectedRows();
-					if (rows.length == 0) {
-						return;
-					}
-					var needSelect = select.isSelected();
-					var needUpdate = false;
-					for (var row : rows) {
-						if (beans.get(row).check == needSelect) {
-							continue;
-						}
-						needUpdate = true;
-						beans.get(row).check = needSelect;
-					}
-					if (needUpdate) {
-						updating(true, 0);
-					}
-				}
-			});
 			buttons.add(cmbSingleMulti);
 			buttons.add(select);
+
 			cmbSingleMulti.addKeyListener(FileDataBase.keyListenerShiftDown);
 			select.addKeyListener(FileDataBase.keyListenerShiftDown);
 		}
 
-		JComboBox<String> cmbFindPosition = new JComboBox<>(new String[] { "any", "starts", "ends" });
-		JComboBox<String> cmbFindFullPathOrName = new JComboBox<>(new String[] { "fullPath", "name" });
-		var butCheckActionListener = new ActionListener() {
+		var cmbChecking = new JComboBox<String>(cmbCheckItems);
+		var cmbCheckingApp = new JComboBox<String>(cmbCheckItemsApp);
+		var cmbCheckingAppPosition = new JComboBox<>(cmbCheckItemsAppPosition);
+
+		cmbCheckingApp.setEnabled(false);
+		cmbCheckingApp.setToolTipText(Const.cmbOnlyAddSubToolTip);
+		cmbCheckingAppPosition.setEnabled(false);
+
+		ActionListener butCheckActionListener = e -> checking(cmbChecking.getSelectedIndex(),
+				cmbCheckingApp.getSelectedIndex(), cmbCheckingAppPosition.getSelectedIndex());
+
+		cmbChecking.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if (beans.isEmpty()) {
-					return;
-				}
-				var clickOnTfFind = e.getActionCommand().equals(Const.textFieldFindPathClick);
-				var findLowerCase = tfFindPath.getText().toLowerCase();
+				var index = cmbChecking.getSelectedIndex();
+				var enabApp = index >= cmbAppEnabStartIndex && index <= cmbAppEnabEndIndex;
+				cmbCheckingAppPosition.setEnabled(enabApp); // 'position' no enabled for textSearch
 
-				if (!findLowerCase.equals(lastFind) || clickOnTfFind) {
-					checkNow = findLowerCase.isEmpty() ? 0 : 1;
-					lastFind = findLowerCase;
-				} else {
-					nextCheckNow(); // 0:no;1:filter(optional);2:files(if > 0);3:folders(if > 0); 4:all
-					if (checkNow == 1 && findLowerCase.isEmpty()) {// filter, no need if empty
-						nextCheckNow();
-					}
-				}
-
-				int findPosition = 0;
-				boolean findByName = false;
-				String find[] = null;
-
-				if (checkNow == 1) {
-					findPosition = cmbFindPosition.getSelectedIndex();
-					findByName = cmbFindFullPathOrName.getSelectedIndex() == 1;
-					find = FileDataBase.getCorrectFindOrNull(findLowerCase);
-					if (find == null) {
-						nextCheckNow();
-					}
-				}
-
-				for (var b : beans) {
-					b.check = (checkNow == 1)
-							? findFilter(findPosition,
-									findByName ? b.getNameLowerCaseFromFour() : b.getFourLowerCase(true, true), find, b)
-							: (checkNow >= CHECK_NOW_MAX) ? true
-									: (checkNow == 2) ? b.serviceIntOne == CommonLib.SIGN_FILE
-											: (checkNow == 3) ? b.serviceIntOne == CommonLib.SIGN_FOLDER : false;// <= 0
-				}
-				updating(false, 0);
-			}
-
-			private boolean findFilter(int findPosition, final String stringInLowerCase, String[] find, MyBean b) {
-				if (!find[1].isEmpty() && !b.findInLowerCase(findPosition, stringInLowerCase, find[1],
-						Const.textFieldFindORSeparator)) {
-					return false;
-				}
-
-				return b.findInLowerCase(findPosition, stringInLowerCase, find[0], Const.textFieldFindORSeparator);
-			}
-
-			private void nextCheckNow() {
-				if (checkNow < 0 || checkNow > CHECK_NOW_MAX) {
-					checkNow = 0;
-				}
-				checkNow++;
-				if (checkNow == 2 && countFiles == 0) {
-					checkNow++;
-				}
-				if (checkNow == 3 && countFolders == 0) {
-					checkNow++;
-				}
-				if (checkNow > CHECK_NOW_MAX) {
-					checkNow = 0;
-				}
-			}
-		};
-
-		tfFindPath = new JTextField(FileDataBase.sizeTextField);
-		tfFindPath.setActionCommand(Const.textFieldFindPathClick);
-		tfFindPath.addActionListener(butCheckActionListener);
-		tfFindPath.setToolTipText(Const.textFieldPathToolTip);
-
-		var butCheck = new JButton("check");
-		butCheck.addActionListener(butCheckActionListener);
-		butCheck.setToolTipText(Const.butCheckToolTipFilesFolders);
-
-		var butInvert = new JButton("invert");
-		butInvert.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				for (var b : beans) {
-					b.check = !b.check;
-				}
-				updating(true, 0);
+				enabApp = enabApp || index == textSearchIndex; // with textSearch
+				cmbCheckingApp.setEnabled(enabApp);
+				tfFindSubstrings.setEnabled(enabApp);
 			}
 		});
 
+		tfFindSubstrings = new JTextField(FileDataBase.sizeTextField);
+		tfFindSubstrings.addActionListener(butCheckActionListener);
+		tfFindSubstrings.setToolTipText(Const.textFieldBinFolderToolTip);
+		tfFindSubstrings.setEnabled(false);
+
+		var butCheck = new JButton("set");
+		butCheck.addActionListener(butCheckActionListener);
+
 		checkInfo = new JLabel();
+		printCount(null, null, 0, null); // check on show window
 
 		cbShowRenameLog = new JCheckBox("log");
 		cbShowRenameLog.setEnabled(false);
@@ -341,36 +281,29 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 		butDoAction.setToolTipText("assign the chosen action to checked/selected items");
 		butDoAction.addActionListener(e -> doAction(cmbActions));
 
-		buttons.add(cmbFindPosition);
-		buttons.add(cmbFindFullPathOrName);
+//ADDING
 
-		buttons.add(tfFindPath);
+		buttons.add(cmbCheckingAppPosition);
+		buttons.add(cmbChecking);
+		buttons.add(cmbCheckingApp);
+
+		buttons.add(tfFindSubstrings);
 		buttons.add(butCheck);
-		buttons.add(butInvert);
+
 		buttons.add(checkInfo);
 
 		buttons.add(cmbActions);
 		buttons.add(butDoAction);
 		buttons.add(cbShowRenameLog);
 
-		cmbFindPosition.addKeyListener(FileDataBase.keyListenerShiftDown);
-		cmbFindFullPathOrName.addKeyListener(FileDataBase.keyListenerShiftDown);
-
-		tfFindPath.addKeyListener(FileDataBase.keyListenerShiftDown);
-		butCheck.addKeyListener(FileDataBase.keyListenerShiftDown);
-		butInvert.addKeyListener(FileDataBase.keyListenerShiftDown);
-
-		cmbActions.addKeyListener(FileDataBase.keyListenerShiftDown);
-		butDoAction.addKeyListener(FileDataBase.keyListenerShiftDown);
-		cbShowRenameLog.addKeyListener(FileDataBase.keyListenerShiftDown);
-
-//end constructor:		
 		JTextArea area = new JTextArea(3, 0); // add 'buttons' height
 		area.setBackground(buttons.getBackground());
 		area.setEditable(false);
 		buttons.add(area);
 		buttons.setLayout(new FlowLayout(FlowLayout.LEADING));
 
+// end constructor:
+		Box contents = new Box(BoxLayout.Y_AXIS);
 		contents.add(new JScrollPane(myTable));
 		getContentPane().add(contents, BorderLayout.CENTER);
 
@@ -378,15 +311,164 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 				ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		getContentPane().add(scrollPan, BorderLayout.SOUTH);
 
-		var t = Toolkit.getDefaultToolkit().getScreenSize();
-		setBounds(0, 0, t.width - 200, t.height - 200);
-		setLocationRelativeTo(null);
-		sorting(4);
-		printCount(true, 0, null);// set count on start window
-		setVisible(true);
+//SHIFT DOWN AND KEYADAPTER	
+		var keyAdapterEnter = new KeyAdapter() {
+			public void keyPressed(KeyEvent e) {
+				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+					checking(cmbChecking.getSelectedIndex(), cmbCheckingApp.getSelectedIndex(),
+							cmbCheckingAppPosition.getSelectedIndex());
+				}
+			}
+		};
+
+		myTable.addKeyListener(FileDataBase.keyListenerShiftDown);
+		cbDrag.addKeyListener(FileDataBase.keyListenerShiftDown);
+
+		cmbCheckingAppPosition.addKeyListener(keyAdapterEnter);
+		cmbCheckingAppPosition.addKeyListener(FileDataBase.keyListenerShiftDown);
+
+		cmbChecking.addKeyListener(keyAdapterEnter);
+		cmbChecking.addKeyListener(FileDataBase.keyListenerShiftDown);
+
+		cmbCheckingApp.addKeyListener(keyAdapterEnter);
+		cmbCheckingApp.addKeyListener(FileDataBase.keyListenerShiftDown);
+
+		tfFindSubstrings.addKeyListener(FileDataBase.keyListenerShiftDown);
+		butCheck.addKeyListener(FileDataBase.keyListenerShiftDown);
+
+		cmbActions.addKeyListener(FileDataBase.keyListenerShiftDown);
+		butDoAction.addKeyListener(FileDataBase.keyListenerShiftDown);
+		cbShowRenameLog.addKeyListener(FileDataBase.keyListenerShiftDown);
 	}
 
-//0:"export to list", 1:"remove from table", 2:"copy/move files to", 3:"delete files", 4:"rename files", 5:"undo rename files", 6:"show rename log"	
+//one, cmpCheckItems:
+//0:"all", 1:"no", 2:"invert", 3:"by Signature", 4:"by Number,result",5:"by Modified", 6:"by Path", 7:"by Name", 8:"textSearch"
+//two, cmpCheckItemsApp:0:"only", 1:"add", 2:"sub" , 3:"onlyCase", 4:"addCase", 5:"subCase" 
+//three:appPos:0:"any", 1:"starts", 2:"ends"	
+	private void checking(int indexOne, int indexTwo, int indexThree) {
+		if (beans.isEmpty() || indexOne < 0 || indexOne >= cmbCheckItems.length) {
+			return;
+		}
+
+//defined: cmbAppEnabStartIndex = 3; cmbAppEnabEndIndex = 7; textSearchIndex = 8;
+		var bNeedFilterAppPos = (indexOne >= cmbAppEnabStartIndex && indexOne <= cmbAppEnabEndIndex);// by columns only
+		var bNeedFilterApp = bNeedFilterAppPos || indexOne == textSearchIndex; // TfFindSubstrings enabled too
+		int indexTwoResult = indexTwo;
+
+		if (indexTwo < 0 || indexTwo >= cmbCheckItemsApp.length) {
+			if (bNeedFilterApp) {
+				return;
+			}
+
+			indexTwo = 0; // for 'all','no','invert' no matter, but in array write correct number
+		}
+
+		if (indexThree < 0 || indexThree >= cmbCheckItemsApp.length) {
+			if (bNeedFilterAppPos) {
+				return;
+			}
+
+			indexThree = 0; // for 'all','no','invert' no matter, but in array write correct number
+		}
+
+		boolean toLowerCase = indexTwo <= 2;
+		if (!toLowerCase) {
+			indexTwoResult -= 3; // 3..5 -> 0..2
+		}
+
+		int[] addedInfo = new int[2]; // plus and minus info
+		addedInfo[0] = 0;
+		addedInfo[1] = 0;
+
+		boolean bAdd = bNeedFilterApp && indexTwoResult == 1;
+		boolean bSub = !bAdd && bNeedFilterApp && indexTwoResult == 2;
+
+		List<String> substringsAND = null;
+		List<String> substringsOr = null;
+
+		if (bNeedFilterApp) {
+			substringsOr = new ArrayList<String>();
+			substringsAND = FileDataBase.getSubstringsAND_DivideByOR_NullIfError(true, toLowerCase,
+					tfFindSubstrings.getText(), substringsOr);
+
+			if (substringsOr.isEmpty()) {
+				updating(lastIndex, null, 0);
+				return;
+			}
+		}
+
+		for (var b : beans) {
+			var res = false;
+
+			if (bNeedFilterApp) { // by column, textSearch
+				if ((b.check && bAdd) || (!b.check && bSub)) {
+					continue;
+				}
+				if (indexOne == textSearchIndex) { // text search //TODO
+
+				} else { // by name (indexOne == 7) or by column 3..6->1..4; find' not null here
+					res = true;
+					String string = indexOne == 7 ? b.getNameFromFour(false)
+							: b.getStringByColumnNumberOrEmpty(indexOne - 2);
+
+					if (CommonLib.notNullEmptyList(substringsAND)) { // first finding by AND, if defined
+						res = b.findSubStringsInString(indexThree, toLowerCase, string, substringsAND);
+					}
+
+					if (res) { // substringsOr not null/empty
+						res = b.findSubStringsInString(indexThree, toLowerCase, string, substringsOr);
+					}
+				}
+
+				if (bSub) {
+					res = !res;
+				}
+
+			} else if (indexOne == 0) { // all
+				res = true;
+			} else if (indexOne == 1) { // no
+				res = false;
+			} else if (indexOne == 2) { // invert
+				res = !b.check;
+			} else {
+				continue; // must not be so...
+			}
+
+			if (b.check != res) {
+				if (res) {
+					addedInfo[0]++;
+				} else {
+					addedInfo[1]++;
+				}
+				b.check = res;
+			}
+		}
+
+		int[] index = { indexOne, indexTwo, indexThree };
+		updating(index, addedInfo, 0);
+
+	}
+
+	private void checkSelect(boolean selected) {
+		var rows = myTable.getSelectedRows();
+		if (rows.length == 0) {
+			return;
+		}
+		var needUpdate = false;
+		for (var row : rows) {
+			if (beans.get(row).check == selected) {
+				continue;
+			}
+			needUpdate = true;
+			beans.get(row).check = selected;
+		}
+		if (needUpdate) {
+			updating(null, null, 0);
+		}
+	}
+
+	// 0:"export to list", 1:"remove from table", 2:"copy/move files to", 3:"delete
+	// files", 4:"rename files", 5:"undo rename files", 6:"show rename log"
 	private void doAction(JComboBox<String> cmbActions) {
 		var index = cmbActions.getSelectedIndex();
 
@@ -409,7 +491,7 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 		String stringFiles = bFiles ? " (files only)" : "";
 
 		Set<Integer> setSelected = new HashSet<Integer>();
-		printCount(false, bFiles ? 1 : 2, setSelected);
+		printCount(lastIndex, null, bFiles ? 1 : 2, setSelected);
 
 		if (setChecked.isEmpty() && setSelected.isEmpty()) {
 			JOptionPane.showMessageDialog(this, "No checked/selected rows found " + stringFiles);
@@ -538,7 +620,7 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 		if (undo) {
 			increaseRenameNumber(true);
 			if (renameUndoItem(foundNumber, false, true)) {
-				updating(true, getNeedSaveType());
+				updating(null, null, getNeedSaveType());
 			}
 			return true;
 		}
@@ -582,7 +664,7 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 			increaseRenameNumber(false);
 
 			if (renameItem(foundNumber, oldName, oldPath, newPath)) {
-				updating(true, getNeedSaveType());
+				updating(null, null, getNeedSaveType());
 			} else {
 				errorMessage = "Error rename, sourse file:" + CommonLib.NEW_LINE_UNIX + oldPath
 						+ CommonLib.NEW_LINE_UNIX + "to new file name:" + CommonLib.NEW_LINE_UNIX + newPath;
@@ -633,7 +715,7 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 			}
 		}
 		if (count > 0) {
-			updating(true, getNeedSaveType());
+			updating(null, null, getNeedSaveType());
 		}
 		return "Renamed: " + count + " from " + sizeToUndo + "; total been chosen: " + totalSize;
 	}
@@ -729,7 +811,7 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 			}
 
 			if ((countRenamed + countRenameError) > 0) {
-				updating(true, getNeedSaveType());
+				updating(null, null, getNeedSaveType());
 			}
 
 			var sb = new StringBuilder();
@@ -819,7 +901,7 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 				throw new Exception(errorMessage);
 			}
 			setNewStandardTitle();
-			updating(true, 0);
+			updating(null, null, 0);
 			return;
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(this, e.getMessage() + ", window be closed");
@@ -829,26 +911,96 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 
 	synchronized private void dragging(int rowDest) {
 		if (FileDataBase.dragging(rowDest, myTable, beans)) {
-			updating(true, 0);
+			updating(null, null, 0);
 		}
 	}
 
 	/**
 	 * Set standard window caption and sort type, updates table, writes checkCount
 	 * 
-	 * @param resetCheckNow     if 'true', in result label be written 'count'; else
-	 *                          label depends on 'checkNow'
+	 * @param index
 	 * @param needSaveRenameLog 0 (by default): no action; 1: save renameLog; 2:
 	 *                          save and start saved file
 	 */
-	private void updating(boolean resetCheckNow, int needSaveRenameLog) {
+	private void updating(int[] index, int[] addedInfo, int needSaveRenameLog) {
 		setStandardTitle();
 		lastSortType = SortBeans.sortNoDefined;
 		myTable.updateUI();
-		printCount(resetCheckNow, 0, null);
+		printCount(index, addedInfo, 0, null);
+
 		if (needSaveRenameLog >= 1 && needSaveRenameLog <= 2) {
 			saveShowRenameLog(needSaveRenameLog, needSaveRenameLog == 2);
 		}
+	}
+
+	/**
+	 * @param index       must be as indexes in 'cmbCheck's
+	 * @param addedInfo   if not null and length == 2, be added info to label
+	 * @param needCount   0 (by default): no recount global 'Set' counters
+	 *                    checked/selected; 1:count files only; 2:count all
+	 * @param setSelected if null, 'needCount' will be set to '0'; not will be
+	 *                    filling 'setChecked' and 'setSelected'; else (if
+	 *                    'needCount' != 0) BOTH be filled
+	 * @return count of checked
+	 */
+	private int printCount(int[] index, int[] addedInfo, int needCount, Set<Integer> setSelected) {
+		lastIndex = index;
+
+		int checkCount = 0;
+
+		if (needCount <= 0 || needCount > 2 || setSelected == null) {
+			needCount = 0;
+		} else { // needCount == 1,2 and 'setSelected' not null
+			setChecked.clear();
+			setSelected.clear();
+		}
+
+		var arSelectedRows = myTable.getSelectedRows();
+		for (int i = 0; i < beans.size(); i++) {
+			var b = beans.get(i);
+
+			if (needCount != 0) {
+				for (int j = 0; j < arSelectedRows.length; j++) {
+					if (arSelectedRows[j] == i) {
+						if (needCount == 1 && b.serviceIntOne != CommonLib.SIGN_FILE) {
+						} else {
+							setSelected.add(i);
+						}
+						break;
+					}
+				}
+			}
+
+			if (!b.check) {
+				continue;
+			}
+
+			checkCount++;
+			if (needCount != 0) {
+				if (needCount == 1 && b.serviceIntOne != CommonLib.SIGN_FILE) {
+				} else {
+					setChecked.add(i);
+				}
+			}
+		}
+
+		var sb = new StringBuilder();
+		sb.append((index == null) ? "count" : cmbCheckItems[index[0]]);
+
+		if (index != null && ((index[0] == textSearchIndex)
+				|| (index[0] >= cmbAppEnabStartIndex && index[0] <= cmbAppEnabEndIndex))) {
+			sb.append(" ").append(cmbCheckItemsApp[index[1]]);
+		}
+
+		sb.append(": ").append(checkCount);
+
+		if (addedInfo != null && addedInfo.length == 2) {
+			sb.append(" (+").append(addedInfo[0]).append("/-").append(addedInfo[1]).append(")");
+		}
+
+		checkInfo.setText(sb.toString());
+
+		return checkCount;
 	}
 
 	/**
@@ -968,68 +1120,6 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 		standardTitle = "Paths list, size: " + beans.size() + " (folders: " + countFolders + ", files: " + countFiles
 				+ ")";
 		setStandardTitle();
-	}
-
-	/**
-	 * @param resetCheckNow if 'true', in result label be written 'count'; else
-	 *                      label depends on 'checkNow'
-	 * @param needCount     0 (by default): no recount global 'Set' counters
-	 *                      checked/selected; 1:count files only; 2:count all
-	 * @param setSelected   if null, 'needCount' will be set to '0'; not will be
-	 *                      filling 'setChecked' and 'setSelected'; else (if
-	 *                      'needCount' != 0) BOTH be filled
-	 * @return count of checked
-	 */
-	private int printCount(boolean resetCheckNow, int needCount, Set<Integer> setSelected) {
-		int checkCount = 0;
-
-		if (needCount <= 0 || needCount > 2 || setSelected == null) {
-			needCount = 0;
-		} else { // needCount == 1,2 and 'setSelected' not null
-			setChecked.clear();
-			setSelected.clear();
-		}
-
-		if (resetCheckNow) {
-			checkNow = -1;
-		}
-
-		var arSelectedRows = myTable.getSelectedRows();
-		for (int i = 0; i < beans.size(); i++) {
-			var b = beans.get(i);
-
-			if (needCount != 0) {
-				for (int j = 0; j < arSelectedRows.length; j++) {
-					if (arSelectedRows[j] == i) {
-						if (needCount == 1 && b.serviceIntOne != CommonLib.SIGN_FILE) {
-						} else {
-							setSelected.add(i);
-						}
-						break;
-					}
-				}
-			}
-
-			if (!b.check) {
-				continue;
-			}
-
-			checkCount++;
-			if (needCount != 0) {
-				if (needCount == 1 && b.serviceIntOne != CommonLib.SIGN_FILE) {
-				} else {
-					setChecked.add(i);
-				}
-			}
-		}
-// 0:no;1:filter(optional);2:files(if > 0);3:folders(if > 0); 4:all		
-		var s = (checkNow < 0 || checkNow > CHECK_NOW_MAX) ? "count"
-				: checkNow == 2 ? "files"
-						: checkNow == 3 ? "folders"
-								: checkNow == CHECK_NOW_MAX ? "all" : checkNow == 1 ? "filter" : "no";
-
-		checkInfo.setText(s.concat(": ") + checkCount);
-		return checkCount;
 	}
 
 	private int[] initBeans(List<File> listFullPaths) {

@@ -151,28 +151,36 @@ public class MarkInfoTable extends JDialog {
 					}
 				}
 
-				String find[] = null;
+				List<String> substringsAND = null;
+				List<String> substringsOr = null;
 
 				if (checkNow == 1) {
-					find = FileDataBase.getCorrectFindOrNull(findLowerCase);
-					if (find == null) {
+
+					substringsOr = new ArrayList<String>();
+					substringsAND = FileDataBase.getSubstringsAND_DivideByOR_NullIfError(true, true, findLowerCase,
+							substringsOr);
+
+					if (substringsOr.isEmpty()) {
 						checkNow = 2;
 					}
 				}
 
 				for (var b : beans) {
-					b.check = (checkNow == 1) ? findFilter(find, b) : (checkNow >= CHECK_NOW_MAX) ? true : false; // <=0
+					b.check = (checkNow == 1) ? findFilter(substringsOr, substringsAND, b)
+							: (checkNow >= CHECK_NOW_MAX) ? true : false; // <=0
 
 				}
 				updating(false);
 			}
 
-			private boolean findFilter(String[] find, MyBean b) {
-				if (!find[1].isEmpty() && !b.findInColumnLowerCase(1, find[1])) {
-					return false;
+			private boolean findFilter(List<String> substringsOr, List<String> substringsAND, MyBean b) {
+				if (CommonLib.notNullEmptyList(substringsAND)) { // first finding by AND, if defined
+					if (!b.findSubstringsInColumn(1, true, substringsAND)) {
+						return false;
+					}
 				}
-
-				return b.findInColumnLowerCase(1, find[0]);
+				// substringsOr not null/empty
+				return b.findSubstringsInColumn(1, true, substringsOr);
 			}
 		};
 

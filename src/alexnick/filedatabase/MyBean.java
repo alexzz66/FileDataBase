@@ -2,6 +2,7 @@ package alexnick.filedatabase;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -121,9 +122,10 @@ public class MyBean {
 	 * 
 	 * @return
 	 */
-	String getNameLowerCaseFromFour() {
+	String getNameFromFour(boolean toLowerCase) {
 		var pos = four.lastIndexOf(File.separator);
-		return pos >= 0 ? four.substring(pos + 1).toLowerCase() : four.toLowerCase();
+		String res = pos >= 0 ? four.substring(pos + 1) : four.toLowerCase();
+		return toLowerCase ? res.toLowerCase() : res;
 	}
 
 	int getStartNumberFromFour() {
@@ -142,79 +144,81 @@ public class MyBean {
 	}
 
 	/**
-	 * Finds 'substringInLowerCase' in MyBean.one<br>
-	 * Separator will be set as Const.textFieldFindORSeparator<br>
-	 * Find position will be set as 'any place'
-	 * 
-	 * @param columnNumber         set 1:'one', 2:'two', 3:'three',
-	 *                             4:'four'+'fourApp'; 5:'four only' <br>
-	 *                             else return false
-	 * @param substringInLowerCase substring for finding, must not be null/empty,
-	 *                             MUST BE IN LOWER CASE
-	 * 
-	 * @return 'true' if found 'substringInLowerCase' in defined 'columnNumber'
+	 * @param columnNumber set 1:'one', 2:'two', 3:'three', 4:'four'+'fourApp';
+	 *                     5:'four only' <br>
+	 *                     else return false
+	 * @return
 	 */
-	boolean findInColumnLowerCase(int columnNumber, String substringInLowerCase) {
-		String s = columnNumber == 1 ? one
+	String getStringByColumnNumberOrEmpty(int columnNumber) {
+		return columnNumber == 1 ? one
 				: columnNumber == 2 ? two
 						: columnNumber == 3 ? three
 								: columnNumber == 4 ? getFour(false, true)
 										: columnNumber == 5 ? getFour(false, false) : "";
-		return s.isEmpty() ? false
-				: findInLowerCase(0, s.toLowerCase(), substringInLowerCase, Const.textFieldFindORSeparator);
 	}
 
 	/**
-	 * Finds in 'stringInLowerCase', substring 'findInLowerCase'
+	 * Finds 'subStrings' in MyBean.four<br>
+	 * Find position will be set as 'any place'
 	 * 
-	 * @param findPosition           1:find in starts; 2:find in ends; else (example
-	 *                               0): any place 'stringInLowerCase'
-	 * @param stringInLowerCase      string for finding, not must be null/empty,
-	 *                               MUST BE IN LOWER CASE
-	 * @param substringInLowerCase   substring for finding, not must be null/empty,
-	 *                               MUST BE IN LOWER CASE
-	 * @param 'separatorInLowerCase' if not null/empty, MUST BE IN LOWER CASE:
-	 *                               'findInLowerCase' will be divided on separate
-	 *                               strings, finding be in each
+	 * @param columnNumber set 1:'one', 2:'two', 3:'three', 4:'four'+'fourApp';
+	 *                     5:'four only' <br>
+	 *                     else return false
+	 * @param toLowerCase  if true, 'string' and each from 'substrings' will be set
+	 *                     to lower case<br>
+	 *                     if false, comparing as is
+	 * @param subStrings   substrings for finding, must not be null/empty
 	 * 
-	 * @return 'true' if found 'substringInLowerCase' in 'stringInLowerCase'
+	 * @return 'true' if found at least one 'subString' in defined 'columnNumber'
 	 */
-	boolean findInLowerCase(int findPosition, final String stringInLowerCase, String substringInLowerCase,
-			final String separatorInLowerCase) {
-		if (CommonLib.nullEmptyString(substringInLowerCase) || stringInLowerCase.isEmpty()) {
+	boolean findSubstringsInColumn(int columnNumber, boolean toLowerCase, List<String> subStrings) {
+		String s = getStringByColumnNumberOrEmpty(columnNumber);
+		return s.isEmpty() ? false : findSubStringsInString(0, toLowerCase, s, subStrings);
+	}
+
+	/**
+	 * Finds 'subStrings' in 'string'
+	 * 
+	 * @param findPosition 1:find in starts; 2:find in ends; else (example 0): any
+	 *                     place 'stringInLowerCase'
+	 * @param toLowerCase  if true, 'string' and each from 'substrings' will be set
+	 *                     to lower case<br>
+	 *                     if false, comparing as is
+	 * @param string       string for finding, must not be null/empty
+	 * @param subStrings   substrings for finding, must not be null/empty
+	 * @return 'true' if found at least one 'subString' in 'string'
+	 */
+	boolean findSubStringsInString(int findPosition, boolean toLowerCase, String string, List<String> subStrings) {
+		if (CommonLib.nullEmptyString(string) || CommonLib.nullEmptyList(subStrings)) {
 			return false;
 		}
 
-		if (CommonLib.nullEmptyString(separatorInLowerCase)) {
-			return stringInLowerCase.contains(substringInLowerCase);
+		if (toLowerCase) {
+			string = string.toLowerCase();
 		}
 
-		int separatorLength = separatorInLowerCase.length();
-		int limit = 1000; // just in case
-		while (!substringInLowerCase.isEmpty() && limit > 0) {
-			limit--;
-			int posSeparatorInFind = substringInLowerCase.indexOf(separatorInLowerCase);
-			var findSub = posSeparatorInFind >= 0 ? substringInLowerCase.substring(0, posSeparatorInFind)
-					: substringInLowerCase;
+		for (var subString : subStrings) {
+			if (CommonLib.nullEmptyString(subString)) {
+				continue;
+			}
 
-			if (!findSub.isEmpty()) {
-				if (findPosition == 1) {
-					if (stringInLowerCase.startsWith(findSub)) { // 'findSub' not empty
-						return true;
-					}
-				} else if (findPosition == 2) {
-					if (stringInLowerCase.endsWith(findSub)) {
-						return true;
-					}
-				} else if (stringInLowerCase.contains(findSub)) {
+			if (toLowerCase) {
+				subString = subString.toLowerCase();
+			}
+
+			if (findPosition == 1) {
+				if (string.startsWith(subString)) {
 					return true;
 				}
+			} else if (findPosition == 2) {
+				if (string.endsWith(subString)) {
+					return true;
+				}
+			} else if (string.contains(subString)) {
+				return true;
 			}
-			if (posSeparatorInFind < 0) {
-				return false;
-			}
-			substringInLowerCase = substringInLowerCase.substring(posSeparatorInFind + separatorLength);
 		}
+
 		return false;
 	}
 

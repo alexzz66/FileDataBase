@@ -69,8 +69,9 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 	// append const indexes from 'cmbCheckItems'
 	private final int cmbAppEnabStartIndex;
 	private final int cmbAppEnabEndIndex;
-	private final int cmbAppEnabStartFindColumnIndex;
-	private String[] cmbCheckItemsApp = new String[] { "only", "add", "sub" };
+	private final int textSearchIndex; // must be -42 (if not defined) or corrected
+
+	private String[] cmbCheckItemsApp = new String[] { "only", "add", "sub", "onlyCase", "addCase", "subCase" };
 
 	/**
 	 * @param frame           may be 'null' or 'this' in case calling from some
@@ -95,21 +96,19 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 			startPathString = "";
 		}
 
-		// String[] tmp= new String[] { "all", "no", "invert", "by Type, size", "by
-		// Name", "by ExtInfo, mark","by Full path", "toList all/paths", "toList
-		// pathsNoRoot"};
 		List<String> cmbItemsList = List.of("all", "no", "invert", "by Type, size", "by Name", "by ExtInfo, mark",
-				"by Full path", "toList all/paths", "toList pathsNoRoot", "check exists");
+				"by Full path", "toList all/paths", "toList pathsNoRoot", "textSearch", "check exists");
+
 		int endIndex = cmbItemsList.size() - 1;
 		if (!filesCanExist) {
-			endIndex--;
+			endIndex -= 2;
 		}
+
+		textSearchIndex = filesCanExist ? (cmbItemsList.size() - 2) : -42;
 
 		cmbCheckItems = CommonLib.getArrayFromListOrNullByIndexes(0, endIndex, cmbItemsList);
 		cmbAppEnabStartIndex = 3;
 		cmbAppEnabEndIndex = 6;
-// endFindColumn == cmbAppEnabEndIndex (find column's last in 'appEnap' indexes) == cmbAppEnabStartFindColumnIndex + 3
-		cmbAppEnabStartFindColumnIndex = 3;
 
 		columns = new String[] { "Type / Size", "Name",
 				"Extensions info / Crc,modified" + (viewNoMark ? "" : " **mark"), "Full path" };
@@ -185,8 +184,10 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				var index = cmbChecking.getSelectedIndex();
-				tfFindColumn.setEnabled(index >= cmbAppEnabStartFindColumnIndex && index <= cmbAppEnabEndIndex);
-				cmbCheckingApp.setEnabled(index >= cmbAppEnabStartIndex && index <= cmbAppEnabEndIndex);
+				var bFindEnab = (index == textSearchIndex)
+						|| (index >= cmbAppEnabStartIndex && index <= cmbAppEnabEndIndex);
+				tfFindColumn.setEnabled(bFindEnab);
+				cmbCheckingApp.setEnabled(bFindEnab);
 			}
 		});
 
@@ -306,7 +307,8 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 
 //0:"all", 1:"no", 2:"invert"
 //3:"by Type, size", 4:"by Name", 5:"by ExtInfo, mark",	6:"by Full path"
-//7:"toList all/paths", 8:"toList pathsNoRoot", 9:"check exists" (optional)
+//7:"toList all/paths", 8:"toList pathsNoRoot",
+//9:"textSearch" (optional), 10:"check exists" (optional) -> init together if 'filesCanExist'
 	private void checking(final int indexOne, int indexTwo) {
 		if (beans.isEmpty() || indexOne < 0 || indexOne >= cmbCheckItems.length) {
 			return;
@@ -318,7 +320,9 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 			return;
 		}
 
-		var bNeedFilterApp = indexOne >= cmbAppEnabStartIndex && indexOne <= cmbAppEnabEndIndex;
+		var bNeedFilterApp = (indexOne == textSearchIndex)
+				|| (indexOne >= cmbAppEnabStartIndex && indexOne <= cmbAppEnabEndIndex);
+		int indexTwoResult = indexTwo;
 
 		if (indexTwo < 0 || indexTwo >= cmbCheckItemsApp.length) {
 			if (bNeedFilterApp) {
@@ -328,18 +332,27 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 			indexTwo = 0; // for 'all','no','invert' no matter, but in array write correct number
 		}
 
+		boolean toLowerCase = indexTwo <= 2;
+		if (!toLowerCase) {
+			indexTwoResult -= 3; // 3..5 -> 0..2
+		}
+
 		int[] addedInfo = new int[2]; // plus and minus info
 		addedInfo[0] = 0;
 		addedInfo[1] = 0;
 
-		boolean bAdd = bNeedFilterApp && indexTwo == 1;
-		boolean bSub = !bAdd && bNeedFilterApp && indexTwo == 2;
+		boolean bAdd = bNeedFilterApp && indexTwoResult == 1;
+		boolean bSub = !bAdd && bNeedFilterApp && indexTwoResult == 2;
 
-		String find[] = null;
+		List<String> substringsAND = null;
+		List<String> substringsOr = null;
 
-		if (bNeedFilterApp && indexOne >= cmbAppEnabStartFindColumnIndex) { // by column
-			find = FileDataBase.getCorrectFindOrNull(tfFindColumn.getText());
-			if (find == null) {
+		if (bNeedFilterApp) { // by column, textSearch
+			substringsOr = new ArrayList<String>();
+			substringsAND = FileDataBase.getSubstringsAND_DivideByOR_NullIfError(true, toLowerCase,
+					tfFindColumn.getText(), substringsOr);
+
+			if (substringsOr.isEmpty()) {
 				updating(lastIndex, null);
 				return;
 			}
@@ -355,11 +368,12 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 
 				// by column 3..6->1..4; 'find' not null here
 				res = true;
-				if (!find[1].isEmpty()) { // first finding by AND, if true, will be finding by find[0]
-					res = b.findInColumnLowerCase(indexOne - 2, find[1]);
+				if (CommonLib.notNullEmptyList(substringsAND)) { // first finding by AND, if defined
+					res = b.findSubstringsInColumn(indexOne - 2, toLowerCase, substringsAND);
 				}
+
 				if (res) {
-					res = b.findInColumnLowerCase(indexOne - 2, find[0]);
+					res = b.findSubstringsInColumn(indexOne - 2, toLowerCase, substringsOr);
 				}
 
 				if (bSub) {
@@ -372,7 +386,9 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 				res = false;
 			} else if (indexOne == 2) { // invert
 				res = !b.check;
-			} else if (indexOne == 9) { // check exists (optional)
+			} else if (indexOne == textSearchIndex) { // textSearch (optional) //TODO
+
+			} else if (indexOne == 10) { // check exists (optional)
 				try {
 					res = Path.of(b.getFour(false, true)).toFile().exists();
 				} catch (Exception e) {

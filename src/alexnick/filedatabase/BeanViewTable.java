@@ -35,7 +35,7 @@ public class BeanViewTable extends JDialog {
 	private List<MyBean> beansTotal;
 	private BeansFourTableDefault myTable;
 
-	private JTextField tfFindColumn;
+	private JTextField tfFindSubstrings;
 	private JLabel checkInfo;
 	private JButton butMark;
 	private JCheckBox cbFilter;
@@ -50,13 +50,13 @@ public class BeanViewTable extends JDialog {
 	private int[] lastIndex = { 0, 0 }; // first as cmbCheckItems index;second as cmbCheckItemsApp
 
 	private String[] cmbCheckItems = new String[] { "all", "no", "invert", "exist", "no exist", "by BinFolder",
-			"by Signature", "by Modified", "by Path", "remove from table" };// !!! 'remove' must be LAST ITEM
+			"by Signature", "by Modified", "by Path", "textSearch", "remove from table" };// !!! 'remove' must be LAST
+																							// ITEM
 	// append const indexes from 'cmbCheckItems'
 	private final int cmbAppEnabStartIndex = 3;
-	private final int cmbAppEnabEndIndex = 8;
-	private final int cmbAppEnabStartFindColumnIndex = 5; // endFindColumn == cmbAppEnabEndIndex (find column's last in
-															// 'appEnap' indexes) == cmbAppEnabStartFindColumnIndex + 3
-	private String[] cmbCheckItemsApp = new String[] { "only", "add", "sub" };
+	private final int cmbAppEnabEndIndex = 9;
+	private final int cmbAppEnabStartFindColumnIndex = 5;
+	private String[] cmbCheckItemsApp = new String[] { "only", "add", "sub", "onlyCase", "addCase", "subCase" };
 
 	private final String caption;
 	volatile private int lastSortType = SortBeans.sortNoDefined;
@@ -164,15 +164,19 @@ public class BeanViewTable extends JDialog {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				var index = cmbChecking.getSelectedIndex();
-				tfFindColumn.setEnabled(index >= cmbAppEnabStartFindColumnIndex && index <= cmbAppEnabEndIndex);
-				cmbCheckingApp.setEnabled(index >= cmbAppEnabStartIndex && index <= cmbAppEnabEndIndex);
+				var bEnabTfFindSubstrings = index >= cmbAppEnabStartFindColumnIndex && index <= cmbAppEnabEndIndex;
+				var bNeedFilterApp = bEnabTfFindSubstrings
+						|| (index >= cmbAppEnabStartIndex && index <= cmbAppEnabEndIndex);
+
+				tfFindSubstrings.setEnabled(bEnabTfFindSubstrings);
+				cmbCheckingApp.setEnabled(bNeedFilterApp);
 			}
 		});
 
-		tfFindColumn = new JTextField(FileDataBase.sizeTextField);
-		tfFindColumn.addActionListener(butCheckActionListener);
-		tfFindColumn.setToolTipText(Const.textFieldBinFolderToolTip);
-		tfFindColumn.setEnabled(false);
+		tfFindSubstrings = new JTextField(FileDataBase.sizeTextField);
+		tfFindSubstrings.addActionListener(butCheckActionListener);
+		tfFindSubstrings.setToolTipText(Const.textFieldBinFolderToolTip);
+		tfFindSubstrings.setEnabled(false);
 
 		var butCheck = new JButton("set");
 		butCheck.addActionListener(butCheckActionListener);
@@ -232,7 +236,7 @@ public class BeanViewTable extends JDialog {
 		buttons.add(cmbChecking);
 		buttons.add(cmbCheckingApp);
 
-		buttons.add(tfFindColumn);
+		buttons.add(tfFindSubstrings);
 		buttons.add(butCheck);
 		buttons.add(checkInfo);
 
@@ -284,7 +288,7 @@ public class BeanViewTable extends JDialog {
 		cmbCheckingApp.addKeyListener(keyAdapterEnter);
 		cmbCheckingApp.addKeyListener(FileDataBase.keyListenerShiftDown);
 
-		tfFindColumn.addKeyListener(FileDataBase.keyListenerShiftDown);
+		tfFindSubstrings.addKeyListener(FileDataBase.keyListenerShiftDown);
 		butCheck.addKeyListener(FileDataBase.keyListenerShiftDown);
 
 		cbFilter.addKeyListener(FileDataBase.keyListenerShiftDown);
@@ -300,8 +304,8 @@ public class BeanViewTable extends JDialog {
 
 //0:"all", 1:"no", 2:"invert", 3:"exists" (3 and more: with indexTwo), 4: "no exists"
 //5:"by BinFolder", 6:"by Start path only", 7:"by Modified ", 8:"by Result"
-//9:remove from table (last index)
-//app: 0:"only", 1:"add", 2:"sub" 	
+//9: "textSearch",  10:remove from table (last index)
+//indexTwo, app: 0:"only", 1:"add", 2:"sub" , 3:"onlyCase", 4:"addCase", 5:"subCase" 	
 	private void checking(final int indexOne, int indexTwo) {
 		if (beans.isEmpty() || indexOne < 0 || indexOne >= cmbCheckItems.length) {
 			return;
@@ -312,7 +316,11 @@ public class BeanViewTable extends JDialog {
 			return;
 		}
 
-		var bNeedFilterApp = indexOne >= cmbAppEnabStartIndex && indexOne <= cmbAppEnabEndIndex;
+//defined: cmbAppEnabStartIndex = 3; cmbAppEnabEndIndex = 9; cmbAppEnabStartFindColumnIndex = 5;	
+		var bEnabTfFindSubstrings = indexOne >= cmbAppEnabStartFindColumnIndex && indexOne <= cmbAppEnabEndIndex;
+		var bNeedFilterApp = bEnabTfFindSubstrings
+				|| (indexOne >= cmbAppEnabStartIndex && indexOne <= cmbAppEnabEndIndex);
+		int indexTwoResult = indexTwo;
 
 		if (indexTwo < 0 || indexTwo >= cmbCheckItemsApp.length) {
 			if (bNeedFilterApp) {
@@ -322,19 +330,28 @@ public class BeanViewTable extends JDialog {
 			indexTwo = 0; // for 'all','no','invert' no matter, but in array write correct number
 		}
 
+		boolean toLowerCase = indexTwo <= 2;
+		if (!toLowerCase) {
+			indexTwoResult -= 3; // 3..5 -> 0..2
+		}
+
 		// remains all but the last
 		int[] addedInfo = new int[2]; // plus and minus info
 		addedInfo[0] = 0;
 		addedInfo[1] = 0;
 
-		boolean bAdd = bNeedFilterApp && indexTwo == 1;
-		boolean bSub = !bAdd && bNeedFilterApp && indexTwo == 2;
+		boolean bAdd = bNeedFilterApp && indexTwoResult == 1;
+		boolean bSub = !bAdd && bNeedFilterApp && indexTwoResult == 2;
 
-		String find[] = null;
+		List<String> substringsAND = null;
+		List<String> substringsOr = null;
 
-		if (bNeedFilterApp && indexOne >= cmbAppEnabStartFindColumnIndex) { // by column
-			find = FileDataBase.getCorrectFindOrNull(tfFindColumn.getText());
-			if (find == null) {
+		if (bEnabTfFindSubstrings) {
+			substringsOr = new ArrayList<String>();
+			substringsAND = FileDataBase.getSubstringsAND_DivideByOR_NullIfError(true, toLowerCase,
+					tfFindSubstrings.getText(), substringsOr);
+
+			if (substringsOr.isEmpty()) {
 				updating(lastIndex, null);
 				return;
 			}
@@ -352,13 +369,17 @@ public class BeanViewTable extends JDialog {
 					if (indexOne == 3) { // exists
 						res = !res;
 					}
+				} else if (indexOne == 9) { // text search //TODO
+
 				} else { // by column 5..8->1..4; find' not null here
 					res = true;
-					if (!find[1].isEmpty()) { // first finding by AND, if true, will be finding by find[0]
-						res = b.findInColumnLowerCase(indexOne - 4, find[1]);
+
+					if (CommonLib.notNullEmptyList(substringsAND)) { // first finding by AND, if defined
+						res = b.findSubstringsInColumn(indexOne - 4, toLowerCase, substringsAND);
 					}
-					if (res) {
-						res = b.findInColumnLowerCase(indexOne - 4, find[0]);
+
+					if (res) { // substringsOr not null/empty
+						res = b.findSubstringsInColumn(indexOne - 4, toLowerCase, substringsOr);
 					}
 				}
 
@@ -862,22 +883,23 @@ public class BeanViewTable extends JDialog {
 
 		boolean withExt = (isFilter && findFullPathOrName <= 1);
 		String tmpLastSearchHash = "";
-
-		String find[] = null;
+		List<String> substringsAND = null;
+		List<String> substringsOr = null;
 
 		if (isFilter) {
-			String substringInLowerCase = "";
-			substringInLowerCase = tfFindPath.getText().toLowerCase();
-			if (substringInLowerCase.isEmpty()) {
+			String substrings = tfFindPath.getText();
+			if (substrings.isEmpty()) {
 				return;
 			}
 
-			find = FileDataBase.getCorrectFindOrNull(substringInLowerCase);
-			if (find == null) {
+			substringsOr = new ArrayList<String>();
+			substringsAND = FileDataBase.getSubstringsAND_DivideByOR_NullIfError(true, true, substrings, substringsOr);
+
+			if (substringsOr.isEmpty()) {
 				return;
 			}
 
-			tmpLastSearchHash = "\"" + substringInLowerCase + "\"" + Const.BRACE_START_FIRST_SPACE
+			tmpLastSearchHash = "\"" + substrings.toLowerCase() + "\"" + Const.BRACE_START_FIRST_SPACE
 					+ cmbFindPosition.getItemAt(findPosition) + ","
 					+ cmbFindFullPathOrName.getItemAt(findFullPathOrName);
 			tmpLastSearchHash += Const.BRACE_END;
@@ -903,27 +925,27 @@ public class BeanViewTable extends JDialog {
 		} else {
 			for (var b : beansTotal) {
 				try {
-					var stringInLowerCase = b.getFourLowerCase(true, withExt);
-					if (stringInLowerCase.isEmpty()) {
+					var rowString = b.getFour(true, withExt);
+					if (rowString.isEmpty()) {
 						continue;
 					}
 					// findArea:fullPath,name,parent
 					if (findFullPathOrName > 0) {
-						var sep = stringInLowerCase.lastIndexOf(File.separator);
+						var sep = rowString.lastIndexOf(File.separator);
 						if (sep < 0) {
 							continue;
 						}
-						stringInLowerCase = findFullPathOrName == 1 ? stringInLowerCase.substring(sep + 1)
-								: stringInLowerCase.substring(0, sep);
+						rowString = findFullPathOrName == 1 ? rowString.substring(sep + 1)
+								: rowString.substring(0, sep);
 					}
-					if (!find[1].isEmpty()) { // first finding by AND, if true, will be finding by find[0]
-						if (!b.findInLowerCase(findPosition, stringInLowerCase, find[1],
-								Const.textFieldFindORSeparator)) {
+
+					if (CommonLib.notNullEmptyList(substringsAND)) { // first finding by AND, if defined
+						if (!b.findSubStringsInString(findPosition, true, rowString, substringsAND)) {
 							continue;
 						}
 					}
-
-					if (!b.findInLowerCase(findPosition, stringInLowerCase, find[0], Const.textFieldFindORSeparator)) {
+					// substringsOr not null/empty
+					if (!b.findSubStringsInString(findPosition, true, rowString, substringsOr)) {
 						continue;
 					}
 					beans.add(b);

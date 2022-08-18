@@ -1,9 +1,11 @@
 @echo off
 cd /d %~d0%~p0
 cd ../bin
-start /b /high java alexnick.filedatabase.FileDataBase -a:autoNoExtract;bigSize;plCrYes;finalPause;extractSaveYes;doubleRepo;temp; %*
+start /b /high java alexnick.filedatabase.FileDataBase -a:autoNoExtract;plCrYes;finalPause;extractSaveYes;doubleRepo;temp; %*
 
-:FOR ALL MODES >>
+:mode -s (sync, syncBin) synchronize OWN repository with a repository on ANOTHER disk; option can be 'finalPause' only; another options no matter
+
+:FOR ALL OTHER MODES >>
 :option register (bigsize,bigSize,bIGSIZE) no matter; all option must be separated by ";", example -a:tempYes;bigsize;finalPause
 :"temp;" if defined, set mode 'TEMP', after confirm. In this mode be cleared extension options and bin-file be saved to 'temp' repository
 :"tempYes;" the same as 'temp'; but without confirmation

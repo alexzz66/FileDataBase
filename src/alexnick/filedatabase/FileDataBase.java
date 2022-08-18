@@ -1079,27 +1079,59 @@ public class FileDataBase {
 	}
 
 	/**
-	 * @param s row string, may be any
-	 * @return null if error OR correct string array in LOWER case, length 2:<br>
-	 *         first not null/empty<br>
-	 *         second must not be null, can be empty, that string after LAST
-	 *         textFieldLastANDSeparator
+	 * @param needANDexcluding      if 'true', will be found
+	 *                              Const.textFieldLastANDSeparator on end of
+	 *                              'rowString', then will be set as result<br>
+	 *                              if false, return empty result string
+	 * @param toLowerCase           if true, ALL result strings will be set to lower
+	 *                              case
+	 * @param rowString             will be divided by
+	 *                              Const.textFieldFindORSeparator after excluding,
+	 *                              if defined 'needANDexcluding'
+	 * @param substringsOrForReturn must not be null; will be clear and filling
+	 *                              result substrings (by OR separator)<br>
+	 *                              If error, returns EMPTY list
+	 * @return null if not defined 'needANDexcluding' or error; else will be AND
+	 *         substrings, not EMPTY
 	 */
-	synchronized static String[] getCorrectFindOrNull(String s) {
-		if (nullEmptyString(s)) {
+	synchronized static List<String> getSubstringsAND_DivideByOR_NullIfError(boolean needANDexcluding,
+			boolean toLowerCase, String rowString, List<String> substringsOrForReturn) {
+
+		if (nullEmptyString(rowString) || rowString.equals(Const.textFieldFindORSeparator)
+				|| substringsOrForReturn == null) {
 			return null;
 		}
-		s = s.toLowerCase();
+
+		substringsOrForReturn.clear();
 		String sAND = "";
 
-		int lastIndexAND = s.lastIndexOf(Const.textFieldLastANDSeparator);
-//'lastIndexAND' must be > 0 (s in result must not be empty)
-		if (lastIndexAND > 0) {
-			sAND = s.substring(lastIndexAND + Const.textFieldLastANDSeparator.length());
-			s = s.substring(0, lastIndexAND);
+		if (needANDexcluding) {
+			if (rowString.equals(Const.textFieldLastANDSeparator)) {
+				return null;
+			}
+
+			int lastIndexAND = rowString.lastIndexOf(Const.textFieldLastANDSeparator);
+
+			if (lastIndexAND > 0) {// 'lastIndexAND' must be > 0 (s in result must not be empty)
+				sAND = rowString.substring(lastIndexAND + Const.textFieldLastANDSeparator.length());
+				rowString = rowString.substring(0, lastIndexAND);
+			}
+
+			if (rowString.isEmpty()) {
+				return null;
+			}
 		}
 
-		return s.isEmpty() ? null : new String[] { s, sAND };
+		var substringsOr = CommonLib.splitStringBySeparatorOrNull(Const.textFieldFindORSeparator, rowString,
+				toLowerCase);
+
+		if (nullEmptyList(substringsOr)) {
+			return null;
+		}
+
+		substringsOrForReturn.addAll(substringsOr);
+		return sAND.isEmpty() ? null
+				: CommonLib.splitStringBySeparatorOrNull(Const.textFieldFindORSeparator, sAND, toLowerCase);
 	}
 
 } // of main class

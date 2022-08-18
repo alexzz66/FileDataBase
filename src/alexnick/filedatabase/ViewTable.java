@@ -241,11 +241,15 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 		boolean bAdd = bNeedFilterApp && indexTwo == 1;
 		boolean bSub = !bAdd && bNeedFilterApp && indexTwo == 2;
 
-		String find[] = null;
+		List<String> substringsAND = null;
+		List<String> substringsOr = null;
 
 		if (bNeedFilterApp && indexOne >= cmbAppEnabStartFindColumnIndex) { // by column
-			find = FileDataBase.getCorrectFindOrNull(tfFindColumn.getText());
-			if (find == null) {
+			substringsOr = new ArrayList<String>();
+			substringsAND = FileDataBase.getSubstringsAND_DivideByOR_NullIfError(true, true, tfFindColumn.getText(),
+					substringsOr);
+
+			if (substringsOr.isEmpty()) {
 				updating(lastIndex, null);
 				return;
 			}
@@ -266,11 +270,12 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 					}
 				} else { // by column 5..8->1..4; 'find' not null here
 					res = true;
-					if (!find[1].isEmpty()) { // first finding by AND, if true, will be finding by find[0]
-						res = b.findInColumnLowerCase(indexOne - 4, find[1]);
+					if (CommonLib.notNullEmptyList(substringsAND)) { // first finding by AND, if defined
+						res = b.findSubstringsInColumn(indexOne - 4, true, substringsAND);
 					}
+
 					if (res) {
-						res = b.findInColumnLowerCase(indexOne - 4, find[0]);
+						res = b.findSubstringsInColumn(indexOne - 4, true, substringsOr);
 					}
 				}
 

@@ -1981,4 +1981,45 @@ public class CommonLib {
 		return source.substring(index);
 	}
 
+	/**
+	 * @param separator   must not be null/empty; 'rowString' will be divided by
+	 *                    that
+	 * @param rowString   must not be null/empty
+	 * @param toLowerCase if true, each result string will be set to lower case
+	 * @return null or not empty list of substrings from 'rowString'
+	 */
+	synchronized public static List<String> splitStringBySeparatorOrNull(final String separator, String rowString,
+			boolean toLowerCase) {
+		if (nullEmptyString(separator) || nullEmptyString(rowString)) {
+			return null;
+		}
+
+		List<String> result = new ArrayList<String>();
+
+		if (!rowString.contains(separator)) {
+			result.add(toLowerCase ? rowString.toLowerCase() : rowString);
+		} else {
+			int limit = 100000; // just in case, max limit
+			int separatorLength = separator.length();
+
+			while (!rowString.isEmpty() && limit > 0) {
+				int posSeparatorInFind = rowString.indexOf(separator);
+
+				var subString = posSeparatorInFind >= 0 ? rowString.substring(0, posSeparatorInFind) : rowString;
+
+				if (!subString.isEmpty()) {
+					result.add(toLowerCase ? subString.toLowerCase() : subString);
+				}
+
+				if (posSeparatorInFind < 0) {
+					break;
+				}
+
+				rowString = rowString.substring(posSeparatorInFind + separatorLength);
+			}
+		}
+
+		return result.isEmpty() ? null : result;
+	}
+
 }

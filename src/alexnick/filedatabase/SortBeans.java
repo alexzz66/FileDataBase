@@ -101,7 +101,7 @@ public class SortBeans {
 	}
 
 	private int defaultCompareName(MyBean o1, MyBean o2) {
-		return o1.getNameLowerCaseFromFour().compareTo(o2.getNameLowerCaseFromFour());
+		return o1.getNameFromFour(true).compareTo(o2.getNameFromFour(true));
 	}
 
 	private void sortCheck_ThenFour(List<MyBean> beans) {
@@ -334,7 +334,7 @@ public class SortBeans {
 	}
 
 	private void sortFourNameLowerCase(List<MyBean> beans) {
-		beans.sort(Comparator.comparing(bean -> bean.getNameLowerCaseFromFour()));
+		beans.sort(Comparator.comparing(bean -> bean.getNameFromFour(true)));
 	}
 
 	private void sortFourNameLowerCase_Shift_CheckOnly(List<MyBean> beans) {

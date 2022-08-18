@@ -1,7 +1,7 @@
 @echo off
 cd /d %~d0%~p0
 cd ../bin
-start /b /high java alexnick.filedatabase.FileDataBase -dd:finalPause;  %*
+start /b /high java alexnick.filedatabase.FileDataBase -1:finalPause;temp;tempYes;bigSize;plCrcNo;plOneFolderYes;modeOnePlYes  %*
 
 :mode -s (sync, syncBin) synchronize OWN repository with a repository on ANOTHER disk; option can be 'finalPause' only; another options no matter
 

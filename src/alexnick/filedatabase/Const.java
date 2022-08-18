@@ -197,7 +197,7 @@ public class Const {
 	static final String textFieldBinFolderToolTip = tfTipPrefix + "<set in combobox>" + tfTipPostfix;
 	static final String textFieldPathToolTip = tfTipPrefix + "Path" + tfTipPostfix;
 	static final String textFieldMarkToolTip = tfTipPrefix + "Mark" + tfTipPostfix;
-	static final String cmbOnlyAddSubToolTip = "set 'only' checked / 'add' found to checked / 'sub' uncheck found";
+	static final String cmbOnlyAddSubToolTip = "set 'only' checked / 'add' found to checked / 'sub' uncheck found. If ends with 'case', case sensitive";
 
 	static final String butCheckToolTip = "check filter(if defined)/all/no";
 	static final String butCheckToolTipFilesFolders = "check filter/files/folders(if defined)/all/no";
