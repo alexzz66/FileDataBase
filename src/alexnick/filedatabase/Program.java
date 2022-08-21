@@ -931,13 +931,13 @@ public class Program {
 					String prev = bin.get(i - 1);
 					dupInfoList.add(prev);
 					// if returns empty?
-					dupGroupPathsList.add(NEW_LINE_UNIX
-							+ getPathStringFromBinItem(null, startPath, prev, "", null, null, duplicatesBeans, null, group));
+					dupGroupPathsList.add(NEW_LINE_UNIX + getPathStringFromBinItem(null, startPath, prev, "", null,
+							null, duplicatesBeans, null, group));
 					bNew = false;
 				}
 				dupInfoList.add(s);
-				dupGroupPathsList
-						.add(getPathStringFromBinItem(null, startPath, s, "", null, null, duplicatesBeans, null, group));
+				dupGroupPathsList.add(
+						getPathStringFromBinItem(null, startPath, s, "", null, null, duplicatesBeans, null, group));
 			} else {
 				if (!bNew) {
 					dupInfoList.addAll(dupGroupPathsList);
@@ -1639,7 +1639,7 @@ public class Program {
 
 // take existing folder and returns full exists path to *.bin (updated if need);
 // returns null if error
-	synchronized File getUpdatedBinFile(boolean tryCreateBin, File file) throws Exception {
+	File getUpdatedBinFile(boolean tryCreateBin, File file) throws Exception {
 		addLog(ADDLOG_SEP, true, null);
 		System.out.println("start update '*.bin file'... " + file);
 		File[] pathForReturn = new File[1];
@@ -1673,7 +1673,7 @@ public class Program {
 	 * method called when be defined 'Const.MR_COPY_MOVE', on closing
 	 * PathsListTable, ViewTable (->BeanViewTable)
 	 */
-	synchronized boolean doCopyMoveNew() throws Exception {
+	boolean doCopyMoveNew() throws Exception {
 		Path listWithFilesPath = FileDataBase.getTempPathForCopyMove();
 		if (listWithFilesPath == null || !listWithFilesPath.toFile().exists()) {
 			System.out.println("list of files to copying no exists: " + listWithFilesPath);

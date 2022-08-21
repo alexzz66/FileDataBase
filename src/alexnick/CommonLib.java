@@ -82,7 +82,7 @@ public class CommonLib {
 	 * @param value
 	 * @return true, if 'value' null or empty
 	 */
-	synchronized public static boolean nullEmptyString(String value) {
+	public static boolean nullEmptyString(String value) {
 		return value == null || value.isEmpty();
 	}
 
@@ -90,7 +90,7 @@ public class CommonLib {
 	 * @param value
 	 * @return true, if 'value' not null and not empty
 	 */
-	synchronized public static boolean notNullEmptyString(String value) {
+	public static boolean notNullEmptyString(String value) {
 		return value != null && !value.isEmpty();
 	}
 
@@ -101,7 +101,7 @@ public class CommonLib {
 	 * @param sb     must not be null
 	 * @return 'true' if anything was appended to 'sb'
 	 */
-	synchronized public static boolean appendNotNullEmpty(String string, StringBuilder sb) {
+	public static boolean appendNotNullEmpty(String string, StringBuilder sb) {
 		if (nullEmptyString(string)) {
 			return false;
 		}
@@ -126,7 +126,7 @@ public class CommonLib {
 	 * @param sb               must not be null
 	 * @return 'true' if anything was appended to 'sb'
 	 */
-	synchronized public static boolean appendNotNullWithTrim(String string, boolean needTrim, int addNewLineBefore,
+	public static boolean appendNotNullWithTrim(String string, boolean needTrim, int addNewLineBefore,
 			int addNewLineAfter, StringBuilder sb) {
 		if (string == null) {
 			return false;
@@ -166,8 +166,7 @@ public class CommonLib {
 	 * @param postMessage if not null, will be written down one line from 'NO'
 	 * @return
 	 */
-	synchronized public static String formatConfirmYesNoMessage(String caption, String yes, String no,
-			String postMessage) {
+	public static String formatConfirmYesNoMessage(String caption, String yes, String no, String postMessage) {
 		var sb = new StringBuilder();
 		appendNotNullWithTrim(caption, true, 0, 1, sb);
 		sb.append("<YES> ");
@@ -182,7 +181,7 @@ public class CommonLib {
 	 * @param value
 	 * @return true, if 'value' null or empty
 	 */
-	synchronized public static boolean nullEmptyList(List<?> value) {
+	public static boolean nullEmptyList(List<?> value) {
 		return value == null || value.isEmpty();
 	}
 
@@ -190,7 +189,7 @@ public class CommonLib {
 	 * @param value
 	 * @return true, if 'value' not null and not empty
 	 */
-	synchronized public static boolean notNullEmptyList(List<?> value) {
+	public static boolean notNullEmptyList(List<?> value) {
 		return value != null && !value.isEmpty();
 	}
 
@@ -198,7 +197,7 @@ public class CommonLib {
 	 * @param value
 	 * @return true, if 'value' null or empty
 	 */
-	synchronized public static boolean nullEmptySet(Set<?> value) {
+	public static boolean nullEmptySet(Set<?> value) {
 		return value == null || value.isEmpty();
 	}
 
@@ -206,7 +205,7 @@ public class CommonLib {
 	 * @param value
 	 * @return true, if 'value' not null and not empty
 	 */
-	synchronized public static boolean notNullEmptySet(Set<?> value) {
+	public static boolean notNullEmptySet(Set<?> value) {
 		return value != null && !value.isEmpty();
 	}
 
@@ -214,7 +213,7 @@ public class CommonLib {
 	 * @param value
 	 * @return true, if 'value' null or empty
 	 */
-	synchronized public static boolean nullEmptyMap(Map<?, ?> value) {
+	public static boolean nullEmptyMap(Map<?, ?> value) {
 		return value == null || value.isEmpty();
 	}
 
@@ -222,7 +221,7 @@ public class CommonLib {
 	 * @param value
 	 * @return true, if 'value' not null and not empty
 	 */
-	synchronized public static boolean notNullEmptyMap(Map<?, ?> value) {
+	public static boolean notNullEmptyMap(Map<?, ?> value) {
 		return value != null && !value.isEmpty();
 	}
 
@@ -230,7 +229,7 @@ public class CommonLib {
 	 * @param value
 	 * @return true, if 'value' null or empty
 	 */
-	synchronized public static boolean nullEmptyProperties(Properties value) {
+	public static boolean nullEmptyProperties(Properties value) {
 		return value == null || value.isEmpty();
 	}
 
@@ -238,7 +237,7 @@ public class CommonLib {
 	 * @param value
 	 * @return true, if 'value' not null and not empty
 	 */
-	synchronized public static boolean notNullEmptyProperties(Properties value) {
+	public static boolean notNullEmptyProperties(Properties value) {
 		return value != null && !value.isEmpty();
 	}
 
@@ -253,7 +252,7 @@ public class CommonLib {
 	 * @return formatted string for file name, as "yyyy-MM-dd_HH-mm-ss", example
 	 *         "2000-12-31_01-01-01"
 	 */
-	synchronized public static String getFormatDateForFileName(long date) {
+	public static String getFormatDateForFileName(long date) {
 		initFormatterFileName();
 		return formatterFileName.format(date);
 	}
@@ -263,7 +262,7 @@ public class CommonLib {
 	 * @return formatted string for file name, as "yyyy-MM-dd_HH-mm-ss", example
 	 *         "2000-12-31_01-01-01"; will be formatted current dateTime
 	 */
-	synchronized public static String getFormatDateNowForFileName() {
+	public static String getFormatDateNowForFileName() {
 		initFormatterFileName();
 		return formatterFileName.format(new Date());
 	}
@@ -272,12 +271,12 @@ public class CommonLib {
 	 * @param date File date modified as type 'long' in milliseconds
 	 * @return formatted string by specified formatter
 	 */
-	synchronized public static String dateModifiedToString(long date) {
+	public static String dateModifiedToString(long date) {
 		return formatter.format(date);
 	}
 
 	// s as '2022.08.13_15:03:56 (ñá)'; formatter 'yyyy.MM.dd_HH:mm:ss'
-	synchronized public static LocalDateTime getLocalDateFromFormatterOrNull(String s) {
+	public static LocalDateTime getLocalDateFromFormatterOrNull(String s) {
 		if (nullEmptyString(s)) {
 			return null;
 		}
@@ -316,7 +315,7 @@ public class CommonLib {
 		return null;
 	}
 
-	synchronized public static long LocalDateToEpochSecondOrNil(LocalDateTime ldt) {
+	public static long LocalDateToEpochSecondOrNil(LocalDateTime ldt) {
 		long result = 0;
 		try {
 			result = ldt.toEpochSecond(ZoneOffset.systemDefault().getRules().getOffset(Instant.now()));
@@ -326,7 +325,7 @@ public class CommonLib {
 		return result < 0 ? 0 : result;
 	}
 
-	synchronized public static char getDigitOrMinus(char charAt) {
+	public static char getDigitOrMinus(char charAt) {
 		return switch (charAt) {
 		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> charAt;
 		default -> '-';
@@ -340,7 +339,7 @@ public class CommonLib {
 	 *             empty string
 	 * @return formatted string "h:m:s"
 	 */
-	synchronized public static String getDifferentTimeOrEmpty(long mSec) {
+	public static String getDifferentTimeOrEmpty(long mSec) {
 		StringBuilder sb = new StringBuilder();
 		if (mSec < 0) {
 			mSec = -mSec;
@@ -374,8 +373,7 @@ public class CommonLib {
 	 * @param postfix  if not null/empty, will be added after result
 	 * @return 'prefix' + 'formatted seconds' + 'postfix'
 	 */
-	synchronized public static String secondsToString(int needDays, boolean withHour, int time, String prefix,
-			String postfix) {
+	public static String secondsToString(int needDays, boolean withHour, int time, String prefix, String postfix) {
 		if (time == Integer.MIN_VALUE) {
 			time++; // no correct for 'Integer.MIN_VALUE'
 		}
@@ -444,7 +442,7 @@ public class CommonLib {
 	 * @param list         for writing on console, not must be null
 	 * @return string in 'log' where be written 'caption'; returns '0' if error
 	 */
-	synchronized public static int writeListToConsole(boolean needSortList, long totalSize, int limit, String caption,
+	public static int writeListToConsole(boolean needSortList, long totalSize, int limit, String caption,
 			boolean fullLog, List<String> log, List<String> list) {
 		if (needSortList && list.size() > 1) {
 			list.sort(null);
@@ -495,7 +493,7 @@ public class CommonLib {
 	 * @param writeOnConsole if true, 's' be wrote on console
 	 * @param log            list of string; if null - string 's' will not be added
 	 */
-	synchronized public static void addLog(String s, boolean writeOnConsole, List<String> log) {
+	public static void addLog(String s, boolean writeOnConsole, List<String> log) {
 		String res = "";
 		boolean bAddedInLog = false;
 		try {
@@ -537,7 +535,7 @@ public class CommonLib {
 	 * @return formatted string from @param sz, rounded to near bytes,KB,MB,GB (div
 	 *         1024, not 1000)
 	 */
-	synchronized public static String bytesToKBMB(boolean needSpaces, int shortType, long size) {
+	public static String bytesToKBMB(boolean needSpaces, int shortType, long size) {
 		final String[] ar = { "bytes", "KB", "MB", "GB" };
 		final String[] arSpaces = { "", "   ", "   ", "   " };
 		if (shortType < 0 || shortType > 4) {
@@ -581,7 +579,7 @@ public class CommonLib {
 	 *                            properties
 	 * @return result of operation 'Properties -> store/load'
 	 */
-	synchronized public static void loadOrStoreProperties(boolean bStore, String commentForStore, Path path,
+	public static void loadOrStoreProperties(boolean bStore, String commentForStore, Path path,
 			Path pathDoubleForSaving, Properties prop) {
 		try {
 			CreateDirectoriesIfNeed(path);
@@ -621,7 +619,7 @@ public class CommonLib {
 	 * @param path             Path for file, where be read
 	 * @return created (not null) array list of String; in case error, list be empty
 	 */
-	synchronized public static List<String> readFile(int skipEmpty, int inLowerUpperCase, Path path) {
+	public static List<String> readFile(int skipEmpty, int inLowerUpperCase, Path path) {
 		ArrayList<String> list = new ArrayList<>();
 		if (!path.toFile().exists()) {
 			return list;
@@ -768,8 +766,8 @@ public class CommonLib {
 	 *                            null, will be saved empty file
 	 * @return saving result for 'path' in 'list'
 	 */
-	synchronized public static boolean saveToFile(boolean writeConsole, int skipEmpty, int deleteIfExistsMode,
-			Path path, Path pathDoubleForSaving, List<String> list) {
+	public static boolean saveToFile(boolean writeConsole, int skipEmpty, int deleteIfExistsMode, Path path,
+			Path pathDoubleForSaving, List<String> list) {
 		if (pathDoubleForSaving != null) {
 			saveToFile(writeConsole, skipEmpty, deleteIfExistsMode, pathDoubleForSaving, null, list);
 		}
@@ -841,7 +839,7 @@ public class CommonLib {
 	 * @param list if null/empty, return null
 	 * @return array of string, size equals list.size, filled by items from 'list'
 	 */
-	synchronized public static String[] getArrayFromListOrNull(List<String> list) {
+	public static String[] getArrayFromListOrNull(List<String> list) {
 		if (nullEmptyList(list)) {
 			return null;
 		}
@@ -859,8 +857,7 @@ public class CommonLib {
 	 * @param list       if null/empty, return null
 	 * @return array of string, size equals list.size, filled by items from 'list'
 	 */
-	synchronized public static String[] getArrayFromListOrNullByIndexes(int startIndex, int endIndex,
-			List<String> list) {
+	public static String[] getArrayFromListOrNullByIndexes(int startIndex, int endIndex, List<String> list) {
 		if (nullEmptyList(list) || startIndex < 0 || endIndex >= list.size() || startIndex > endIndex) {
 			return null;
 		}
@@ -878,7 +875,7 @@ public class CommonLib {
 	 * @param list        String list, not null, hash for empty items no created
 	 * @return hash set from 'list'
 	 */
-	synchronized public static Set<String> getSetFromList(boolean toLowerCase, List<String> list) {
+	public static Set<String> getSetFromList(boolean toLowerCase, List<String> list) {
 		Set<String> set = new HashSet<String>();
 		for (var s : list) {
 			if (s.isEmpty()) {
@@ -896,7 +893,7 @@ public class CommonLib {
 	 * @param path             where strings will be read from
 	 * @return filling or empty (if error) set
 	 */
-	synchronized public static Set<String> getSetFromFileOrEmptySet(int inLowerUpperCase, Path path) {
+	public static Set<String> getSetFromFileOrEmptySet(int inLowerUpperCase, Path path) {
 		Set<String> set = new HashSet<String>();
 		try {
 			var list = readFile(2, inLowerUpperCase, path);
@@ -915,7 +912,7 @@ public class CommonLib {
 	 * @param list
 	 * @return
 	 */
-	synchronized public static List<String> sortList(int needSortedList, List<String> list) {
+	public static List<String> sortList(int needSortedList, List<String> list) {
 		if (nullEmptyList(list)) {
 			return list;
 		}
@@ -933,7 +930,7 @@ public class CommonLib {
 	 * @param set            not must be null
 	 * @return
 	 */
-	synchronized public static List<String> getListFromSet(int needSortedList, Set<String> set) {
+	public static List<String> getListFromSet(int needSortedList, Set<String> set) {
 		List<String> list = new ArrayList<String>(set);
 		return sortList(needSortedList, list);
 	}
@@ -944,7 +941,7 @@ public class CommonLib {
 	 * @param set            not must be null
 	 * @return
 	 */
-	synchronized public static List<String> getListFromPathsSet(int needSortedList, Set<Path> set) {
+	public static List<String> getListFromPathsSet(int needSortedList, Set<Path> set) {
 		List<String> list = new ArrayList<String>();
 		for (var path : set) {
 			list.add(path.toString());
@@ -958,7 +955,7 @@ public class CommonLib {
 	 * @param paths          not must be null
 	 * @return
 	 */
-	synchronized public static List<String> getListFromPathsList(int needSortedList, List<Path> paths) {
+	public static List<String> getListFromPathsList(int needSortedList, List<Path> paths) {
 		List<String> list = new ArrayList<String>();
 		for (var path : paths) {
 			list.add(path.toString());
@@ -975,7 +972,7 @@ public class CommonLib {
 	 * @return map in format "original string, number string in 'list'(last number,
 	 *         if been several string)"
 	 */
-	synchronized public static Map<String, Integer> getMapFromList(boolean toLowerCase, List<String> list) {
+	public static Map<String, Integer> getMapFromList(boolean toLowerCase, List<String> list) {
 		Map<String, Integer> map = new HashMap<String, Integer>();
 		for (int i = 0; i < list.size(); i++) {
 			var s = list.get(i);
@@ -993,7 +990,7 @@ public class CommonLib {
 	 * @param waitEnter if 'true' required press 'Enter' before start process
 	 * @param path      must be exists file/directory
 	 */
-	synchronized public static void startProcess(boolean waitEnter, Path path) {
+	public static void startProcess(boolean waitEnter, Path path) {
 		Desktop desktop = null;
 		if (!Desktop.isDesktopSupported()) {
 			return;
@@ -1013,7 +1010,7 @@ public class CommonLib {
 	 * 
 	 * @return null if error or selected user directory
 	 */
-	synchronized public static Path getDestPathGUI(boolean inviteOnConsole) {
+	public static Path getDestPathGUI(boolean inviteOnConsole) {
 		JFileChooser chooser = new JFileChooser("/");
 		chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 
@@ -1045,7 +1042,7 @@ public class CommonLib {
 	 *                'toStart' or 'toEnd'
 	 * @return 's' with File.separator, if need; or 's' otherwise
 	 */
-	synchronized public static String fileSeparatorAddIfNeed(boolean toStart, boolean toEnd, String s) {
+	public static String fileSeparatorAddIfNeed(boolean toStart, boolean toEnd, String s) {
 		return startOrEndAddIfNeed(File.separator, toStart, toEnd, s);
 	}
 
@@ -1059,7 +1056,7 @@ public class CommonLib {
 	 *                'toStart' or 'toEnd'
 	 * @return 's' with 'substr', if need; or 's' otherwise
 	 */
-	synchronized public static String startOrEndAddIfNeed(String substr, boolean toStart, boolean toEnd, String s) {
+	public static String startOrEndAddIfNeed(String substr, boolean toStart, boolean toEnd, String s) {
 		if (s.isEmpty()) {
 			return (toStart || toEnd) ? substr : "";
 		}
@@ -1087,7 +1084,7 @@ public class CommonLib {
 	 * @param s       source string
 	 * @return 's' with deleted File.separators on start/end
 	 */
-	synchronized public static String fileSeparatorDeleteAll(boolean inStart, boolean inEnd, String s) {
+	public static String fileSeparatorDeleteAll(boolean inStart, boolean inEnd, String s) {
 		return startOrEndDeleteAll(File.separator, inStart, inEnd, s);
 	}
 
@@ -1102,8 +1099,7 @@ public class CommonLib {
 	 * @return 'source' with deleted 'subStringToDelete' on start or end; OR EMPTY
 	 *         if error
 	 */
-	synchronized public static String startOrEndDeleteAll(String subStringToDelete, boolean inStart, boolean inEnd,
-			String source) {
+	public static String startOrEndDeleteAll(String subStringToDelete, boolean inStart, boolean inEnd, String source) {
 		if (nullEmptyString(source)) {
 			return "";
 		}
@@ -1140,8 +1136,8 @@ public class CommonLib {
 	 * @param source        source string
 	 * @return 'source' with deleted chars on start or end; OR EMPTY if error
 	 */
-	synchronized public static String startOrEndDeleteAllChars(Set<Character> charsToDelete, boolean inStart,
-			boolean inEnd, String source) {
+	public static String startOrEndDeleteAllChars(Set<Character> charsToDelete, boolean inStart, boolean inEnd,
+			String source) {
 		if (nullEmptyString(source)) {
 			return "";
 		}
@@ -1193,8 +1189,7 @@ public class CommonLib {
 	 * @param path             where will be saved 'list', not must be null
 	 * @param list             for saving, must be not null
 	 */
-	synchronized public static void saveAndShowList(boolean doBackIfExists, int needStartProcess, Path path,
-			List<String> list) {
+	public static void saveAndShowList(boolean doBackIfExists, int needStartProcess, Path path, List<String> list) {
 		if (needStartProcess == 3) {
 			String infSizeList = (list == null) ? "null" : "" + list.size();
 			if (!pauseQueryOne("Confirm saving information to file, then open this file:" + NEW_LINE_UNIX + path
@@ -1239,8 +1234,7 @@ public class CommonLib {
 	 * @param log               filling by delete results; if null, will be created
 	 * @return deleted count
 	 */
-	synchronized public static int deleteFiles(int needFileDirectory, Path saveResultTo, List<String> list,
-			List<String> log) {
+	public static int deleteFiles(int needFileDirectory, Path saveResultTo, List<String> list, List<String> log) {
 		List<File> fileList = getFileListOrNull(needFileDirectory, list);
 		if (nullEmptyList(fileList)) {
 			System.out.println("error: no found correct paths for deleting");
@@ -1326,7 +1320,7 @@ public class CommonLib {
 	 * @param log  if not null, will be filling; if null, will be created
 	 * @return '-1' if error, otherwise count of deleted files
 	 */
-	synchronized public static int deleteFilesFromFile(File file, List<String> log) {
+	public static int deleteFilesFromFile(File file, List<String> log) {
 		if (!existsNotNullFile(true, file)) {
 			return -1;
 		}
@@ -1384,8 +1378,7 @@ public class CommonLib {
 	 *                            null/empty
 	 * @return existing file path; or null
 	 */
-	synchronized public static File getCorrectFileOrNull(int minLengthFileString, final int needFileDirectory,
-			String fileString) {
+	public static File getCorrectFileOrNull(int minLengthFileString, final int needFileDirectory, String fileString) {
 		try {
 			fileString = removeEndStringAfterSpecificRestrictedWindowsChars(fileString);
 			if (minLengthFileString < 1) {
@@ -1418,8 +1411,8 @@ public class CommonLib {
 	 * @param file               must be existing file for reading path strings
 	 * @return created (but may be empty) list of existing path or null
 	 */
-	synchronized public static List<File> getFileListFromFileOrNull(final boolean needCanonicalFile,
-			final int needFileDirectory, File file) {
+	public static List<File> getFileListFromFileOrNull(final boolean needCanonicalFile, final int needFileDirectory,
+			File file) {
 		if (!existsNotNullFile(true, file)) {
 			return null;
 		}
@@ -1437,7 +1430,7 @@ public class CommonLib {
 	 * @param endDest   if removed 'endSource', will be added it
 	 * @return 'source' with changed 'endSource' or empty if error
 	 */
-	synchronized public static String changeEndOfStringOrEmpty(String source, String endSource, String endDest) {
+	public static String changeEndOfStringOrEmpty(String source, String endSource, String endDest) {
 		if (nullEmptyString(source) || nullEmptyString(endSource) || nullEmptyString(endDest)) {
 			return "";
 		}
@@ -1469,8 +1462,8 @@ public class CommonLib {
 	 *                                string
 	 * @param log                     if not null, all inform will be also added to
 	 */
-	synchronized public static void setInfo(int betweenStringDelimeters, String first, String second,
-			String appendString, List<String> log) {
+	public static void setInfo(int betweenStringDelimeters, String first, String second, String appendString,
+			List<String> log) {
 		if (first == null || first.isEmpty()) {
 			return;
 		}
@@ -1500,8 +1493,7 @@ public class CommonLib {
 	 * @param list      must not be null, be sorted
 	 * @param listTotal if not null or equal to 'list', will be added 'list' to one
 	 */
-	synchronized public static void sortFillingList(int sortType, String caption, List<String> list,
-			List<String> listTotal) {
+	public static void sortFillingList(int sortType, String caption, List<String> list, List<String> listTotal) {
 		if (nullEmptyList(list)) {
 			return;
 		}
@@ -1542,7 +1534,7 @@ public class CommonLib {
 	 * @return not null string list of equal folders
 	 * @throws IOException
 	 */
-	synchronized public static List<String> getEqualFoldersOnOtherDisks(boolean excludeSourceDisk, String sourceDisk,
+	public static List<String> getEqualFoldersOnOtherDisks(boolean excludeSourceDisk, String sourceDisk,
 			String sourceFolder) throws IOException {
 		List<String> equalFolders = new ArrayList<>();
 		sourceFolder = (nullEmptyString(sourceFolder)) ? "" : fileSeparatorDeleteAll(true, true, sourceFolder);
@@ -1584,7 +1576,7 @@ public class CommonLib {
 		return equalFolders;
 	}
 
-	synchronized public static List<Map.Entry<String, Integer>> getSortedListFromMap(Map<String, Integer> map) {
+	public static List<Map.Entry<String, Integer>> getSortedListFromMap(Map<String, Integer> map) {
 		List<Map.Entry<String, Integer>> sortedList = new ArrayList<>(map.entrySet());
 		if (map.size() < 2) {
 			return sortedList;
@@ -1621,7 +1613,7 @@ public class CommonLib {
 	 * @param source not null string, for search restricted symbols
 	 * @return for 'type'= 0 : 'source' as is or empty; for other - replaced string
 	 */
-	synchronized public static String removeRestrictedWindowsChars(int type, String source) {
+	public static String removeRestrictedWindowsChars(int type, String source) {
 		if (nullEmptyString(source)) {
 			return "";
 		}
@@ -1656,7 +1648,7 @@ public class CommonLib {
 	 * @param newName must be not null/empty, must be without extension
 	 * @return formatted string, or empty string, if error
 	 */
-	synchronized public static String getCorrectFileNameToRename(int limit, String newName) {
+	public static String getCorrectFileNameToRename(int limit, String newName) {
 		if (nullEmptyString(newName)) {
 			return "";
 		}
@@ -1694,7 +1686,7 @@ public class CommonLib {
 	 *               that info will be removed
 	 * @return trimmed 'source' with removed end after first found specific symbol
 	 */
-	synchronized public static String removeEndStringAfterSpecificRestrictedWindowsChars(String source) {
+	public static String removeEndStringAfterSpecificRestrictedWindowsChars(String source) {
 		source = source.trim();
 		if (source.isEmpty()) {
 			return "";
@@ -1728,8 +1720,7 @@ public class CommonLib {
 	 * @param list      string list to write
 	 * @return result string
 	 */
-	synchronized public static String ListToString(int limit, String prefix, String postfix, String separator,
-			List<String> list) {
+	public static String ListToString(int limit, String prefix, String postfix, String separator, List<String> list) {
 		var sb = new StringBuilder();
 		appendNotNullEmpty(prefix, sb);
 		if (notNullEmptyList(list)) {
@@ -1757,7 +1748,7 @@ public class CommonLib {
 	 * @param list not null/empty string list
 	 * @return empty if error; or text
 	 */
-	synchronized public static String listToStringOrEmpty(List<String> list) {
+	public static String listToStringOrEmpty(List<String> list) {
 		if (nullEmptyList(list)) {
 			return "";
 		}
@@ -1783,7 +1774,7 @@ public class CommonLib {
 		return sb.toString();
 	}
 
-	synchronized public static List<String> stringToList(String s) {
+	public static List<String> stringToList(String s) {
 		List<String> list = new ArrayList<String>();
 		if (nullEmptyString(s)) {
 			return list;
@@ -1817,7 +1808,7 @@ public class CommonLib {
 	 * @param code char code
 	 * @return true, if code of char 'A'..'Z' or 'a'..'z'
 	 */
-	synchronized public static boolean englishLetterCharCode(int code) {
+	public static boolean englishLetterCharCode(int code) {
 		return (code >= 65 && code <= 90) || (code >= 97 && code <= 122);
 	}
 
@@ -1829,7 +1820,7 @@ public class CommonLib {
 	 * @return true, if 'pathString' starts with english letter, then ':'. If
 	 *         'pathString' length more 2, next after ':' symbol, must be '\' or '/'
 	 */
-	synchronized public static boolean correctWindowsStartPath(String pathString) {
+	public static boolean correctWindowsStartPath(String pathString) {
 		if (pathString.length() < 2 && !englishLetterCharCode(pathString.codePointAt(0))
 				&& pathString.charAt(1) != ':') {
 			return false;
@@ -1845,7 +1836,7 @@ public class CommonLib {
 	 * @return 0: all items set to 'false'; 1: all items set to 'true'; else (-1):
 	 *         error
 	 */
-	synchronized public static int resetArrayBoolean(boolean[] array) {
+	public static int resetArrayBoolean(boolean[] array) {
 		if (array == null || array.length == 0) {
 			return -1;
 		}
@@ -1868,7 +1859,7 @@ public class CommonLib {
 	 *               maximal(200) border accordingly
 	 * @return
 	 */
-	synchronized public static String getRandomDigitString(int length) {
+	public static String getRandomDigitString(int length) {
 		int min = 1;
 		int max = 200;
 		length = length < min ? min : length > max ? max : length;
@@ -1897,7 +1888,7 @@ public class CommonLib {
 	 * @param postfix if not null/empty, will be added after result
 	 * @return formatted string
 	 */
-	synchronized public static String formatInt(int value, int length, String prefix, String postfix) {
+	public static String formatInt(int value, int length, String prefix, String postfix) {
 		var sb = new StringBuilder();
 		length = length < 1 ? 1 : length > 8 ? 8 : length;
 		appendNotNullEmpty(prefix, sb);
@@ -1925,7 +1916,7 @@ public class CommonLib {
 	 * @param file which name, extension will be extracted
 	 * @return null if error; else filling array, 2 elements
 	 */
-	synchronized public static String[] extractFileNameExtensionOrNull(File file) {
+	public static String[] extractFileNameExtensionOrNull(File file) {
 		try {
 			String[] ar = new String[2];
 			var name = file.getName();
@@ -1949,7 +1940,7 @@ public class CommonLib {
 	 * @param list
 	 * @return add result
 	 */
-	synchronized public static boolean addItemtoList(boolean toEnd, String item, List<String> list) {
+	public static boolean addItemtoList(boolean toEnd, String item, List<String> list) {
 		if (list == null || item == null) {
 			return false;
 		}
@@ -1974,7 +1965,7 @@ public class CommonLib {
 
 	}
 
-	synchronized public static String getSubstringFromIndexOrEmpty(String source, int index) {
+	public static String getSubstringFromIndexOrEmpty(String source, int index) {
 		if (nullEmptyString(source) || index >= source.length()) {
 			return "";
 		}
@@ -1988,7 +1979,7 @@ public class CommonLib {
 	 * @param toLowerCase if true, each result string will be set to lower case
 	 * @return null or not empty list of substrings from 'rowString'
 	 */
-	synchronized public static List<String> splitStringBySeparatorOrNull(final String separator, String rowString,
+	public static List<String> splitStringBySeparatorOrNull(final String separator, String rowString,
 			boolean toLowerCase) {
 		if (nullEmptyString(separator) || nullEmptyString(rowString)) {
 			return null;
@@ -2003,6 +1994,7 @@ public class CommonLib {
 			int separatorLength = separator.length();
 
 			while (!rowString.isEmpty() && limit > 0) {
+				limit--;
 				int posSeparatorInFind = rowString.indexOf(separator);
 
 				var subString = posSeparatorInFind >= 0 ? rowString.substring(0, posSeparatorInFind) : rowString;

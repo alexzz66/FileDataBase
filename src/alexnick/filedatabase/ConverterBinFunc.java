@@ -65,9 +65,9 @@ public class ConverterBinFunc {
 	 * @return extracted path string from 'binItem', be added startPath, if no
 	 *         empty, and appendInf if not null/empty
 	 */
-	synchronized static String getPathStringFromBinItem(String[] columnBinFolderId3Mark, String startPath,
-			String binItem, String appendInf, Path binPath, Set<String> setExts, List<MyBean> beans,
-			Set<String> checkSetLowerCase, int serviceIntThreeToAddBean) {
+	static String getPathStringFromBinItem(String[] columnBinFolderId3Mark, String startPath, String binItem,
+			String appendInf, Path binPath, Set<String> setExts, List<MyBean> beans, Set<String> checkSetLowerCase,
+			int serviceIntThreeToAddBean) {
 		if (binItem.isEmpty()) {
 			return "";
 		}
@@ -216,8 +216,7 @@ public class ConverterBinFunc {
 	 * @param rowList    not must be null/empty
 	 * @param resultList must be not null, result be added to
 	 */
-	synchronized static void fillBinList(String startPath, String appendInf, List<String> rowList,
-			List<String> resultList) {
+	static void fillBinList(String startPath, String appendInf, List<String> rowList, List<String> resultList) {
 		if (resultList == null || CommonLib.nullEmptyList(rowList)) {
 			return;
 		}
@@ -228,12 +227,12 @@ public class ConverterBinFunc {
 		}
 	}
 
-	synchronized static Path getPathFromBinItemOrNull(String startPath, String binItem) {
+	static Path getPathFromBinItemOrNull(String startPath, String binItem) {
 		var pathString = getPathStringFromBinItem(null, "", binItem, "", null, null, null, null, 0);
 		return pathString.isEmpty() ? null : Path.of(startPath, pathString);
 	}
 
-	synchronized static String getBinEndFromBinItemOrEmpty(boolean toLowerCase, String binItem) {
+	static String getBinEndFromBinItemOrEmpty(boolean toLowerCase, String binItem) {
 		// 00000000(0)17d1dcdd58e*<1> -> 26 symbols
 		// returns 'binEnd', example: '<1>'
 		if (binItem.length() < 26 || binItem.startsWith("00000000")) {
@@ -259,7 +258,7 @@ public class ConverterBinFunc {
 	 *                        '<' + path + '>' + ext )
 	 * @return 'endBin' from 'path' or empty if error
 	 */
-	synchronized static String getBinEndFromPathOrEmpty(int lengthStartPath, String[] ar, Path path) {
+	static String getBinEndFromPathOrEmpty(int lengthStartPath, String[] ar, Path path) {
 		var sb = new StringBuilder();
 		try {
 			if (ar == null) {
@@ -282,7 +281,7 @@ public class ConverterBinFunc {
 	 *         2: the same as 'array[0], but "" if empty;<br>
 	 *         if error, arrays be filled with null; checks array[0] == null
 	 */
-	synchronized static String[] dividePathToAll_Ext(int lengthStartPath, String pathString) {
+	static String[] dividePathToAll_Ext(int lengthStartPath, String pathString) {
 		String[] ar = new String[3];
 		var s = lengthStartPath <= 0 ? pathString
 				: lengthStartPath >= pathString.length() ? "" : pathString.substring(lengthStartPath);
@@ -307,7 +306,7 @@ public class ConverterBinFunc {
 
 	// takes string of kind "00000000(0)17d1dcdd58e"
 	// returns decoded size and date modified, or empty
-	synchronized static String getAppendInf(String binItem) {
+	static String getAppendInf(String binItem) {
 		long[] arrInf = getDecodeDateSizeCrc(binItem);
 		return (arrInf[0] == 0) ? "" : getFileInf(true, arrInf[0], arrInf[1]);
 	}
@@ -318,7 +317,7 @@ public class ConverterBinFunc {
 	 * @param size          file length
 	 * @return formatted string in braces '<' and '/> ' or only this braces if error
 	 */
-	synchronized static String getFileInf(boolean needWriteSize, long lastModified, long size) {
+	static String getFileInf(boolean needWriteSize, long lastModified, long size) {
 		String sInf;
 		try {
 			sInf = dateModifiedToString(lastModified);
@@ -339,7 +338,7 @@ public class ConverterBinFunc {
 	 * @return 'null' if error; or array, length == 2; [0]:signature; [1] start bin
 	 *         signature
 	 */
-	synchronized static String[] getStartBinSignature(long fLen, long crc, File file) {
+	static String[] getStartBinSignature(long fLen, long crc, File file) {
 		if (crc < 0) { // no must be, but check anyway
 			return null; // result be empty
 		}
@@ -370,7 +369,7 @@ public class ConverterBinFunc {
 
 	// take 'binItem' in bin format '00000005(5fb01ff)1805ba1617c*<test>txt'
 	// path must exists
-	synchronized static boolean equalsPathOnLengthAndDate(Path path, String binItem) {
+	static boolean equalsPathOnLengthAndDate(Path path, String binItem) {
 		try {
 			String[] arrString = getSizeCrcDateInStringArrayOrNull(binItem);
 			if (arrString == null) {
@@ -396,7 +395,7 @@ public class ConverterBinFunc {
 		return false;
 	}
 
-	synchronized private static String[] getSizeCrcDateInStringArrayOrNull(String binStartOrFull) {
+	private static String[] getSizeCrcDateInStringArrayOrNull(String binStartOrFull) {
 		String[] arrString = new String[3];
 		Arrays.fill(arrString, "");
 
@@ -426,7 +425,7 @@ public class ConverterBinFunc {
 	 * @return not null array, length == 3, if array[0] == 0 - error; in array[0] -
 	 *         date modified, in array[1] - size, in array[2] - crc
 	 */
-	synchronized static long[] getDecodeDateSizeCrc(String binStartOrFull) {
+	static long[] getDecodeDateSizeCrc(String binStartOrFull) {
 		long[] arr = new long[3];
 		Arrays.fill(arr, 0);
 		// size,crc,date_modified
@@ -446,7 +445,7 @@ public class ConverterBinFunc {
 		return arr;
 	}
 
-	synchronized public static Set<String> getHashSetFromBin(List<String> binFileListDestFolder) {
+	public static Set<String> getHashSetFromBin(List<String> binFileListDestFolder) {
 		Set<String> hashFilesOfBin = new HashSet<String>();
 		for (var s : binFileListDestFolder) {
 			var p = s.indexOf(')'); // need size and crc,(in hashWithFilesRealPath too)
@@ -459,7 +458,7 @@ public class ConverterBinFunc {
 		return hashFilesOfBin;
 	}
 
-	synchronized public static String getSignatureOrEmpty(String s) {
+	public static String getSignatureOrEmpty(String s) {
 		if (s == null || s.length() < 11) {
 			return "";
 		}

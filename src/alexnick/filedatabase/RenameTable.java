@@ -755,7 +755,7 @@ public class RenameTable extends JDialog {
 		setNewTitle(standardTitle.concat(sortBeans.getAppendCaption()));
 	}
 
-	synchronized private boolean initBeans(List<Path> paths) {
+	private boolean initBeans(List<Path> paths) {
 		namesNumbersNoSort = new ArrayList<String>();
 		namesOldNoSort = new ArrayList<String>();
 

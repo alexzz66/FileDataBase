@@ -10,7 +10,7 @@ import alexnick.CommonLib;
 
 public class BinCreator {
 	private List<String> binList = new ArrayList<String>();
-	volatile private int countForInfCount = 0;
+	private int countForInfCount = 0;
 
 	public BinCreator(int needCalcID3, Path startPath, Path binPath, List<String> listPathsToEndBin) {
 		createBinList(needCalcID3, startPath.toString(), binPath, listPathsToEndBin);
@@ -22,13 +22,13 @@ public class BinCreator {
 
 // 'binPath' folder name for saving result, need for checking, if '*.bin' be saved before; 'listFiles' not null and no empty
 // if 'needCalcID3 != Const.ID3_EXTRACT_NO' -> after calling this method, need saving/null id3Options; 
-	synchronized private void createBinList(int needCalcID3, String startPath, Path binPath, List<String> listFiles) {
+	private void createBinList(int needCalcID3, String startPath, Path binPath, List<String> listFiles) {
 		List<String> oldBinList = readFile(2, 0, binPath); // read anyway, let's 'no exists'
 		List<String> listFilesNewForBin = new ArrayList<String>();
 		listFilesNewForBin.addAll(listFiles); // be new paths only
 
 		if (!oldBinList.isEmpty()) {
-			// get all items from 'listFiles'(that is '<path>exe' only) to lower case
+// get all items from 'listFiles'(that is '<path>exe' only) to lower case
 			var hashMap = CommonLib.getMapFromList(true, listFilesNewForBin);
 			if (!hashMap.isEmpty()) {
 				var keys = hashMap.keySet();
@@ -45,8 +45,8 @@ public class BinCreator {
 						if (needCalcID3 == Const.ID3_EXTRACT_ALL && sLow.endsWith(Const.extensionForCalcId3Check)) {
 							continue;
 						}
-						// checking for changing, comparing length and date modified (crc no updated, if
-						// equals)
+
+// checking for changing, comparing length and date modified (crc no updated, if equals) 
 						Path path = ConverterBinFunc.getPathFromBinItemOrNull(startPath, binItem);
 						if (path == null || !ConverterBinFunc.equalsPathOnLengthAndDate(path, binItem)) {
 							continue;
@@ -72,27 +72,26 @@ public class BinCreator {
 			System.out.println("start calculate of crc, files: " + listFilesNewForBin.size());
 			countForInfCount = 0;
 			var newBinList = listFilesNewForBin.stream().unordered() // instead of 'parallel()'
-					// .parallel() >>> search stopping on 'parallel()' WTF???
-					.map(s -> getBinItem(needCalcID3, startPath, s)).filter(s -> !s.isEmpty()).toList();
+					.map(s -> getBinItemOrEmpty(needCalcID3, startPath, s)).filter(s -> !s.isEmpty()).toList();
 			if (!newBinList.isEmpty()) {
 				binList.addAll(newBinList);
 			}
 		}
 	}
 
-	synchronized private String getBinItem(int needCalcID3, String startPath, String s) {
+	synchronized private String getBinItemOrEmpty(int needCalcID3, String startPath, String s) {
 		infCount();
+
 		Path path = ConverterBinFunc.getPathFromBinItemOrNull(startPath, s);
 		if (path == null) {
 			return "";
 		}
 		// THERE INIT FOR ID3
 		var crc = new CalcCrc(needCalcID3 == Const.ID3_EXTRACT_NO ? 1 : 2, s, path);
-		var binItem = crc.getBinItem();
-		return binItem;
+		return crc.getBinItem();
 	}
 
-	synchronized private void infCount() {
+	private void infCount() { // must be called from 'synchronized' method
 		countForInfCount++;
 		if ((countForInfCount & 1023) == 0) {
 			System.out.println("...processed files:" + countForInfCount);

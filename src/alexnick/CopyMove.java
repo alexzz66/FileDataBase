@@ -57,7 +57,7 @@ public class CopyMove {
 	 *                    also defined 'QUERY_YES_TO_ALL'
 	 * @return
 	 */
-	synchronized public static boolean queryCopyMoveDefined(boolean confirmOnly) {
+	public static boolean queryCopyMoveDefined(boolean confirmOnly) {
 		var confirm = queryCopyMove == QUERY_CONFIRM_EACH || queryCopyMove == QUERY_CONFIRM_LIST
 				|| queryCopyMove == QUERY_CONFIRM_LIST_YES_NO_TOALL;
 		var result = confirmOnly ? confirm : (confirm || queryCopyMove == QUERY_YES_TO_ALL);
@@ -75,7 +75,7 @@ public class CopyMove {
 		}
 	}
 
-	synchronized public static boolean checkQueryResultYesOrYesToAll(String queryResult) {
+	public static boolean checkQueryResultYesOrYesToAll(String queryResult) {
 		return queryResult.equals(CONFIRM_YES) || queryResult.equals(CONFIRM_YES_TO_ALL);
 	}
 
@@ -87,7 +87,7 @@ public class CopyMove {
 	 * @param confirmCapt be print on console before confirm
 	 * @return
 	 */
-	synchronized public static String getQueryResult(String confirmCapt) {
+	public static String getQueryResult(String confirmCapt) {
 		if (queryCopyMove == QUERY_CONFIRM_EACH) {
 			return CommonLib.pauseQueryOne(confirmCapt) ? CONFIRM_YES : CONFIRM_NO;
 		}
@@ -122,7 +122,7 @@ public class CopyMove {
 	 * @param withSec if 'false', result ends on '-', if 'true', be added sec
 	 * @return prefix with starts '~FDB~
 	 */
-	synchronized public static String getPrefixName(boolean withSec) {
+	public static String getPrefixName(boolean withSec) {
 		var s = "yyyy-MM-dd-HH-mm-";
 		if (withSec) {
 			s = s + "ss";
@@ -143,7 +143,7 @@ public class CopyMove {
 	 *                     This string be append with file name
 	 * @throws Exception if error operation
 	 */
-	synchronized public static void renameToBack(Path path, String appendString) throws Exception {
+	public static void renameToBack(Path path, String appendString) throws Exception {
 		if (!path.toFile().exists() || CommonLib.nullEmptyString(appendString)) {
 			throw new IllegalArgumentException("Path must be exists and back extension not must be empty");
 		}
@@ -170,7 +170,7 @@ public class CopyMove {
 	 * @param path
 	 * @throws Exception
 	 */
-	synchronized public static void renameToBack(Path path) throws Exception {
+	public static void renameToBack(Path path) throws Exception {
 		renameToBack(path, BACK_EXT);
 	}
 
@@ -180,7 +180,7 @@ public class CopyMove {
 	 * @param path where be extracted 'root'
 	 * @return empty string if error, or root with UPPER CASE, with '\' on end
 	 */
-	synchronized public static String getRootUpperCaseWithFileSeparator(Path path) {
+	public static String getRootUpperCaseWithFileSeparator(Path path) {
 		String res = path.getRoot().toString().toUpperCase();
 		return (CommonLib.nullEmptyString(res)) ? "" : CommonLib.fileSeparatorAddIfNeed(false, true, res);
 	}
@@ -304,7 +304,7 @@ public class CopyMove {
 	 *                          exists, will be created directories
 	 * @return string for writing log about result copying
 	 */
-	synchronized public String copyMoveFile(int queryCopyMoveInit, Path source, Path dest) {
+	public String copyMoveFile(int queryCopyMoveInit, Path source, Path dest) {
 		StringBuilder sb = new StringBuilder();
 
 		String queryResult = ""; // if not empty, be added in result string;
@@ -491,7 +491,7 @@ public class CopyMove {
 	 *                                      of this method
 	 * @return count copied files, 0 or more
 	 */
-	synchronized public int backUpCopyMoveFiles(int queryCopyMoveInit, int writeSourceListBeforeCopying,
+	public int backUpCopyMoveFiles(int queryCopyMoveInit, int writeSourceListBeforeCopying,
 			boolean checkDestEqualPathIfOtherDisk, String caption, int removeFromSourceForExchange, Path destFolder,
 			List<Path> sourceList, List<String> log) {
 		int copyCount = 0;

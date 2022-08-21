@@ -336,7 +336,7 @@ public class FileDataBase {
 		return Const.MODE_NO_DEFINED;
 	}
 
-	synchronized static ArrayList<Map.Entry<String, FileCntSize>> getSortedHmExt(Map<String, FileCntSize> hmExt) {
+	static ArrayList<Map.Entry<String, FileCntSize>> getSortedHmExt(Map<String, FileCntSize> hmExt) {
 		ArrayList<Map.Entry<String, FileCntSize>> sortedHmExtsList = new ArrayList<>(hmExt.entrySet());
 		if (!sortedHmExtsList.isEmpty()) {
 			sortedHmExtsList.sort((e1, e2) -> {
@@ -366,8 +366,7 @@ public class FileDataBase {
 	 * @param myTable     must not be null/empty
 	 * @param beans       must not be null/empty
 	 */
-	synchronized static void openDirectory(int whereIsPath, boolean isShiftDown, BeansFourTableDefault myTable,
-			List<MyBean> beans) {
+	static void openDirectory(int whereIsPath, boolean isShiftDown, BeansFourTableDefault myTable, List<MyBean> beans) {
 		if (myTable.getSelectedRowCount() != 1 || whereIsPath < 0 || whereIsPath > 3) {
 			return;
 		}
@@ -411,8 +410,7 @@ public class FileDataBase {
 	 *                          'set'
 	 * @param beans
 	 */
-	synchronized static void beansToList(boolean noCheckPathInFour, int sortType, Set<Integer> set,
-			List<MyBean> beans) {
+	static void beansToList(boolean noCheckPathInFour, int sortType, Set<Integer> set, List<MyBean> beans) {
 		if (nullEmptyList(beans)) {
 			return;
 		}
@@ -561,7 +559,7 @@ public class FileDataBase {
 		return true;
 	}
 
-	synchronized private static String fullInform(String s, MyBean b) {
+	private static String fullInform(String s, MyBean b) {
 		var sb = new StringBuilder();
 		sb.append(s).append(Const.BRACE_START_FIRST_SPACE);
 		if (!b.getOne().isEmpty()) {
@@ -577,7 +575,7 @@ public class FileDataBase {
 		return sb.toString();
 	}
 
-	synchronized static boolean isCorrectBin(Path path) {
+	static boolean isCorrectBin(Path path) {
 		var f = path.toFile();
 		if (!f.exists() || f.isDirectory()) {
 			return false;
@@ -587,7 +585,7 @@ public class FileDataBase {
 		return f.length() > 20 && path.toString().endsWith(Const.extensionBinList);
 	}
 
-	synchronized static Path getDatPathForBinOrNull(Path path) {
+	static Path getDatPathForBinOrNull(Path path) {
 		if (path == null) {
 			return null;
 		}
@@ -609,7 +607,7 @@ public class FileDataBase {
 //'stuffForReturn' must be created, size minimum 4, be filled 'two', 'three', 'four', 'two' AS_IS_IN_DAT for MyBean	
 //'realDiskInBraceOrEmpty' if not null/empty, must be like example '<E:\> '; otherwise must be empty
 //'mapCountExtForReturn' if created, will be cleared and filled extension info; ALSO MEANS defining checkSum
-	synchronized static int getCountBinItemsOrNil(String realDiskInBraceOrEmpty, Path fDat,
+	static int getCountBinItemsOrNil(String realDiskInBraceOrEmpty, Path fDat,
 			Map<String, Integer> mapCountExtForReturn, String[] stuffForReturn) {
 		if (stuffForReturn == null || stuffForReturn.length < 6) {
 			return 0;
@@ -785,7 +783,7 @@ public class FileDataBase {
 		return countBinItems;
 	}
 
-	synchronized static List<Entry<String, Integer>> fillSortedListExtCountOrNull(List<MyBean> beans) {
+	static List<Entry<String, Integer>> fillSortedListExtCountOrNull(List<MyBean> beans) {
 		Map<String, Integer> mapExtCount = new HashMap<String, Integer>();
 		for (var b : beans) {
 			var ext = b.getFourApp(true, true);
@@ -844,18 +842,18 @@ public class FileDataBase {
 		}
 	}
 
-	synchronized static void initId3IsProperty() {
+	static void initId3IsProperty() {
 		initProperty(false, Const.id3IsPropertyName);
 	}
 
-	synchronized static void saveID3Property() {
+	static void saveID3Property() {
 		savePropertyAndNull(false, "Properties ID3 tags for *" + Const.extensionForCalcId3, Const.id3IsPropertyName);
 	}
 
 	/**
 	 * @return true, if 'markIsProperty' and 'markPropertySet' not null
 	 */
-	synchronized static boolean initMarkIsProperty() {
+	static boolean initMarkIsProperty() {
 		if (!initProperty(true, Const.markIsPropertyName)) {
 			return false;
 		}
@@ -877,7 +875,7 @@ public class FileDataBase {
 	/**
 	 * @return 'true', if been changed 'markIsProperty'
 	 */
-	synchronized static boolean saveMarkProperty() {
+	static boolean saveMarkProperty() {
 		if (nullEmptyProperties(markIsProperty)) {
 			return false;
 		}
@@ -959,8 +957,8 @@ public class FileDataBase {
 //=========END PROPERTY=========
 
 // if index incorrect, example '-1', will not be changed value of 'sortedListExtSkipped'
-	synchronized static void setSkipInfo(int index, boolean[] sortedListExtSkipped, String[] sortedListExts,
-			JTextField tfSkipInfo) { // press 'skip'
+	static void setSkipInfo(int index, boolean[] sortedListExtSkipped, String[] sortedListExts, JTextField tfSkipInfo) { // press
+																															// 'skip'
 		if (sortedListExtSkipped == null || sortedListExts == null
 				|| sortedListExtSkipped.length != sortedListExts.length) {
 			return;
@@ -979,7 +977,7 @@ public class FileDataBase {
 		return;
 	}
 
-	synchronized static boolean getSkipExt(MyBean b, boolean[] sortedListExtSkipped, String[] sortedListExts) {
+	static boolean getSkipExt(MyBean b, boolean[] sortedListExtSkipped, String[] sortedListExts) {
 		if (sortedListExtSkipped == null) {
 			return false;
 		}
@@ -1008,7 +1006,7 @@ public class FileDataBase {
 		}
 	};
 
-	synchronized static boolean dragging(int rowDest, BeansFourTableDefault myTable, List<MyBean> beans) {
+	static boolean dragging(int rowDest, BeansFourTableDefault myTable, List<MyBean> beans) {
 		if (beans.size() <= 1 || rowDest < 0 || rowDest >= beans.size()) {
 			return false;
 		}
@@ -1055,7 +1053,7 @@ public class FileDataBase {
 	}
 
 	// finally init b.one; after all other parameters init
-	synchronized static void formatBeanOneForEqualTable(String prefix, MyBean b) {
+	static void formatBeanOneForEqualTable(String prefix, MyBean b) {
 		StringBuilder sb = new StringBuilder();
 		CommonLib.appendNotNullEmpty(prefix, sb);
 
@@ -1094,8 +1092,8 @@ public class FileDataBase {
 	 * @return null if not defined 'needANDexcluding' or error; else will be AND
 	 *         substrings, not EMPTY
 	 */
-	synchronized static List<String> getSubstringsAND_DivideByOR_NullIfError(boolean needANDexcluding,
-			boolean toLowerCase, String rowString, List<String> substringsOrForReturn) {
+	static List<String> getSubstringsAND_DivideByOR_NullIfError(boolean needANDexcluding, boolean toLowerCase,
+			String rowString, List<String> substringsOrForReturn) {
 
 		if (nullEmptyString(rowString) || rowString.equals(Const.textFieldFindORSeparator)
 				|| substringsOrForReturn == null) {

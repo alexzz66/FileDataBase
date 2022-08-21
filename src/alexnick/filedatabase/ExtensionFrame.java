@@ -210,7 +210,7 @@ public final class ExtensionFrame extends JDialog implements Callable<List<Strin
 	}
 
 	// returns map, key=key of 'propertyGroups', value=exist exts only
-	synchronized private Map<String, String> getExtGroups() {
+	private Map<String, String> getExtGroups() {
 		Set<String> extsListSet = new HashSet<String>();
 		extsListSet.addAll(trimExtNew());
 
