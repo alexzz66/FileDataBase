@@ -369,17 +369,20 @@ public class BeanViewTable extends JDialog {
 					if (indexOne == 3) { // exists
 						res = !res;
 					}
-				} else if (indexOne == 9) { // text search //TODO
+				} else if (indexOne == 9) { // textSearchIndex == 9 text search //TODO
+
+					res = FileDataBase.getTextSearchResult(0, toLowerCase ? 1 : 0, b.getFour(false, true),
+							substringsAND, substringsOr);
 
 				} else { // by column 5..8->1..4; find' not null here
 					res = true;
 
 					if (CommonLib.notNullEmptyList(substringsAND)) { // first finding by AND, if defined
-						res = b.findSubstringsInColumn(indexOne - 4, toLowerCase, substringsAND);
+						res = b.findSubstringsInColumn(indexOne - 4, toLowerCase ? 1 : 0, substringsAND);
 					}
 
 					if (res) { // substringsOr not null/empty
-						res = b.findSubstringsInColumn(indexOne - 4, toLowerCase, substringsOr);
+						res = b.findSubstringsInColumn(indexOne - 4, toLowerCase ? 1 : 0, substringsOr);
 					}
 				}
 
@@ -940,12 +943,12 @@ public class BeanViewTable extends JDialog {
 					}
 
 					if (CommonLib.notNullEmptyList(substringsAND)) { // first finding by AND, if defined
-						if (!b.findSubStringsInString(findPosition, true, rowString, substringsAND)) {
+						if (!b.findSubStringsInString(findPosition, 1, rowString, substringsAND)) {
 							continue;
 						}
 					}
 					// substringsOr not null/empty
-					if (!b.findSubStringsInString(findPosition, true, rowString, substringsOr)) {
+					if (!b.findSubStringsInString(findPosition, 1, rowString, substringsOr)) {
 						continue;
 					}
 					beans.add(b);

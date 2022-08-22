@@ -246,7 +246,7 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 				var enabApp = index >= cmbAppEnabStartIndex && index <= cmbAppEnabEndIndex;
 				cmbCheckingAppPosition.setEnabled(enabApp); // 'position' no enabled for textSearch
 
-				enabApp = enabApp || index == textSearchIndex; // with textSearch
+				enabApp = enabApp || index == textSearchIndex; // with textSearch TODO
 				cmbCheckingApp.setEnabled(enabApp);
 				tfFindSubstrings.setEnabled(enabApp);
 			}
@@ -404,19 +404,24 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 				if ((b.check && bAdd) || (!b.check && bSub)) {
 					continue;
 				}
-				if (indexOne == textSearchIndex) { // text search //TODO
+
+				if (indexOne == textSearchIndex) { // text search
+					
+						res = FileDataBase.getTextSearchResult(indexThree, toLowerCase ? 1 : 0, b.getFour(false, true),
+								substringsAND, substringsOr);
 
 				} else { // by name (indexOne == 7) or by column 3..6->1..4; find' not null here
 					res = true;
+
 					String string = indexOne == 7 ? b.getNameFromFour(false)
 							: b.getStringByColumnNumberOrEmpty(indexOne - 2);
 
 					if (CommonLib.notNullEmptyList(substringsAND)) { // first finding by AND, if defined
-						res = b.findSubStringsInString(indexThree, toLowerCase, string, substringsAND);
+						res = b.findSubStringsInString(indexThree, toLowerCase ? 1 : 0, string, substringsAND);
 					}
 
 					if (res) { // substringsOr not null/empty
-						res = b.findSubStringsInString(indexThree, toLowerCase, string, substringsOr);
+						res = b.findSubStringsInString(indexThree, toLowerCase ? 1 : 0, string, substringsOr);
 					}
 				}
 

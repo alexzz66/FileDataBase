@@ -69,7 +69,7 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 	// append const indexes from 'cmbCheckItems'
 	private final int cmbAppEnabStartIndex;
 	private final int cmbAppEnabEndIndex;
-	private final int textSearchIndex; // must be -42 (if not defined) or corrected
+	private final int textSearchIndex; // must be -42 (if not defined) or corrected (cmbItemsList.size - 2)
 
 	private String[] cmbCheckItemsApp = new String[] { "only", "add", "sub", "onlyCase", "addCase", "subCase" };
 
@@ -362,18 +362,27 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 			var res = false;
 
 			if (bNeedFilterApp) {
+
 				if ((b.check && bAdd) || (!b.check && bSub)) {
 					continue;
 				}
 
-				// by column 3..6->1..4; 'find' not null here
-				res = true;
-				if (CommonLib.notNullEmptyList(substringsAND)) { // first finding by AND, if defined
-					res = b.findSubstringsInColumn(indexOne - 2, toLowerCase, substringsAND);
-				}
+				if (indexOne == textSearchIndex) { // text search
 
-				if (res) {
-					res = b.findSubstringsInColumn(indexOne - 2, toLowerCase, substringsOr);
+					res = FileDataBase.getTextSearchResult(0, toLowerCase ? 1 : 0, b.getFour(false, true),
+							substringsAND, substringsOr);
+
+				} else { // by column 3..6->1..4; 'find' not null here
+					res = true;
+
+					if (CommonLib.notNullEmptyList(substringsAND)) { // first finding by AND, if defined
+						res = b.findSubstringsInColumn(indexOne - 2, toLowerCase ? 1 : 0, substringsAND);
+					}
+
+					if (res) {
+						res = b.findSubstringsInColumn(indexOne - 2, toLowerCase ? 1 : 0, substringsOr);
+					}
+
 				}
 
 				if (bSub) {
@@ -386,8 +395,6 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 				res = false;
 			} else if (indexOne == 2) { // invert
 				res = !b.check;
-			} else if (indexOne == textSearchIndex) { // textSearch (optional) //TODO
-
 			} else if (indexOne == 10) { // check exists (optional)
 				try {
 					res = Path.of(b.getFour(false, true)).toFile().exists();
