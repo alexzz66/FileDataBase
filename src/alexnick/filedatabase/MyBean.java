@@ -164,14 +164,16 @@ public class MyBean {
 	 * @param columnNumber set 1:'one', 2:'two', 3:'three', 4:'four'+'fourApp';
 	 *                     5:'four only' <br>
 	 *                     else return false
-	 * @param toLowerCase  if true, 'string' and each from 'substrings' will be set
-	 *                     to lower case<br>
-	 *                     if false, comparing as is
+	 * @param toLowerCase  1: 'string' from 'columnNumber' will be set to lower
+	 *                     case<br>
+	 *                     2: 'each from 'substrings' will be set to lower case<br>
+	 *                     3: '1' and '2': all strings will be set to lower case<br>
+	 *                     else (example 0): no action, comparing as is
 	 * @param subStrings   substrings for finding, must not be null/empty
 	 * 
 	 * @return 'true' if found at least one 'subString' in defined 'columnNumber'
 	 */
-	boolean findSubstringsInColumn(int columnNumber, boolean toLowerCase, List<String> subStrings) {
+	boolean findSubstringsInColumn(int columnNumber, int toLowerCase, List<String> subStrings) {
 		String s = getStringByColumnNumberOrEmpty(columnNumber);
 		return s.isEmpty() ? false : findSubStringsInString(0, toLowerCase, s, subStrings);
 	}
@@ -181,19 +183,24 @@ public class MyBean {
 	 * 
 	 * @param findPosition 1:find in starts; 2:find in ends; else (example 0): any
 	 *                     place 'stringInLowerCase'
-	 * @param toLowerCase  if true, 'string' and each from 'substrings' will be set
-	 *                     to lower case<br>
-	 *                     if false, comparing as is
+	 * @param toLowerCase  1: 'string' will be set to lower case<br>
+	 *                     2: 'each from 'substrings' will be set to lower case<br>
+	 *                     3: '1' and '2': all strings will be set to lower case<br>
+	 *                     else (example 0): no action, comparing as is
 	 * @param string       string for finding, must not be null/empty
 	 * @param subStrings   substrings for finding, must not be null/empty
 	 * @return 'true' if found at least one 'subString' in 'string'
 	 */
-	boolean findSubStringsInString(int findPosition, boolean toLowerCase, String string, List<String> subStrings) {
+	boolean findSubStringsInString(int findPosition, int toLowerCase, String string, List<String> subStrings) {
 		if (CommonLib.nullEmptyString(string) || CommonLib.nullEmptyList(subStrings)) {
 			return false;
 		}
 
-		if (toLowerCase) {
+		if (toLowerCase < 0 || toLowerCase > 3) {
+			toLowerCase = 0;
+		}
+
+		if (toLowerCase == 1 || toLowerCase == 3) {
 			string = string.toLowerCase();
 		}
 
@@ -202,7 +209,7 @@ public class MyBean {
 				continue;
 			}
 
-			if (toLowerCase) {
+			if (toLowerCase >= 2) { // means 2 or 3
 				subString = subString.toLowerCase();
 			}
 

@@ -92,6 +92,7 @@ public class FileDataBase {
 	public static void main(String[] args) {
 		var sbOptions = new StringBuilder();
 		int mode = Const.MODE_NO_DEFINED;
+
 		try {
 			System.out.print(NEW_LINE_UNIX + "Start FileDataBase, ");
 			addLog(ADDLOG_DATE, true, null);
@@ -1130,6 +1131,32 @@ public class FileDataBase {
 		substringsOrForReturn.addAll(substringsOr);
 		return sAND.isEmpty() ? null
 				: CommonLib.splitStringBySeparatorOrNull(Const.textFieldFindORSeparator, sAND, toLowerCase);
+	}
+
+	/**
+	 * Finds 'subStrings' in 'string'
+	 * 
+	 * @param findPosition     1:find in starts; 2:find in ends; else (example 0):
+	 *                         any place 'stringInLowerCase'
+	 * @param toLowerCase      1: 'string' will be set to lower case<br>
+	 *                         2: 'each from 'substrings' will be set to lower
+	 *                         case<br>
+	 *                         3: '1' and '2': all strings will be set to lower
+	 *                         case<br>
+	 *                         else (example 0): no action, comparing as is
+	 * @param rowStringForPath string of path, where will be searching; path file
+	 *                         must be exists and length no more 10 MB
+	 * @param subStringsAND    substrings for finding, if not null/empty, will be FIRST
+	 *                         search
+	 * @param subStringsOr     substrings for finding, if null/empty, returns 'false';
+	 *                         else will be SECOND search
+	 * @return 'true' if found at least one 'subString' in 'string'
+	 */
+
+	static boolean getTextSearchResult(int findPosition, int toLowerCase, String rowStringForPath,
+			List<String> subStringsAND, List<String> subStringsOr) { // TODO
+
+		return false;
 	}
 
 } // of main class

@@ -175,12 +175,12 @@ public class MarkInfoTable extends JDialog {
 
 			private boolean findFilter(List<String> substringsOr, List<String> substringsAND, MyBean b) {
 				if (CommonLib.notNullEmptyList(substringsAND)) { // first finding by AND, if defined
-					if (!b.findSubstringsInColumn(1, true, substringsAND)) {
+					if (!b.findSubstringsInColumn(1, 1, substringsAND)) {
 						return false;
 					}
 				}
 				// substringsOr not null/empty
-				return b.findSubstringsInColumn(1, true, substringsOr);
+				return b.findSubstringsInColumn(1, 1, substringsOr);
 			}
 		};
 

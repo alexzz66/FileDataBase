@@ -271,11 +271,11 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 				} else { // by column 5..8->1..4; 'find' not null here
 					res = true;
 					if (CommonLib.notNullEmptyList(substringsAND)) { // first finding by AND, if defined
-						res = b.findSubstringsInColumn(indexOne - 4, true, substringsAND);
+						res = b.findSubstringsInColumn(indexOne - 4, 1, substringsAND);
 					}
 
 					if (res) {
-						res = b.findSubstringsInColumn(indexOne - 4, true, substringsOr);
+						res = b.findSubstringsInColumn(indexOne - 4, 1, substringsOr);
 					}
 				}
 
