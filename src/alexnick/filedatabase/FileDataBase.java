@@ -5,6 +5,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -1136,8 +1137,58 @@ public class FileDataBase {
 	/**
 	 * Finds 'subStrings' in 'string'
 	 * 
-	 * @param findPosition     1:find in starts; 2:find in ends; else (example 0):
-	 *                         any place 'stringInLowerCase'
+	 * @param findPosition 1:find in starts; 2:find in ends; else (example 0): any
+	 *                     place 'stringInLowerCase'
+	 * @param toLowerCase  1: 'string' will be set to lower case<br>
+	 *                     2: 'each from 'substrings' will be set to lower case<br>
+	 *                     3: '1' and '2': all strings will be set to lower case<br>
+	 *                     else (example 0): no action, comparing as is
+	 * @param string       string for finding, must not be null/empty
+	 * @param subStrings   substrings for finding, must not be null/empty
+	 * @return 'true' if found at least one 'subString' in 'string'
+	 */
+	static boolean findSubStringsInString(int findPosition, int toLowerCase, String string, List<String> subStrings) {
+		if (CommonLib.nullEmptyString(string) || CommonLib.nullEmptyList(subStrings)) {
+			return false;
+		}
+
+		if (toLowerCase < 0 || toLowerCase > 3) {
+			toLowerCase = 0;
+		}
+
+		if (toLowerCase == 1 || toLowerCase == 3) {
+			string = string.toLowerCase();
+		}
+
+		for (var subString : subStrings) {
+			if (CommonLib.nullEmptyString(subString)) {
+				continue;
+			}
+
+			if (toLowerCase >= 2) { // means 2 or 3
+				subString = subString.toLowerCase();
+			}
+
+			if (findPosition == 1) {
+				if (string.startsWith(subString)) {
+					return true;
+				}
+			} else if (findPosition == 2) {
+				if (string.endsWith(subString)) {
+					return true;
+				}
+			} else if (string.contains(subString)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Finds 'subStrings' in path by name 'rowStringForPath'; if file length > 0 and
+	 * < 10_000_000; strings must be in UTF-8
+	 * 
 	 * @param toLowerCase      1: 'string' will be set to lower case<br>
 	 *                         2: 'each from 'substrings' will be set to lower
 	 *                         case<br>
@@ -1146,15 +1197,46 @@ public class FileDataBase {
 	 *                         else (example 0): no action, comparing as is
 	 * @param rowStringForPath string of path, where will be searching; path file
 	 *                         must be exists and length no more 10 MB
-	 * @param subStringsAND    substrings for finding, if not null/empty, will be FIRST
-	 *                         search
-	 * @param subStringsOr     substrings for finding, if null/empty, returns 'false';
-	 *                         else will be SECOND search
+	 * @param subStringsAND    substrings for finding, if not null/empty, will be
+	 *                         FIRST search
+	 * @param subStringsOr     substrings for finding, if search 'FIRST' without
+	 *                         result, will be SECOND search<br>
+	 *                         This parameter MUST NOT BE null/empty
 	 * @return 'true' if found at least one 'subString' in 'string'
 	 */
 
-	static boolean getTextSearchResult(int findPosition, int toLowerCase, String rowStringForPath,
-			List<String> subStringsAND, List<String> subStringsOr) { // TODO
+	static boolean getTextSearchResult(int toLowerCase, String rowStringForPath, List<String> subStringsAND,
+			List<String> subStringsOr) {
+		if (nullEmptyList(subStringsOr)) {
+			return false;
+		}
+
+		File file = null;
+		try {
+			file = Path.of(rowStringForPath).toFile();
+			if (!file.exists() || file.isDirectory() || file.length() == 0L || file.length() > 10_000_000L) {
+				return false;
+			}
+
+		} catch (Exception e) {
+			return false;
+		}
+
+		try (var br = Files.newBufferedReader(file.toPath())) {
+			String string;
+
+			boolean needAnd = notNullEmptyList(subStringsAND);
+
+			while ((string = br.readLine()) != null) {
+
+				var res = needAnd ? FileDataBase.findSubStringsInString(0, toLowerCase, string, subStringsAND) : true;
+
+				if (res && FileDataBase.findSubStringsInString(0, toLowerCase, string, subStringsOr)) {
+					return true;
+				}
+			}
+		} catch (Exception e) {
+		}
 
 		return false;
 	}

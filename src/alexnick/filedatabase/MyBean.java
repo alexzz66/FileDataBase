@@ -175,58 +175,7 @@ public class MyBean {
 	 */
 	boolean findSubstringsInColumn(int columnNumber, int toLowerCase, List<String> subStrings) {
 		String s = getStringByColumnNumberOrEmpty(columnNumber);
-		return s.isEmpty() ? false : findSubStringsInString(0, toLowerCase, s, subStrings);
-	}
-
-	/**
-	 * Finds 'subStrings' in 'string'
-	 * 
-	 * @param findPosition 1:find in starts; 2:find in ends; else (example 0): any
-	 *                     place 'stringInLowerCase'
-	 * @param toLowerCase  1: 'string' will be set to lower case<br>
-	 *                     2: 'each from 'substrings' will be set to lower case<br>
-	 *                     3: '1' and '2': all strings will be set to lower case<br>
-	 *                     else (example 0): no action, comparing as is
-	 * @param string       string for finding, must not be null/empty
-	 * @param subStrings   substrings for finding, must not be null/empty
-	 * @return 'true' if found at least one 'subString' in 'string'
-	 */
-	boolean findSubStringsInString(int findPosition, int toLowerCase, String string, List<String> subStrings) {
-		if (CommonLib.nullEmptyString(string) || CommonLib.nullEmptyList(subStrings)) {
-			return false;
-		}
-
-		if (toLowerCase < 0 || toLowerCase > 3) {
-			toLowerCase = 0;
-		}
-
-		if (toLowerCase == 1 || toLowerCase == 3) {
-			string = string.toLowerCase();
-		}
-
-		for (var subString : subStrings) {
-			if (CommonLib.nullEmptyString(subString)) {
-				continue;
-			}
-
-			if (toLowerCase >= 2) { // means 2 or 3
-				subString = subString.toLowerCase();
-			}
-
-			if (findPosition == 1) {
-				if (string.startsWith(subString)) {
-					return true;
-				}
-			} else if (findPosition == 2) {
-				if (string.endsWith(subString)) {
-					return true;
-				}
-			} else if (string.contains(subString)) {
-				return true;
-			}
-		}
-
-		return false;
+		return s.isEmpty() ? false : FileDataBase.findSubStringsInString(0, toLowerCase, s, subStrings);
 	}
 
 }

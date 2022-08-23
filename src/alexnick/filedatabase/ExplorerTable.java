@@ -369,8 +369,8 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 
 				if (indexOne == textSearchIndex) { // text search
 
-					res = FileDataBase.getTextSearchResult(0, toLowerCase ? 1 : 0, b.getFour(false, true),
-							substringsAND, substringsOr);
+					res = FileDataBase.getTextSearchResult(toLowerCase ? 1 : 0, b.getFour(false, true), substringsAND,
+							substringsOr);
 
 				} else { // by column 3..6->1..4; 'find' not null here
 					res = true;

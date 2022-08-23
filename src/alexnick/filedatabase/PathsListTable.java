@@ -406,9 +406,9 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 				}
 
 				if (indexOne == textSearchIndex) { // text search
-					
-						res = FileDataBase.getTextSearchResult(indexThree, toLowerCase ? 1 : 0, b.getFour(false, true),
-								substringsAND, substringsOr);
+
+					res = FileDataBase.getTextSearchResult(toLowerCase ? 1 : 0, b.getFour(false, true),
+							substringsAND, substringsOr);
 
 				} else { // by name (indexOne == 7) or by column 3..6->1..4; find' not null here
 					res = true;
@@ -417,11 +417,13 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 							: b.getStringByColumnNumberOrEmpty(indexOne - 2);
 
 					if (CommonLib.notNullEmptyList(substringsAND)) { // first finding by AND, if defined
-						res = b.findSubStringsInString(indexThree, toLowerCase ? 1 : 0, string, substringsAND);
+						res = FileDataBase.findSubStringsInString(indexThree, toLowerCase ? 1 : 0, string,
+								substringsAND);
 					}
 
 					if (res) { // substringsOr not null/empty
-						res = b.findSubStringsInString(indexThree, toLowerCase ? 1 : 0, string, substringsOr);
+						res = FileDataBase.findSubStringsInString(indexThree, toLowerCase ? 1 : 0, string,
+								substringsOr);
 					}
 				}
 
