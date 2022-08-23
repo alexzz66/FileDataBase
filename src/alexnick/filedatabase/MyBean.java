@@ -8,6 +8,7 @@ import java.util.Set;
 
 import alexnick.CommonLib;
 
+
 public class MyBean {
 	private String one;
 	private String two;
