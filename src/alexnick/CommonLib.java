@@ -34,6 +34,7 @@ import javax.swing.JFileChooser;
  *
  */
 
+
 public class CommonLib {
 	public static final String NEW_LINE_WINDOWS = "\r\n";
 	public static final String NEW_LINE_UNIX = "\n";
