@@ -56,7 +56,8 @@ public class BeanViewTable extends JDialog {
 	private final int cmbAppEnabStartIndex = 3;
 	private final int cmbAppEnabEndIndex = 9;
 	private final int cmbAppEnabStartFindColumnIndex = 5;
-	private String[] cmbCheckItemsApp = new String[] { "only", "add", "sub", "onlyCase", "addCase", "subCase" };
+	private final int textSearchIndex = 9; // cmbApp enabled
+	private String[] cmbCheckItemsApp = new String[] { "only", "add", "sub", "onlyCase", "addCase", "subCase", "TEST" };
 
 	private final String caption;
 	volatile private int lastSortType = SortBeans.sortNoDefined;
@@ -305,7 +306,7 @@ public class BeanViewTable extends JDialog {
 //0:"all", 1:"no", 2:"invert", 3:"exists" (3 and more: with indexTwo), 4: "no exists"
 //5:"by BinFolder", 6:"by Start path only", 7:"by Modified ", 8:"by Result"
 //9: "textSearch",  10:remove from table (last index)
-//indexTwo, app: 0:"only", 1:"add", 2:"sub" , 3:"onlyCase", 4:"addCase", 5:"subCase" 	
+//indexTwo, app: 0:"only", 1:"add", 2:"sub" , 3:"onlyCase", 4:"addCase", 5:"subCase", 6: "TEST" 	
 	private void checking(final int indexOne, int indexTwo) {
 		if (beans.isEmpty() || indexOne < 0 || indexOne >= cmbCheckItems.length) {
 			return;
@@ -328,6 +329,19 @@ public class BeanViewTable extends JDialog {
 			}
 
 			indexTwo = 0; // for 'all','no','invert' no matter, but in array write correct number
+		}
+
+		boolean test = bNeedFilterApp && indexTwo == 6;// TEST
+
+		if (test && (indexOne == textSearchIndex)) { // TEST text search
+			int[] addedInfo = FileDataBase.testTextSearchOrNull(beans);
+			if (addedInfo == null) {
+				return;
+			}
+
+			int[] index = { indexOne, indexTwo };
+			updating(index, addedInfo);
+			return;
 		}
 
 		boolean toLowerCase = indexTwo <= 2;
@@ -355,24 +369,43 @@ public class BeanViewTable extends JDialog {
 				updating(lastIndex, null);
 				return;
 			}
+
+			if (test) {
+				FileDataBase.testInfo(this, substringsAND, substringsOr);
+				return;
+			}
+		} else if (test && bNeedFilterApp) {
+			return; // for exists, no exists
 		}
 
 		for (var b : beans) {
-			var res = false;
+			var res = false; // false by default
 
 			if (bNeedFilterApp) { // by exists, column
 				if ((b.check && bAdd) || (!b.check && bSub)) {
 					continue;
 				}
-				if (indexOne == 3 || indexOne == 4) { // exists, no exists
+
+				if (indexOne == 3 || indexOne == 4) { // exists, no exists; 'toLowerCase' no matters
 					res = b.isFourPrefixNoExists(); // no exists
 					if (indexOne == 3) { // exists
 						res = !res;
 					}
-				} else if (indexOne == 9) { // textSearchIndex == 9 text search //TODO
 
-					res = FileDataBase.getTextSearchResult(toLowerCase ? 1 : 0, b.getFour(false, true), substringsAND,
-							substringsOr);
+				} else if (indexOne == textSearchIndex) { // textSearchIndex == 9 text search //TODO
+
+					var one = b.getOne();
+					if (one.startsWith(Const.BRACE_TEST_ERROR_FULL)) {
+						// res == false
+					} else {
+						var count = FileDataBase.getTextSearchResult(false, toLowerCase ? 1 : 0, b.getFour(false, true),
+								substringsAND, substringsOr);
+						if (count > 0) {
+							res = true;
+						} else if (count == -1) {
+							b.setOne(Const.BRACE_TEST_ERROR_FULL + one);
+						}
+					}
 
 				} else { // by column 5..8->1..4; find' not null here
 					res = true;

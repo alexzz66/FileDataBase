@@ -66,12 +66,12 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 	private int[] lastIndex = { 0, 0 }; // first as cmbCheckItems index;second as cmbCheckItemsApp
 
 	private final String[] cmbCheckItems; // init in constructor
+	private String[] cmbCheckItemsApp; // init in constructor
+
 	// append const indexes from 'cmbCheckItems'
 	private final int cmbAppEnabStartIndex;
 	private final int cmbAppEnabEndIndex;
 	private final int textSearchIndex; // must be -42 (if not defined) or corrected (cmbItemsList.size - 2)
-
-	private String[] cmbCheckItemsApp = new String[] { "only", "add", "sub", "onlyCase", "addCase", "subCase" };
 
 	/**
 	 * @param frame           may be 'null' or 'this' in case calling from some
@@ -104,11 +104,19 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 			endIndex -= 2;
 		}
 
-		textSearchIndex = filesCanExist ? (cmbItemsList.size() - 2) : -42;
-
 		cmbCheckItems = CommonLib.getArrayFromListOrNullByIndexes(0, endIndex, cmbItemsList);
 		cmbAppEnabStartIndex = 3;
 		cmbAppEnabEndIndex = 6;
+
+		textSearchIndex = filesCanExist ? (cmbItemsList.size() - 2) : -42;
+
+		List<String> cmbItemsAppList = List.of("only", "add", "sub", "onlyCase", "addCase", "subCase", "TEST");
+		endIndex = cmbItemsAppList.size() - 1;
+		if (textSearchIndex < 0) { // not defined testSearch
+			endIndex -= 1;
+		}
+
+		cmbCheckItemsApp = CommonLib.getArrayFromListOrNullByIndexes(0, endIndex, cmbItemsAppList);
 
 		columns = new String[] { "Type / Size", "Name",
 				"Extensions info / Crc,modified" + (viewNoMark ? "" : " **mark"), "Full path" };
@@ -309,6 +317,7 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 //3:"by Type, size", 4:"by Name", 5:"by ExtInfo, mark",	6:"by Full path"
 //7:"toList all/paths", 8:"toList pathsNoRoot",
 //9:"textSearch" (optional), 10:"check exists" (optional) -> init together if 'filesCanExist'
+//indexTwo, app: 0:"only", 1:"add", 2:"sub" , 3:"onlyCase", 4:"addCase", 5:"subCase", 6: "TEST" (optional)
 	private void checking(final int indexOne, int indexTwo) {
 		if (beans.isEmpty() || indexOne < 0 || indexOne >= cmbCheckItems.length) {
 			return;
@@ -330,6 +339,19 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 			}
 
 			indexTwo = 0; // for 'all','no','invert' no matter, but in array write correct number
+		}
+
+		boolean test = bNeedFilterApp && indexTwo == 6;// TEST
+
+		if (test && (indexOne == textSearchIndex)) { // TEST text search
+			int[] addedInfo = FileDataBase.testTextSearchOrNull(beans);
+			if (addedInfo == null) {
+				return;
+			}
+
+			int[] index = { indexOne, indexTwo };
+			updating(index, addedInfo);
+			return;
 		}
 
 		boolean toLowerCase = indexTwo <= 2;
@@ -356,10 +378,15 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 				updating(lastIndex, null);
 				return;
 			}
+
+			if (test) {
+				FileDataBase.testInfo(this, substringsAND, substringsOr);
+				return;
+			}
 		}
 
 		for (var b : beans) {
-			var res = false;
+			var res = false; // false by default
 
 			if (bNeedFilterApp) {
 
@@ -367,10 +394,20 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 					continue;
 				}
 
-				if (indexOne == textSearchIndex) { // text search
+				if (indexOne == textSearchIndex) { // text search TODO
 
-					res = FileDataBase.getTextSearchResult(toLowerCase ? 1 : 0, b.getFour(false, true), substringsAND,
-							substringsOr);
+					var one = b.getOne();
+					if (one.startsWith(Const.BRACE_TEST_ERROR_FULL)) {
+						// res == false
+					} else {
+						var count = FileDataBase.getTextSearchResult(false, toLowerCase ? 1 : 0, b.getFour(false, true),
+								substringsAND, substringsOr);
+						if (count > 0) {
+							res = true;
+						} else if (count == -1) {
+							b.setOne(Const.BRACE_TEST_ERROR_FULL + one);
+						}
+					}
 
 				} else { // by column 3..6->1..4; 'find' not null here
 					res = true;

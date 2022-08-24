@@ -55,10 +55,12 @@ public class Program {
 		this.options = options;
 
 		// for 'MODE_SYNC_BIN' no matter (no TEMP mode, no ID3 etc...)
+		// in 'readGlobalOptions' set FileDataBase.isTemp
 		int needCalcID3 = (mode == Const.MODE_SYNC_BIN) ? 0 : readGlobalOptions(mode == Const.MODE_EXTRACT);
 
-		boolean needInitDoubleRepo = (mode == Const.MODE_SYNC_BIN) ? false
+		boolean needInitDoubleRepo = (FileDataBase.isTEMP || (mode == Const.MODE_SYNC_BIN)) ? false
 				: this.options.contains(Const.OPTIONS_DOUBLE_REPO);
+
 		if (!checkRepositoryPath(mode == Const.MODE_VIEW, needInitDoubleRepo)) {
 			errorArgument("Error checking repository and options directory on disk " + FileDataBase.diskMain);
 		}

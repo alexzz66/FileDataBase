@@ -80,7 +80,7 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 	private JCheckBox cbShowRenameLog;
 
 	private JTextField tfFindSubstrings;
-	private String[] cmbCheckItemsApp = new String[] { "only", "add", "sub", "onlyCase", "addCase", "subCase" };
+	private String[] cmbCheckItemsApp = new String[] { "only", "add", "sub", "onlyCase", "addCase", "subCase", "TEST" };// TEST_is_last
 	private String[] cmbCheckItemsAppPosition = new String[] { "any", "starts", "ends" };
 
 	private int[] lastIndex = { 0, 0, 0 }; // cmbCheckItems, cmbCheckItemsApp, cmbFindPosition indexes
@@ -246,7 +246,7 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 				var enabApp = index >= cmbAppEnabStartIndex && index <= cmbAppEnabEndIndex;
 				cmbCheckingAppPosition.setEnabled(enabApp); // 'position' no enabled for textSearch
 
-				enabApp = enabApp || index == textSearchIndex; // with textSearch TODO
+				enabApp = enabApp || index == textSearchIndex;
 				cmbCheckingApp.setEnabled(enabApp);
 				tfFindSubstrings.setEnabled(enabApp);
 			}
@@ -343,7 +343,7 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 
 //one, cmpCheckItems:
 //0:"all", 1:"no", 2:"invert", 3:"by Signature", 4:"by Number,result",5:"by Modified", 6:"by Path", 7:"by Name", 8:"textSearch"
-//two, cmpCheckItemsApp:0:"only", 1:"add", 2:"sub" , 3:"onlyCase", 4:"addCase", 5:"subCase" 
+//two, cmpCheckItemsApp:0:"only", 1:"add", 2:"sub" , 3:"onlyCase", 4:"addCase", 5:"subCase" , 6: "TEST"
 //three:appPos:0:"any", 1:"starts", 2:"ends"	
 	private void checking(int indexOne, int indexTwo, int indexThree) {
 		if (beans.isEmpty() || indexOne < 0 || indexOne >= cmbCheckItems.length) {
@@ -363,17 +363,32 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 			indexTwo = 0; // for 'all','no','invert' no matter, but in array write correct number
 		}
 
-		if (indexThree < 0 || indexThree >= cmbCheckItemsApp.length) {
+		if (indexThree < 0 || indexThree >= cmbCheckItemsAppPosition.length) {
 			if (bNeedFilterAppPos) {
 				return;
 			}
 
-			indexThree = 0; // for 'all','no','invert' no matter, but in array write correct number
+			indexThree = 0; // for 'all','no','invert' no matters, but in array writes correct number
+		}
+
+		boolean test = bNeedFilterApp && indexTwo == 6;// TEST
+
+		if (test && (indexOne == textSearchIndex)) { // TEST text search
+			int[] addedInfo = FileDataBase.testTextSearchOrNull(beans);
+			if (addedInfo == null) {
+				return;
+			}
+
+			int[] index = { indexOne, indexTwo, indexThree };
+			updating(index, addedInfo, 0);
+			return;
 		}
 
 		boolean toLowerCase = indexTwo <= 2;
 		if (!toLowerCase) {
-			indexTwoResult -= 3; // 3..5 -> 0..2
+			{
+				indexTwoResult -= 3; // 3..5 -> 0..2
+			}
 		}
 
 		int[] addedInfo = new int[2]; // plus and minus info
@@ -395,10 +410,15 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 				updating(lastIndex, null, 0);
 				return;
 			}
+
+			if (test) {
+				FileDataBase.testInfo(this, substringsAND, substringsOr);
+				return;
+			}
 		}
 
 		for (var b : beans) {
-			var res = false;
+			var res = false; // false by default
 
 			if (bNeedFilterApp) { // by column, textSearch
 				if ((b.check && bAdd) || (!b.check && bSub)) {
@@ -407,8 +427,18 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 
 				if (indexOne == textSearchIndex) { // text search
 
-					res = FileDataBase.getTextSearchResult(toLowerCase ? 1 : 0, b.getFour(false, true),
-							substringsAND, substringsOr);
+					var one = b.getOne();
+					if (one.startsWith(Const.BRACE_TEST_ERROR_FULL)) {
+						// res == false
+					} else {
+						var count = FileDataBase.getTextSearchResult(false, toLowerCase ? 1 : 0, b.getFour(false, true),
+								substringsAND, substringsOr);
+						if (count > 0) {
+							res = true;
+						} else if (count == -1) {
+							b.setOne(Const.BRACE_TEST_ERROR_FULL + one);
+						}
+					}
 
 				} else { // by name (indexOne == 7) or by column 3..6->1..4; find' not null here
 					res = true;

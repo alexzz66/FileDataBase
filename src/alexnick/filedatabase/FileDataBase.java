@@ -1181,7 +1181,7 @@ public class FileDataBase {
 				return true;
 			}
 		}
- 
+
 		return false;
 	}
 
@@ -1189,6 +1189,8 @@ public class FileDataBase {
 	 * Finds 'subStrings' in path by name 'rowStringForPath'; if file length > 0 and
 	 * < 10_000_000; strings must be in UTF-8
 	 * 
+	 * @param test             if true, returns total count of strings without
+	 *                         search substrings
 	 * @param toLowerCase      1: 'string' will be set to lower case<br>
 	 *                         2: 'each from 'substrings' will be set to lower
 	 *                         case<br>
@@ -1202,27 +1204,34 @@ public class FileDataBase {
 	 * @param subStringsOr     substrings for finding, if search 'FIRST' without
 	 *                         result, will be SECOND search<br>
 	 *                         This parameter MUST NOT BE null/empty
-	 * @return 'true' if found at least one 'subString' in 'string'
+	 * @return if test == false: '-1' case error; '0': not found; '1': found at
+	 *         least one 'subString' in 'string'<br>
+	 *         if test == true: -1: case error, or count of lines
 	 */
 
-	static boolean getTextSearchResult(int toLowerCase, String rowStringForPath, List<String> subStringsAND,
+	static int getTextSearchResult(boolean test, int toLowerCase, String rowStringForPath, List<String> subStringsAND,
 			List<String> subStringsOr) {
-		if (nullEmptyList(subStringsOr)) {
-			return false;
+		if (!test && nullEmptyList(subStringsOr)) {
+			return -1;
 		}
 
 		File file = null;
 		try {
 			file = Path.of(rowStringForPath).toFile();
 			if (!file.exists() || file.isDirectory() || file.length() == 0L || file.length() > 10_000_000L) {
-				return false;
+				return -1;
 			}
 
 		} catch (Exception e) {
-			return false;
+			return -1;
 		}
 
 		try (var br = Files.newBufferedReader(file.toPath())) {
+
+			if (test) {
+				return (int) br.lines().count();
+			}
+
 			String string;
 
 			boolean needAnd = notNullEmptyList(subStringsAND);
@@ -1232,13 +1241,85 @@ public class FileDataBase {
 				var res = needAnd ? FileDataBase.findSubStringsInString(0, toLowerCase, string, subStringsAND) : true;
 
 				if (res && FileDataBase.findSubStringsInString(0, toLowerCase, string, subStringsOr)) {
-					return true;
+					return 1;
 				}
 			}
+
 		} catch (Exception e) {
+			return -1;
 		}
 
-		return false;
+		return 0;
+	}
+
+	/**
+	 * Text search in each bean, by getFour(false, true)
+	 * 
+	 * @param beans
+	 * @return null if error or correct 'addedInfo'
+	 */
+	static int[] testTextSearchOrNull(List<MyBean> beans) {
+		if (nullEmptyList(beans)) {
+			return null;
+		}
+
+		int[] addedInfo = new int[2]; // plus and minus info
+		addedInfo[0] = 0;
+		addedInfo[1] = 0;
+
+		for (var b : beans) {
+			var res = false;
+			var one = b.getOne();
+
+			if (one.startsWith(Const.BRACE_TEST_ERROR_FULL)) {
+				// res == false
+			} else if (one.startsWith(Const.BRACE_START_TEST)) {
+				res = true; // was done test and it not a error
+			} else { // set TEST to 'one'
+				var count = getTextSearchResult(true, 0, b.getFour(false, true), null, null);
+				res = count > 0;
+
+				String onePrefix = res ? Const.BRACE_START_TEST + count + Const.BRACE_END_WITH_SPACE
+						: Const.BRACE_TEST_ERROR_FULL;
+				b.setOne(onePrefix.concat(one));
+			}
+
+			if (b.check != res) {
+				if (res) {
+					addedInfo[0]++;
+				} else {
+					addedInfo[1]++;
+				}
+				b.check = res;
+			}
+		}
+
+		return addedInfo;
+	}
+
+	static void testInfo(Component parentComponent, List<String> substringsAND, List<String> substringsOr) {// TODO
+		var sb = new StringBuilder();
+		sb.append("TEST need for 'textSearch'").append(CommonLib.NEW_LINE_UNIX)
+				.append("To first column will be added '<test:' and lines count in file")
+				.append(CommonLib.NEW_LINE_UNIX).append("If not error, that row will be checked.")
+				.append(CommonLib.NEW_LINE_UNIX).append(CommonLib.NEW_LINE_UNIX)
+				.append("Information for current search:");
+
+		sb.append(CommonLib.NEW_LINE_UNIX).append("Substrings AND");
+		if (nullEmptyList(substringsAND)) {
+			sb.append(": not defined");
+		} else {
+			sb.append(CommonLib.NEW_LINE_UNIX).append(substringsAND.toString());
+		}
+
+		sb.append(CommonLib.NEW_LINE_UNIX).append(CommonLib.NEW_LINE_UNIX).append("Substrings OR");
+		if (nullEmptyList(substringsOr)) {
+			sb.append(": not defined");
+		} else {
+			sb.append(CommonLib.NEW_LINE_UNIX).append(substringsOr.toString());
+		}
+
+		JOptionPane.showMessageDialog(parentComponent, sb.toString());
 	}
 
 } // of main class

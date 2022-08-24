@@ -14,10 +14,13 @@ public class Const {
 
 	static final String BRACE_START = "<";// CopyMove.ERROR_BRACE_START;
 	static final String BRACE_START_FIRST_SPACE = " " + BRACE_START;
+	static final String BRACE_START_TEST = BRACE_START + "test: ";
 
 	static final String BRACE_END = ">";
 	static final String BRACE_END_WITH_SLASH_SPACE = "/> "; // CopyMove.ERROR_BRACE_END;
 	static final String BRACE_END_WITH_SPACE = "> ";
+
+	static final String BRACE_TEST_ERROR_FULL = BRACE_START_TEST + "error" + BRACE_END_WITH_SPACE;
 
 	static final String ROOT_SEPARATOR_WINDOWS = ":" + File.separator;
 	static final String UPDATE_BIN_COMPARING_REMINDER = CommonLib.NEW_LINE_UNIX + CommonLib.NEW_LINE_UNIX
