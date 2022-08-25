@@ -227,8 +227,8 @@ public class BeanViewTable extends JDialog {
 
 		setLabelChoosed(beans0);
 
-		JComboBox<String> cmbAction = new JComboBox<>(
-				new String[] { "copy/move", "toList all/paths", "toList pathsNoRoot", "generate *.bin" });
+		JComboBox<String> cmbAction = new JComboBox<>(new String[] { "copy/move", "toList all/paths",
+				"toList pathsNoRoot", "generate *.bin", "filesToString" });
 		JButton butAction = new JButton("do");
 		butAction.addActionListener(e -> doAction(cmbAction.getSelectedIndex()));
 
@@ -392,7 +392,7 @@ public class BeanViewTable extends JDialog {
 						res = !res;
 					}
 
-				} else if (indexOne == textSearchIndex) { // textSearchIndex == 9 text search //TODO
+				} else if (indexOne == textSearchIndex) {
 
 					var one = b.getOne();
 					if (one.startsWith(Const.BRACE_TEST_ERROR_FULL)) {
@@ -475,8 +475,9 @@ public class BeanViewTable extends JDialog {
 		updating(null, null);
 	}
 
-//0:copy/move, 1:toList all/paths, 2:toList pathsNoRoot, 3:generate .*bin  
-	private void doAction(int selectedIndex) {
+//0:copy/move, 1:toList all/paths, 2:toList pathsNoRoot, 3:generate .*bin 
+//4: "filesToString"
+	private void doAction(int selectedIndex) { // TODO
 		if (selectedIndex == 0) {
 			doCopyMove();
 			return;
@@ -486,7 +487,33 @@ public class BeanViewTable extends JDialog {
 			generateBin();
 			return;
 		}
+
+		if (selectedIndex == 4) {
+			toCommandLine();
+			return;
+		}
+
 		FileDataBase.beansToList(false, selectedIndex == 2 ? 3 : 2, null, beans);
+	}
+
+	private void toCommandLine() {
+		int checkCount = printCount(lastIndex, true, null);
+		if (checkCount <= 0) {
+			return;
+		}
+
+		Set<Integer> numbers = new HashSet<>();
+
+		for (int i = 0; i < beans.size(); i++) {
+			var b = beans.get(i);
+			if (!b.check) {
+				continue;
+			}
+
+			numbers.add(i);
+		}
+
+		FileDataBase.toCommandLine(this, 0, numbers, beans);
 	}
 
 	private void generateBin() {

@@ -1297,7 +1297,7 @@ public class FileDataBase {
 		return addedInfo;
 	}
 
-	static void testInfo(Component parentComponent, List<String> substringsAND, List<String> substringsOr) {// TODO
+	static void testInfo(Component parentComponent, List<String> substringsAND, List<String> substringsOr) {
 		var sb = new StringBuilder();
 		sb.append("TEST need for 'textSearch'").append(CommonLib.NEW_LINE_UNIX)
 				.append("To first column will be added '<test:' and lines count in file")
@@ -1320,6 +1320,138 @@ public class FileDataBase {
 		}
 
 		JOptionPane.showMessageDialog(parentComponent, sb.toString());
+	}
+
+	/**
+	 * Generates one string from 'numbers' of 'beans'; in quotes with 'space'
+	 * separator, opens result file.<br>
+	 * NB: for Windows command line, the length of result string must be no more
+	 * 8191 symbols
+	 * 
+	 * @param parentComponent may be null or frame, from be called that method; need
+	 *                        for show 'message'
+	 * @param message         0 (by default): message anyway (except no correct
+	 *                        'numbers' or 'beans')<br>
+	 *                        1: message if found errors (no exists files or
+	 *                        any)<br>
+	 *                        2: show result file only<br>
+	 *                        If empty result, will be message about it anyway
+	 * @param numbers         correct numbers, path will be of 'getFour(true, true)'
+	 * @param beans           correct beans
+	 */
+	static void toCommandLine(Component parentComponent, int message, Set<Integer> numbers, List<MyBean> beans) {
+		if (nullEmptyList(beans) || nullEmptySet(numbers)) {
+			return;
+		}
+
+		if (message < 0 || message > 2) {
+			message = 0;
+		}
+
+		int errorCount = 0;
+		int existsCount = 0;
+		int noExistsCount = 0;
+
+		var sbExists = new StringBuilder();
+		var sbNoExists = new StringBuilder();
+
+		for (var i : numbers) {
+			if (i < 0 || i >= beans.size()) {
+				errorCount++;
+				continue;
+			}
+
+			try {
+				var b = beans.get(i);
+				boolean noExistsPrefix = b.isFourPrefixNoExists();
+
+				var file = Path.of(b.getFour(noExistsPrefix, true)).toFile();
+
+				if (file == null) {
+					throw new NullPointerException();
+				}
+
+				StringBuilder sb;
+
+				if (noExistsPrefix || !file.exists()) {
+					noExistsCount++;
+					sb = sbNoExists;
+				} else {
+					existsCount++;
+					sb = sbExists;
+				}
+
+				if (!sb.isEmpty()) {
+					sb.append(" ");
+				}
+
+				sb.append("\"").append(file.toString()).append("\"");
+
+			} catch (Exception e) {
+				errorCount++;
+				continue;
+			}
+		}
+
+		boolean foundErrors = (errorCount > 0) || (noExistsCount > 0);
+
+		String exists = sbExists.toString();
+		String noExists = sbNoExists.toString();
+
+		boolean isResults = !exists.isEmpty() || !noExists.isEmpty();
+
+		boolean needMessage = (message == 2) && (isResults) ? false : (message == 1) && (!foundErrors) ? false : true;
+		var confirm = JOptionPane.CANCEL_OPTION;
+
+		if (needMessage) {
+
+			var sbResult = new StringBuilder();
+			sbResult.append("Total count of chosen: ").append(numbers.size()).append("; of which errors: ")
+					.append(errorCount).append(", exists: ").append(existsCount).append(", no exists: ")
+					.append(noExistsCount).append(CommonLib.NEW_LINE_UNIX).append(CommonLib.NEW_LINE_UNIX);
+
+			if (!isResults) {
+				sbResult.append("Result is empty");
+				JOptionPane.showMessageDialog(parentComponent, sbResult.toString());
+				return;
+			}
+
+			sbResult.append("<YES> exists only, string length: ").append(exists.length())
+					.append(CommonLib.NEW_LINE_UNIX);
+			sbResult.append("<NO> exists / no exists, with string length info: ").append(exists.length()).append(" / ")
+					.append(noExists.length());
+
+			sbResult.append(CommonLib.NEW_LINE_UNIX).append(CommonLib.NEW_LINE_UNIX)
+					.append("[NB: for Windows command line, the length of result string must be no more 8191 symbols]");
+			confirm = JOptionPane.showConfirmDialog(parentComponent, sbResult.toString(), "to Command line",
+					JOptionPane.YES_NO_CANCEL_OPTION);
+
+		} else if (noExists.isEmpty()) {
+			confirm = JOptionPane.YES_OPTION;
+		} else {
+			confirm = JOptionPane.NO_OPTION;
+		}
+
+		var sbResult = new StringBuilder();
+		String name = "toCommandLine";
+
+		if (confirm == JOptionPane.NO_OPTION) { // with info
+			sbResult.append("<EXISTS, count: ").append(existsCount).append("; length: ").append(exists.length())
+					.append(">").append(CommonLib.NEW_LINE_UNIX).append(exists).append(CommonLib.NEW_LINE_UNIX);
+			sbResult.append("<NO EXISTS, count: ").append(noExistsCount).append("; length: ").append(noExists.length())
+					.append(">").append(CommonLib.NEW_LINE_UNIX).append(noExists).append(CommonLib.NEW_LINE_UNIX);
+			name += "_fullInfo";
+		} else if (confirm == JOptionPane.YES_OPTION) {
+			sbResult.append(exists);
+		} else {
+			return;
+		}
+
+		if (sbResult.isEmpty()) {
+			JOptionPane.showMessageDialog(parentComponent, "Result is empty");
+		} else {
+			saveAndShowList(true, 1, getTempPath(name + ".txt"), List.of(sbResult.toString()));
+		}
 	}
 
 } // of main class

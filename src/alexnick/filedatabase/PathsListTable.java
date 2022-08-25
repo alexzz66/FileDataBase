@@ -267,8 +267,9 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 		cbShowRenameLog.setEnabled(false);
 		cbShowRenameLog.setToolTipText("show rename log after rename/undo");
 
-		JComboBox<String> cmbActions = new JComboBox<>(new String[] { "export to list", "remove from table",
-				"copy/move files to", "delete files", "rename files", "undo rename files", "show rename log" });
+		JComboBox<String> cmbActions = new JComboBox<>(
+				new String[] { "export to list", "remove from table", "copy/move files to", "delete files",
+						"rename files", "undo rename files", "show rename log", "filesToString", "foldersToString" });
 		cmbActions.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -386,9 +387,7 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 
 		boolean toLowerCase = indexTwo <= 2;
 		if (!toLowerCase) {
-			{
-				indexTwoResult -= 3; // 3..5 -> 0..2
-			}
+			indexTwoResult -= 3; // 3..5 -> 0..2
 		}
 
 		int[] addedInfo = new int[2]; // plus and minus info
@@ -504,9 +503,9 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 		}
 	}
 
-	// 0:"export to list", 1:"remove from table", 2:"copy/move files to", 3:"delete
-	// files", 4:"rename files", 5:"undo rename files", 6:"show rename log"
-	private void doAction(JComboBox<String> cmbActions) {
+// 0:"export to list", 1:"remove from table", 2:"copy/move files to", 3:"delete files", 4:"rename files", 5:"undo rename files", 
+// 6:"show rename log", 7:"filesToString", 8: "foldersToString"
+	private void doAction(JComboBox<String> cmbActions) { // TODO
 		var index = cmbActions.getSelectedIndex();
 
 		if (index == 6) {
@@ -514,7 +513,7 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 			return;
 		}
 
-		if (index < 0 || beans.isEmpty()) {
+		if (index < 0 || index > 8 || beans.isEmpty()) {
 			return;
 		}
 
@@ -523,12 +522,13 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 		final int FILES_RENAME = 4;
 		final int FILES_RENAME_UNDO = 5;
 
-		boolean bFiles = index >= 2; // 2,3,4,5
+//needCount 1:count files only; 2: count folders 3:count all
+		int needCount = index == 8 ? 2 : index <= 1 ? 3 : 1;// for index 2,3,4,5,7
 
-		String stringFiles = bFiles ? " (files only)" : "";
+		String stringFiles = needCount == 1 ? " (files only)" : needCount == 2 ? " (folders only)" : "";
 
 		Set<Integer> setSelected = new HashSet<Integer>();
-		printCount(lastIndex, null, bFiles ? 1 : 2, setSelected);
+		printCount(lastIndex, null, needCount, setSelected);
 
 		if (setChecked.isEmpty() && setSelected.isEmpty()) {
 			JOptionPane.showMessageDialog(this, "No checked/selected rows found " + stringFiles);
@@ -551,7 +551,7 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 			var message = CommonLib.formatConfirmYesNoMessage("Action '" + actionCaption + "'.",
 					"for CHECKED items" + stringFiles + setChecked.size(),
 					"for SELECTED items" + stringFiles + setSelected.size(),
-					(index == FILES_COPY_MOVE || index == FILES_DELETE) ? "This window be closed" : null);
+					(index == FILES_COPY_MOVE || index == FILES_DELETE) ? "This window will be closed" : null);
 
 			confirm = JOptionPane.showConfirmDialog(this, message, actionCaption, JOptionPane.YES_NO_CANCEL_OPTION);
 		}
@@ -580,6 +580,12 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 
 		if (index == 1) { // remove from table
 			removeFromTable(setChecked);
+			setChecked.clear();
+			return;
+		}
+
+		if (index == 7 || index == 8) { // 7:"filesToString", 8: "foldersToString"
+			FileDataBase.toCommandLine(this, 1, setChecked, beans);
 			setChecked.clear();
 			return;
 		}
@@ -974,7 +980,10 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 	 * @param index       must be as indexes in 'cmbCheck's
 	 * @param addedInfo   if not null and length == 2, be added info to label
 	 * @param needCount   0 (by default): no recount global 'Set' counters
-	 *                    checked/selected; 1:count files only; 2:count all
+	 *                    checked/selected;<br>
+	 *                    1:count files only<br>
+	 *                    2: count folders only<br>
+	 *                    3:count all
 	 * @param setSelected if null, 'needCount' will be set to '0'; not will be
 	 *                    filling 'setChecked' and 'setSelected'; else (if
 	 *                    'needCount' != 0) BOTH be filled
@@ -985,24 +994,28 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 
 		int checkCount = 0;
 
-		if (needCount <= 0 || needCount > 2 || setSelected == null) {
+		if (needCount <= 0 || needCount > 3 || setSelected == null) {
 			needCount = 0;
-		} else { // needCount == 1,2 and 'setSelected' not null
+		} else { // needCount == 1,2,3 and 'setSelected' not null
 			setChecked.clear();
 			setSelected.clear();
 		}
 
-		var arSelectedRows = myTable.getSelectedRows();
+		int[] arSelectedRows = myTable.getSelectedRows();
+
 		for (int i = 0; i < beans.size(); i++) {
 			var b = beans.get(i);
 
 			if (needCount != 0) {
 				for (int j = 0; j < arSelectedRows.length; j++) {
 					if (arSelectedRows[j] == i) {
-						if (needCount == 1 && b.serviceIntOne != CommonLib.SIGN_FILE) {
+
+						if (needCount == 1 && b.serviceIntOne != CommonLib.SIGN_FILE) { // need files
+						} else if (needCount == 2 && b.serviceIntOne != CommonLib.SIGN_FOLDER) { // need folders
 						} else {
 							setSelected.add(i);
 						}
+
 						break;
 					}
 				}
@@ -1014,7 +1027,9 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 
 			checkCount++;
 			if (needCount != 0) {
-				if (needCount == 1 && b.serviceIntOne != CommonLib.SIGN_FILE) {
+
+				if (needCount == 1 && b.serviceIntOne != CommonLib.SIGN_FILE) { // need files
+				} else if (needCount == 2 && b.serviceIntOne != CommonLib.SIGN_FOLDER) { // need folders
 				} else {
 					setChecked.add(i);
 				}

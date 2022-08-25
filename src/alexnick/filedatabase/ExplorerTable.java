@@ -16,8 +16,10 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 import javax.swing.Box;
@@ -97,11 +99,12 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 		}
 
 		List<String> cmbItemsList = List.of("all", "no", "invert", "by Type, size", "by Name", "by ExtInfo, mark",
-				"by Full path", "toList all/paths", "toList pathsNoRoot", "textSearch", "check exists");
+				"by Full path", "toList all/paths", "toList pathsNoRoot", "textSearch", "check exists", "filesToString",
+				"foldersToString");
 
 		int endIndex = cmbItemsList.size() - 1;
 		if (!filesCanExist) {
-			endIndex -= 2;
+			endIndex -= 4;
 		}
 
 		cmbCheckItems = CommonLib.getArrayFromListOrNullByIndexes(0, endIndex, cmbItemsList);
@@ -208,7 +211,7 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 		butCheck.addActionListener(butCheckActionListener);
 
 		checkInfo = new JLabel();
-		printCount(null, false, null); // check on show window
+		printCount(0, null, false, null); // check on show window
 
 		butUp = new JButton("Up");
 		butUp.setToolTipText("Shift + click: open root folder");
@@ -244,7 +247,7 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 
 				if (myTable.getSelectedColumn() == 0) {
 					if (e.getClickCount() == 1) {
-						printCount(null, false, null);
+						printCount(0, null, false, null);
 					}
 					return;
 				}
@@ -316,10 +319,15 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 //0:"all", 1:"no", 2:"invert"
 //3:"by Type, size", 4:"by Name", 5:"by ExtInfo, mark",	6:"by Full path"
 //7:"toList all/paths", 8:"toList pathsNoRoot",
-//9:"textSearch" (optional), 10:"check exists" (optional) -> init together if 'filesCanExist'
+//OPTIONAL >> 9:"textSearch", 10:"check exists", 11: "filesToString", 12: "foldersToString" >> init together if 'filesCanExist'
 //indexTwo, app: 0:"only", 1:"add", 2:"sub" , 3:"onlyCase", 4:"addCase", 5:"subCase", 6: "TEST" (optional)
 	private void checking(final int indexOne, int indexTwo) {
 		if (beans.isEmpty() || indexOne < 0 || indexOne >= cmbCheckItems.length) {
+			return;
+		}
+
+		if (indexOne == 11 || indexOne == 12) { // 11: "filesToString", 12: "foldersToString"
+			toCommandLine(indexOne == 11);
 			return;
 		}
 
@@ -394,7 +402,7 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 					continue;
 				}
 
-				if (indexOne == textSearchIndex) { // text search TODO
+				if (indexOne == textSearchIndex) { // text search
 
 					var one = b.getOne();
 					if (one.startsWith(Const.BRACE_TEST_ERROR_FULL)) {
@@ -454,6 +462,16 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 
 		int[] index = { indexOne, indexTwo };
 		updating(index, addedInfo);
+	}
+
+//'files' if true: files; if false: folders	
+	private void toCommandLine(boolean files) {// TODO Auto-generated method stub
+		var numbers = printCount(files ? 1 : 2, null, true, null);
+		if (CommonLib.nullEmptySet(numbers)) {
+			return;
+		}
+
+		FileDataBase.toCommandLine(this, 0, numbers, beans);
 	}
 
 	private void previousNext(boolean next) {
@@ -538,20 +556,53 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 		setStandardTitle();
 		lastSortType = SortBeans.sortNoDefined;
 		myTable.updateUI();
-		printCount(index, false, addedInfo);
+		printCount(0, index, false, addedInfo);
 	}
 
-//'addedInfo' if not null and length == 2, be added info to label	
-//'index' must be null OR as indexes in 'cmbCheckItems', 'cmbCheckItemsApp'	
-	private int printCount(int[] index, boolean messageIfNoChecked, int[] addedInfo) {
+	/**
+	 * @param typeReturn         1:numbers of files; 2: of folders; else (0): return
+	 *                           null
+	 * @param index              must be null OR as indexes in 'cmbCheckItems',
+	 *                           'cmbCheckItemsApp'
+	 * @param messageIfNoChecked if true and result count == 0, will be message<br>
+	 *                           NB: for not null 'resultSet', result count be set
+	 *                           as size 'resultSet'
+	 * @param addedInfo          if not null and length == 2, be added info to label
+	 * @return null or 'resultSet'
+	 */
+	private Set<Integer> printCount(int typeReturn, int[] index, boolean messageIfNoChecked, int[] addedInfo) {
 		lastIndex = index;
 
 		int checkCount = 0;
-		for (var b : beans) {
+
+		if (typeReturn < 0 || typeReturn > 2) {
+			typeReturn = 0;
+		}
+
+		Set<Integer> resultSet = typeReturn > 0 ? new HashSet<>() : null;
+
+		for (int i = 0; i < beans.size(); i++) {
+			var b = beans.get(i);
+
 			if (!b.check) {
 				continue;
 			}
+
 			checkCount++;
+
+			if (resultSet != null) {
+				// may by SIGN_FILE or SIGN_FOLDER only
+				if (b.serviceIntOne == CommonLib.SIGN_FOLDER) { // folders
+					if (typeReturn == 2) {
+						resultSet.add(i);
+					}
+				} else { // files
+					if (typeReturn == 1) {
+						resultSet.add(i);
+					}
+				}
+			}
+
 		}
 
 		var sb = new StringBuilder();
@@ -568,10 +619,16 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 		}
 
 		checkInfo.setText(sb.toString());
+
+		if (resultSet != null) {
+			checkCount = resultSet.size();
+		}
+
 		if (checkCount == 0 && messageIfNoChecked) {
 			JOptionPane.showMessageDialog(this, "No checked items");
 		}
-		return checkCount;
+
+		return resultSet;
 	}
 
 	private void setNewTitle(String s) {
