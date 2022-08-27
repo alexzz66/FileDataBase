@@ -523,7 +523,7 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 		final int FILES_RENAME_UNDO = 5;
 
 //needCount 1:count files only; 2: count folders 3:count all
-		int needCount = index == 8 ? 2 : index <= 1 ? 3 : 1;// for index 2,3,4,5,7
+		final int needCount = index == 8 ? 2 : index <= 1 ? 3 : 1;// for index 2,3,4,5,7
 
 		String stringFiles = needCount == 1 ? " (files only)" : needCount == 2 ? " (folders only)" : "";
 
@@ -585,7 +585,8 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 		}
 
 		if (index == 7 || index == 8) { // 7:"filesToString", 8: "foldersToString"
-			FileDataBase.toCommandLine(this, 1, setChecked, beans);
+			// !!!'needCount' equals 'typeInfo' in 'FileDataBase.toCommandLine'
+			FileDataBase.toCommandLine(this, needCount, 1, setChecked, beans);
 			setChecked.clear();
 			return;
 		}
@@ -628,7 +629,7 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 
 		if (index == FILES_COPY_MOVE) { // copy/move
 			var tempPath = FileDataBase.getTempPathForCopyMove();
-			if (!CommonLib.saveToFile(true, 1, CopyMove.DeleteIfExists_OLD_RENAME_TO_BAK, tempPath, null,
+			if (!CommonLib.saveToFile(false, true, 1, CopyMove.DeleteIfExists_OLD_RENAME_TO_BAK, tempPath, null,
 					getResultStringPaths())) {
 				JOptionPane.showMessageDialog(this, "error of saving path list to " + tempPath);
 				return;
@@ -1069,7 +1070,8 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 			return;
 		}
 		if (needSaveRenameLog == 1 || needSaveRenameLog == 2) {
-			CommonLib.saveToFile(false, 0, CopyMove.DeleteIfExists_OLD_DELETE, pathSaveRenameLog, null, renameLog);
+			CommonLib.saveToFile(false, false, 0, CopyMove.DeleteIfExists_OLD_DELETE, pathSaveRenameLog, null,
+					renameLog);
 		}
 		if (needSaveRenameLog == 2 || needSaveRenameLog == 3) {
 			CommonLib.startProcess(false, pathSaveRenameLog);

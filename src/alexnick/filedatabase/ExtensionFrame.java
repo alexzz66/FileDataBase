@@ -302,13 +302,13 @@ public final class ExtensionFrame extends JDialog implements Callable<List<Strin
 		}
 
 		if (addedNewNeed) {
-			CommonLib.saveToFile(false, 0, CopyMove.DeleteIfExists_OLD_DELETE,
+			CommonLib.saveToFile(false, false, 0, CopyMove.DeleteIfExists_OLD_DELETE,
 					FileDataBase.getPathPropertyExtsNeed(false), FileDataBase.getPathPropertyExtsNeed(true),
 					CommonLib.getListFromSet(1, extsNeedListSet));
 		}
 
 		if (addedNewNoNeed) {
-			CommonLib.saveToFile(false, 0, CopyMove.DeleteIfExists_OLD_DELETE,
+			CommonLib.saveToFile(false, false, 0, CopyMove.DeleteIfExists_OLD_DELETE,
 					FileDataBase.getPathPropertyExtsNoNeed(false), FileDataBase.getPathPropertyExtsNoNeed(true),
 					CommonLib.getListFromSet(1, extsNoNeedListSet));
 		}

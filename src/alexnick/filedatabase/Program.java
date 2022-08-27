@@ -370,7 +370,7 @@ public class Program {
 		sb.append("Sync *.bin, RESULT: export ").append(countExport).append(" / ").append(listExport.size());
 		sb.append("; import ").append(countImport).append(" / ").append(listImport.size());
 		addLog(sb.toString(), true, logList);
-		saveAndShowList(true, 1, FileDataBase.getTempPath("SyncBinResult.txt"), logList);
+		saveAndShowList(false, true, 1, FileDataBase.getTempPath("SyncBinResult.txt"), logList);
 	}
 
 	private void deleteEmptyDir(List<String> parameters) {
@@ -785,7 +785,7 @@ public class Program {
 		binList.sort(null);
 		if (noFoundNewFiles == 0) {
 			System.out.println("saving...");
-			resultSavingBin = saveToFile(true, 1, DeleteIfExists_OLD_DELETE, binPath, binPathDouble, binList);
+			resultSavingBin = saveToFile(false, true, 1, DeleteIfExists_OLD_DELETE, binPath, binPathDouble, binList);
 		}
 
 		System.out.println("adding duplicates bin...");
@@ -802,7 +802,7 @@ public class Program {
 		Path binInfPathDouble = (binFolderPathDouble == null) ? null : Path.of(binFolderPathDouble.toString(), name);
 
 		if (noFoundNewFiles == 0 || !binInfPath.toFile().exists()) {
-			saveToFile(true, 0, CopyMove.DeleteIfExists_OLD_DELETE, binInfPath, binInfPathDouble, binInf);
+			saveToFile(false, true, 0, CopyMove.DeleteIfExists_OLD_DELETE, binInfPath, binInfPathDouble, binInf);
 		}
 // ==============BIN END==================
 
@@ -888,7 +888,7 @@ public class Program {
 			addLog("Error of define duplicate paths", true, delList);
 		} finally {
 			if (!delList.isEmpty()) {
-				saveAndShowList(true, 1, saveResultTo, delList);
+				saveAndShowList(false, true, 1, saveResultTo, delList);
 			}
 		}
 		return deletedCount;
@@ -1243,7 +1243,7 @@ public class Program {
 				}
 			}
 		}
-		saveAndShowList(true, 1, FileDataBase.getTempPath(nameForResultFiles.concat(Const.extensionTxt)), list);
+		saveAndShowList(false, true, 1, FileDataBase.getTempPath(nameForResultFiles.concat(Const.extensionTxt)), list);
 	}
 
 	private int SetInfoMode(final int value) {
@@ -1449,7 +1449,7 @@ public class Program {
 		}
 
 		int needStartProcess = options.contains(Const.OPTIONS_EXTRACT_SAVE_YES) ? 1 : 3;
-		saveAndShowList(false, needStartProcess, FileDataBase.getTempPath("extractResult.txt"), result);
+		saveAndShowList(false, false, needStartProcess, FileDataBase.getTempPath("extractResult.txt"), result);
 	}
 
 	private void addListToResult(boolean appendNamesWithoutExtensions, String caption, Set<File> paths,
@@ -1655,7 +1655,7 @@ public class Program {
 		}
 
 		if (tryCreateBin) {
-			saveToFile(true, 0, DeleteIfExists_OLD_DELETE, pathForReturn[0].toPath(), null, null);
+			saveToFile(false, true, 0, DeleteIfExists_OLD_DELETE, pathForReturn[0].toPath(), null, null);
 			if (pathForReturn[0].exists()) {
 				return pathForReturn[0];
 			}
@@ -1783,7 +1783,7 @@ public class Program {
 				sourcePathListOtherDisk, sourcePathListSameDisk, logList);
 
 		String res = listWithFilesPath.toString().concat(Const.COPY_NEW_RESULT_POSTFIX);
-		saveToFile(true, 0, DeleteIfExists_OLD_DELETE, Path.of(res), null, logList);
+		saveToFile(false, true, 0, DeleteIfExists_OLD_DELETE, Path.of(res), null, logList);
 		if (countCopyTotal > 0) { // updating .*bin
 			createBin(Const.ID3_EXTRACT_NO, Const.MODE_STOP_TWO, destFolder.toString(), null);
 		}
@@ -1823,7 +1823,7 @@ public class Program {
 		if (notNullEmptyList(errorOldDeleteOnMovingList)) {
 			errorOldDeleteOnMovingList.add(0, "<" + formatter.format(new Date())
 					+ "> <ERROR MOVING LIST: files were copied but 'source files' not deleted>");
-			saveAndShowList(true, 1, FileDataBase.getTempPath(Const.ERROR_OLD_DELETE_ON_MOVING),
+			saveAndShowList(false, true, 1, FileDataBase.getTempPath(Const.ERROR_OLD_DELETE_ON_MOVING),
 					errorOldDeleteOnMovingList);
 		}
 		return countCopyTotal;

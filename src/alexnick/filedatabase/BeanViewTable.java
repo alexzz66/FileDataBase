@@ -475,8 +475,7 @@ public class BeanViewTable extends JDialog {
 		updating(null, null);
 	}
 
-//0:copy/move, 1:toList all/paths, 2:toList pathsNoRoot, 3:generate .*bin 
-//4: "filesToString"
+//0:copy/move, 1:toList all/paths, 2:toList pathsNoRoot, 3:generate .*bin, 4: "filesToString"
 	private void doAction(int selectedIndex) { // TODO
 		if (selectedIndex == 0) {
 			doCopyMove();
@@ -513,7 +512,7 @@ public class BeanViewTable extends JDialog {
 			numbers.add(i);
 		}
 
-		FileDataBase.toCommandLine(this, 0, numbers, beans);
+		FileDataBase.toCommandLine(this, 1, 0, numbers, beans);
 	}
 
 	private void generateBin() {
@@ -575,7 +574,7 @@ public class BeanViewTable extends JDialog {
 		var resultList = CommonLib.getListFromSet(2, beansSet);
 		Path path = FileDataBase.getTempPath(Const.GENERATED_BIN_NAME);
 
-		if (CommonLib.saveToFile(false, 1, CopyMove.DeleteIfExists_OLD_DELETE, path, null, resultList)) {
+		if (CommonLib.saveToFile(false, false, 1, CopyMove.DeleteIfExists_OLD_DELETE, path, null, resultList)) {
 			CommonLib.startProcess(false, path.getParent());
 		}
 	}
@@ -602,7 +601,7 @@ public class BeanViewTable extends JDialog {
 		}
 
 		if (!copyFilesEqualSignatureList.isEmpty()) {
-			CommonLib.saveAndShowList(false, 1, FileDataBase.getTempPath("equalSignaturesList.txt"),
+			CommonLib.saveAndShowList(false, false, 1, FileDataBase.getTempPath("equalSignaturesList.txt"),
 					copyFilesEqualSignatureList);
 
 			String message = CommonLib.formatConfirmYesNoMessage(
@@ -666,7 +665,8 @@ public class BeanViewTable extends JDialog {
 		}
 
 		var tempPath = FileDataBase.getTempPathForCopyMove();
-		if (!CommonLib.saveToFile(true, 1, CopyMove.DeleteIfExists_OLD_RENAME_TO_BAK, tempPath, null, copyFilesList)) {
+		if (!CommonLib.saveToFile(false, true, 1, CopyMove.DeleteIfExists_OLD_RENAME_TO_BAK, tempPath, null,
+				copyFilesList)) {
 			JOptionPane.showMessageDialog(null, "error of saving path list to " + tempPath);
 			return;
 		}

@@ -2,15 +2,10 @@ package alexnick.filedatabase;
 
 import java.awt.Color;
 import java.io.File;
-import java.nio.charset.Charset;
 
 import alexnick.CommonLib;
 
 public class Const {
-
-//charset for class 'BufferTools' in com.mpatric.mp3agic; by default: "ISO-8859-1"	
-	private static Charset localCharset = Charset.forName(System.getProperty("file.encoding"));// Charset.forName("cp1251");_>>_for_Russian_Windows
-	public static final String defaultCharsetName = localCharset.toString();// "ISO-8859-1"; >> default_id3_charSet
 
 	static final String BRACE_START = "<";// CopyMove.ERROR_BRACE_START;
 	static final String BRACE_START_FIRST_SPACE = " " + BRACE_START;
@@ -56,6 +51,7 @@ public class Const {
 	static final String OPTIONS_EXTRACT_SAVE_YES = ";extractsaveyes;";
 	static final String OPTIONS_AUTO_NO_EXTRACT = ";autonoextract;";
 	static final String OPTIONS_DOUBLE_REPO = ";doublerepo;";
+	static final String OPTIONS_CMD_CHARSET_PREFIX = ";cmdcp-";
 	static final String OPTIONS_TEST_FDB = ";test_fdb;";
 
 	static final String OPTIONS_COMPARETWOBIN_NOFULLPATHS = ";comparetwobinnofullpaths;";

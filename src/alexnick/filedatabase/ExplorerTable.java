@@ -471,7 +471,7 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 			return;
 		}
 
-		FileDataBase.toCommandLine(this, 0, numbers, beans);
+		FileDataBase.toCommandLine(this, files ? 1 : 2, 0, numbers, beans);
 	}
 
 	private void previousNext(boolean next) {

@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -33,7 +34,6 @@ import javax.swing.JFileChooser;
  * @author alexey
  *
  */
-
 
 public class CommonLib {
 	public static final String NEW_LINE_WINDOWS = "\r\n";
@@ -741,6 +741,8 @@ public class CommonLib {
 	/**
 	 * Saves 'list' to 'path'; if 'list' is null/empty, will be created empty file
 	 * 
+	 * @param defaultCharset      if true, charSet of result file will be set as
+	 *                            system code page; if false: utf-8
 	 * @param writeConsole        writes result of saving on console
 	 * @param skipEmpty           0 (by default) save all lines;<br>
 	 *                            1: empty lines will be skipped; <br>
@@ -767,10 +769,10 @@ public class CommonLib {
 	 *                            null, will be saved empty file
 	 * @return saving result for 'path' in 'list'
 	 */
-	public static boolean saveToFile(boolean writeConsole, int skipEmpty, int deleteIfExistsMode, Path path,
-			Path pathDoubleForSaving, List<String> list) {
+	public static boolean saveToFile(boolean defaultCharset, boolean writeConsole, int skipEmpty,
+			int deleteIfExistsMode, Path path, Path pathDoubleForSaving, List<String> list) {
 		if (pathDoubleForSaving != null) {
-			saveToFile(writeConsole, skipEmpty, deleteIfExistsMode, pathDoubleForSaving, null, list);
+			saveToFile(defaultCharset, writeConsole, skipEmpty, deleteIfExistsMode, pathDoubleForSaving, null, list);
 		}
 		if (skipEmpty < 0 || skipEmpty > 2) {
 			skipEmpty = 0;
@@ -808,7 +810,8 @@ public class CommonLib {
 				}
 			}
 
-			try (var out = Files.newBufferedWriter(path, StandardCharsets.UTF_8, StandardOpenOption.WRITE,
+			try (var out = Files.newBufferedWriter(path,
+					defaultCharset ? Charset.defaultCharset() : StandardCharsets.UTF_8, StandardOpenOption.WRITE,
 					StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
 				if (list != null) {
 					for (var n : list) {
@@ -1177,34 +1180,42 @@ public class CommonLib {
 	/**
 	 * Saves 'list' and starts it in 'process', if 'needStartProcess' > 0;
 	 * 
+	 * @param defaultCharset   if true, charSet of result file will be set as system
+	 *                         code page; if false: utf-8
 	 * @param doBackIfExists   if true and file of 'path' exists, old file will be
 	 *                         moved with add '.bak'; if false, old file will be
 	 *                         replaced
-	 * @param needStartProcess 1:start,<br>
-	 *                         2:start and wait press Enter; otherwise:no action,
-	 *                         saving only; <br>
-	 *                         3: confirm at start this method, may cancel saving
-	 *                         and start; <br>
-	 *                         0 (by default): save 'path' to 'list' only, with
-	 *                         given 'doBackIfExists'
+	 * @param needStartProcess 0 (by default): save 'path' to 'list' only, with
+	 *                         given 'doBackIfExists'<br>
+	 *                         1: start process<br>
+	 *                         2: start and wait press Enter<br>
+	 *                         3: confirm at begin this method, can cancel<br>
+	 *                         4: instead of 'start', will be opened folder with
+	 *                         result file
 	 * @param path             where will be saved 'list', not must be null
 	 * @param list             for saving, must be not null
 	 */
-	public static void saveAndShowList(boolean doBackIfExists, int needStartProcess, Path path, List<String> list) {
+	public static void saveAndShowList(boolean defaultCharset, boolean doBackIfExists, int needStartProcess, Path path,
+			List<String> list) {
 		if (needStartProcess == 3) {
 			String infSizeList = (list == null) ? "null" : "" + list.size();
+
 			if (!pauseQueryOne("Confirm saving information to file, then open this file:" + NEW_LINE_UNIX + path
 					+ NEW_LINE_UNIX + "Count of string for saving: " + infSizeList)) {
 				return;
 			}
 		}
+
 		int deleteIfExistsMode = doBackIfExists ? CopyMove.DeleteIfExists_OLD_RENAME_TO_BAK
 				: CopyMove.DeleteIfExists_OLD_DELETE;
-		if (!saveToFile(true, 0, deleteIfExistsMode, path, null, list)) {
+		if (!saveToFile(defaultCharset, true, 0, deleteIfExistsMode, path, null, list)) {
 			return;
 		}
 
 		if (needStartProcess > 0) {
+			if (needStartProcess == 4) {
+				path = path.getParent();
+			}
 			startProcess(needStartProcess == 2, path);
 		}
 	}
@@ -1311,7 +1322,7 @@ public class CommonLib {
 		}
 
 		if (saveResultTo != null) {
-			saveAndShowList(false, 1, saveResultTo, log);
+			saveAndShowList(false, false, 1, saveResultTo, log);
 		}
 		return deletedCount;
 	}

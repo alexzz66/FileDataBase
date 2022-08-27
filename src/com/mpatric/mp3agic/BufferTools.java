@@ -1,13 +1,12 @@
 package com.mpatric.mp3agic;
 
 import java.io.UnsupportedEncodingException;
-
-import alexnick.filedatabase.Const;
+import java.nio.charset.Charset;
 
 public final class BufferTools {
 
-	protected static final String defaultCharsetName = Const.defaultCharsetName; // "ISO-8859-1";
-																					// Charset.forName("cp1251").toString();
+	private static Charset localCharset = Charset.forName(System.getProperty("file.encoding", "ISO-8859-1"));
+	protected static final String defaultCharsetName = localCharset.toString();
 
 	private BufferTools() {
 	}

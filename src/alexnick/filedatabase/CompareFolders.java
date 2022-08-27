@@ -279,7 +279,7 @@ public class CompareFolders {
 				CommonLib.addLog(CommonLib.NEW_LINE_UNIX + "comparing folders's finished", true, compareLog);
 
 				// first parameter do 'true', to '.bak' create; copying's strange sometimes
-				CommonLib.saveAndShowList(true, querySavingResult ? 3 : 1, pathLog, compareLog);
+				CommonLib.saveAndShowList(false, true, querySavingResult ? 3 : 1, pathLog, compareLog);
 			}
 
 		} catch (Exception e) {
@@ -358,7 +358,7 @@ public class CompareFolders {
 		if (result == Const.MR_NEED_UPDATE_BASE && compareLog != null && pathLog != null
 				&& CommonLib.notNullEmptyList(resultList)) {
 			compareLog.addAll(resultList);
-			CommonLib.saveAndShowList(false, 1, pathLog, compareLog);
+			CommonLib.saveAndShowList(false, false, 1, pathLog, compareLog);
 		}
 
 		return result;

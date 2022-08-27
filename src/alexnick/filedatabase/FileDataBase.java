@@ -5,6 +5,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -28,6 +29,8 @@ import alexnick.CopyMove;
 import static alexnick.CommonLib.*;
 
 public class FileDataBase {
+
+	private static Charset definedCharSet = Charset.defaultCharset();// in 'Options'
 
 	static boolean isShiftDown = false;
 
@@ -128,6 +131,8 @@ public class FileDataBase {
 			sizeTextField = sbOptions.toString().contains(Const.OPTIONS_BIG_SIZE_TEXTFIELD) ? Const.textFieldBigSize
 					: Const.textFieldStardardSize;
 
+			setDefinedCharSet(sbOptions.toString());
+
 			if (sbOptions.toString().contains(Const.OPTIONS_TEST_FDB)) { // test methods
 				System.out.println("start 'test_fdb' mode...");
 			} else { // normal program start
@@ -142,6 +147,32 @@ public class FileDataBase {
 			}
 		}
 		finalProgramExit(0, sbOptions.toString().contains(Const.OPTIONS_FINAL_PAUSE));
+	}
+
+	private static void setDefinedCharSet(final String options) {
+		var pos = options.indexOf(Const.OPTIONS_CMD_CHARSET_PREFIX);
+		if (pos < 0) {
+			return;
+		}
+
+		var s = options.substring(pos + Const.OPTIONS_CMD_CHARSET_PREFIX.length());
+		pos = s.indexOf(";");
+		if (pos <= 0) { // must be at least 1 symbol
+			return;
+		}
+
+		s = s.substring(0, pos);
+		try {
+			int cp = Integer.valueOf(s);
+			if (cp <= 0) {
+				return;
+			}
+
+			definedCharSet = Charset.forName("cp" + s);
+			setInfo(2, "option", "CMD_CODEPAGE: " + definedCharSet, null, null);
+		} catch (Exception e) {
+			return;
+		}
 	}
 
 	private static int usage(boolean appendConfirmViewMode) {
@@ -516,7 +547,7 @@ public class FileDataBase {
 		sortFillingList(sortType, listNoFoundCaption, listNoFoundDiskOrStartPath, listExists);
 
 		listExists.add(0, formatter.format(new Date()));
-		if (saveToFile(true, 0, CopyMove.DeleteIfExists_OLD_DELETE, resPath, null, listExists)) {
+		if (saveToFile(false, true, 0, CopyMove.DeleteIfExists_OLD_DELETE, resPath, null, listExists)) {
 			startProcess(false, resPath);
 		}
 	}
@@ -1330,23 +1361,38 @@ public class FileDataBase {
 	 * 
 	 * @param parentComponent may be null or frame, from be called that method; need
 	 *                        for show 'message'
+	 * @param typeInfo        3 (by default): files, folders <br>
+	 *                        1: files only<br>
+	 *                        2: folders only<br>
 	 * @param message         0 (by default): message anyway (except no correct
 	 *                        'numbers' or 'beans')<br>
 	 *                        1: message if found errors (no exists files or
 	 *                        any)<br>
 	 *                        2: show result file only<br>
-	 *                        If empty result, will be message about it anyway
+	 *                        for 0,1,2: if empty result, will be message about it
+	 *                        anyway<br>
+	 *                        3: quiet mode; get result only
 	 * @param numbers         correct numbers, path will be of 'getFour(true, true)'
 	 * @param beans           correct beans
+	 * @return generated EXISTS string or empty
 	 */
-	static void toCommandLine(Component parentComponent, int message, Set<Integer> numbers, List<MyBean> beans) {
+	static String toCommandLine(Component parentComponent, int typeInfo, int message, Set<Integer> numbers,
+			List<MyBean> beans) {
 		if (nullEmptyList(beans) || nullEmptySet(numbers)) {
-			return;
+			return "";
 		}
 
-		if (message < 0 || message > 2) {
+		if (message < 0 || message > 3) {
 			message = 0;
 		}
+
+		boolean quietMode = message == 3;
+
+		if (typeInfo < 1 || typeInfo > 3) {
+			typeInfo = 3;
+		}
+		// 'typeInfoString' uses for file name and information
+		final String typeInfoString = typeInfo == 1 ? "Files" : typeInfo == 2 ? "Folders" : "FilesFolders";
 
 		int errorCount = 0;
 		int existsCount = 0;
@@ -1395,8 +1441,13 @@ public class FileDataBase {
 
 		boolean foundErrors = (errorCount > 0) || (noExistsCount > 0);
 
-		String exists = sbExists.toString();
-		String noExists = sbNoExists.toString();
+		final String exists = sbExists.toString();
+
+		if (quietMode) {
+			return exists;
+		}
+
+		final String noExists = sbNoExists.toString();
 
 		boolean isResults = !exists.isEmpty() || !noExists.isEmpty();
 
@@ -1406,14 +1457,15 @@ public class FileDataBase {
 		if (needMessage) {
 
 			var sbResult = new StringBuilder();
-			sbResult.append("Total count of chosen: ").append(numbers.size()).append("; of which errors: ")
-					.append(errorCount).append(", exists: ").append(existsCount).append(", no exists: ")
-					.append(noExistsCount).append(CommonLib.NEW_LINE_UNIX).append(CommonLib.NEW_LINE_UNIX);
+			sbResult.append(typeInfoString).append(". Total count of chosen: ").append(numbers.size())
+					.append("; of which errors: ").append(errorCount).append(", exists: ").append(existsCount)
+					.append(", no exists: ").append(noExistsCount).append(CommonLib.NEW_LINE_UNIX)
+					.append(CommonLib.NEW_LINE_UNIX);
 
 			if (!isResults) {
 				sbResult.append("Result is empty");
 				JOptionPane.showMessageDialog(parentComponent, sbResult.toString());
-				return;
+				return exists;
 			}
 
 			sbResult.append("<YES> exists only, string length: ").append(exists.length())
@@ -1433,25 +1485,55 @@ public class FileDataBase {
 		}
 
 		var sbResult = new StringBuilder();
-		String name = "toCommandLine";
+		final String prefix = "commandLine" + File.separator;
+		String name = null;
 
-		if (confirm == JOptionPane.NO_OPTION) { // with info
-			sbResult.append("<EXISTS, count: ").append(existsCount).append("; length: ").append(exists.length())
-					.append(">").append(CommonLib.NEW_LINE_UNIX).append(exists).append(CommonLib.NEW_LINE_UNIX);
+		StringBuilder sbCmd = null;
+
+		if (confirm == JOptionPane.NO_OPTION) { // with info; 1 file creates
+
+			sbResult.append(typeInfoString).append(" <EXISTS, count: ").append(existsCount).append("; length: ")
+					.append(exists.length()).append(">").append(CommonLib.NEW_LINE_UNIX).append(exists)
+					.append(CommonLib.NEW_LINE_UNIX);
 			sbResult.append("<NO EXISTS, count: ").append(noExistsCount).append("; length: ").append(noExists.length())
 					.append(">").append(CommonLib.NEW_LINE_UNIX).append(noExists).append(CommonLib.NEW_LINE_UNIX);
-			name += "_fullInfo";
-		} else if (confirm == JOptionPane.YES_OPTION) {
+
+			name = prefix.concat(typeInfoString).concat("_fullInfo");
+
+		} else if (confirm == JOptionPane.YES_OPTION) { // 2 files creates
+
+			if (exists.isEmpty()) {
+				JOptionPane.showMessageDialog(parentComponent, "Result is empty");
+				return exists;
+			}
+
 			sbResult.append(exists);
+			name = prefix.concat(typeInfoString);
+
+			// create cmd file
+			sbCmd = new StringBuilder();
+
+			// need 'pause'?
+			sbCmd.append("%1 ").append(exists);
+
 		} else {
-			return;
+			return exists;
 		}
 
-		if (sbResult.isEmpty()) {
-			JOptionPane.showMessageDialog(parentComponent, "Result is empty");
-		} else {
-			saveAndShowList(true, 1, getTempPath(name + ".txt"), List.of(sbResult.toString()));
+		saveAndShowList(false, true, 1, getTempPath(name + ".txt"), List.of(sbResult.toString()));
+
+		if (sbCmd == null) {
+			return exists;
 		}
+
+		try {
+			name = prefix.concat("dropProgramToOpen").concat(typeInfoString);
+			var b = sbCmd.toString().getBytes(definedCharSet);
+			saveAndShowList(true, false, 4, getTempPath(name + ".cmd"), List.of(new String(b)));
+		} catch (Exception e) {
+		}
+
+		return exists;
 	}
 
 } // of main class
