@@ -505,7 +505,7 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 
 // 0:"export to list", 1:"remove from table", 2:"copy/move files to", 3:"delete files", 4:"rename files", 5:"undo rename files", 
 // 6:"show rename log", 7:"filesToString", 8: "foldersToString"
-	private void doAction(JComboBox<String> cmbActions) { // TODO
+	private void doAction(JComboBox<String> cmbActions) {
 		var index = cmbActions.getSelectedIndex();
 
 		if (index == 6) {

@@ -1,7 +1,7 @@
 @echo off
 cd /d %~d0%~p0
 cd ../bin
-start /b /high java alexnick.filedatabase.FileDataBase -a:autoNoExtract;plCrYes;finalPause;extractSaveYes;doubleRepo;temp; %*
+start /b /high java alexnick.filedatabase.FileDataBase -a:autoNoExtract;plCrYes;finalPause;extractSaveYes;doubleRepo;temp;cmdCp-cp866; %*
 
 :mode -s (sync, syncBin) synchronize OWN repository with a repository on ANOTHER disk; option can be 'finalPause' only; another options no matter
 
@@ -46,5 +46,5 @@ start /b /high java alexnick.filedatabase.FileDataBase -a:autoNoExtract;plCrYes;
 
 :mode '-dd' (-deleteDirectories) must be ONE exists folder; will be found and removed EMPTY subfolders
 
-:FOR filesToString;foldersToString: prefix "cmdCp-", must be number code page for create '.cmd' file, example 'cmdCp-866;'; if not defined, will be set system default code page
+:FOR filesToString;foldersToString: prefix "cmdCp-", must be name code page for create '.cmd' file, example 'cmdCp-cp866;'; if not defined, will be set system default code page
 :Need drop program file on created '.cmd'; equals 'sendTo', but don't support unicode

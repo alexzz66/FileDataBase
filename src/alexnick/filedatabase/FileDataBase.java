@@ -161,14 +161,8 @@ public class FileDataBase {
 			return;
 		}
 
-		s = s.substring(0, pos);
 		try {
-			int cp = Integer.valueOf(s);
-			if (cp <= 0) {
-				return;
-			}
-
-			definedCharSet = Charset.forName("cp" + s);
+			definedCharSet = Charset.forName(s.substring(0, pos));
 			setInfo(2, "option", "CMD_CODEPAGE: " + definedCharSet, null, null);
 		} catch (Exception e) {
 			return;

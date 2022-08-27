@@ -476,7 +476,7 @@ public class BeanViewTable extends JDialog {
 	}
 
 //0:copy/move, 1:toList all/paths, 2:toList pathsNoRoot, 3:generate .*bin, 4: "filesToString"
-	private void doAction(int selectedIndex) { // TODO
+	private void doAction(int selectedIndex) {
 		if (selectedIndex == 0) {
 			doCopyMove();
 			return;

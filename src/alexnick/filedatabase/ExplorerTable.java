@@ -465,7 +465,7 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 	}
 
 //'files' if true: files; if false: folders	
-	private void toCommandLine(boolean files) {// TODO Auto-generated method stub
+	private void toCommandLine(boolean files) {
 		var numbers = printCount(files ? 1 : 2, null, true, null);
 		if (CommonLib.nullEmptySet(numbers)) {
 			return;
