@@ -104,6 +104,7 @@ public class Const {
 	static final String groupsProperty = "~prop~groups" + extensionProperties;
 	static final String id3IsPropertyName = "~prop~id3Is" + extensionProperties;
 	static final String markIsPropertyName = "~prop~markIs" + extensionProperties;
+	static final String openWithPropertyName = "~prop~openWith" + extensionProperties;
 
 	static final String FOLDER_NAME_PROPERTY = "property";
 	static final String COPY_MOVE_NEW_LIST = "~tmp~copyMoveNewlist.txt";

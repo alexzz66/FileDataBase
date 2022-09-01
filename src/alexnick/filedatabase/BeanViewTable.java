@@ -67,7 +67,7 @@ public class BeanViewTable extends JDialog {
 		super(frame, true);
 		FileDataBase.isShiftDown = false;
 
-		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosed(WindowEvent e) {
@@ -228,7 +228,7 @@ public class BeanViewTable extends JDialog {
 		setLabelChoosed(beans0);
 
 		JComboBox<String> cmbAction = new JComboBox<>(new String[] { "copy/move", "toList all/paths",
-				"toList pathsNoRoot", "generate *.bin", "filesToString" });
+				"toList pathsNoRoot", "generate *.bin", "openWithFiles" });
 		JButton butAction = new JButton("do");
 		butAction.addActionListener(e -> doAction(cmbAction.getSelectedIndex()));
 
@@ -264,9 +264,7 @@ public class BeanViewTable extends JDialog {
 		buttons.add(area);
 		buttons.setLayout(new FlowLayout(FlowLayout.LEADING));
 
-		Box contents = new Box(BoxLayout.Y_AXIS);
-		contents.add(new JScrollPane(myTable));
-		getContentPane().add(contents, BorderLayout.CENTER);
+		getContentPane().add(new JScrollPane(myTable), BorderLayout.CENTER);
 
 		var scrollPan = new JScrollPane(buttons, ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER,
 				ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
@@ -475,7 +473,7 @@ public class BeanViewTable extends JDialog {
 		updating(null, null);
 	}
 
-//0:copy/move, 1:toList all/paths, 2:toList pathsNoRoot, 3:generate .*bin, 4: "filesToString"
+//0:copy/move, 1:toList all/paths, 2:toList pathsNoRoot, 3:generate .*bin, 4: "openWithFiles"
 	private void doAction(int selectedIndex) {
 		if (selectedIndex == 0) {
 			doCopyMove();
@@ -512,7 +510,7 @@ public class BeanViewTable extends JDialog {
 			numbers.add(i);
 		}
 
-		FileDataBase.toCommandLine(this, 1, 0, numbers, beans);
+		FileDataBase.toCommandLine(this, true, 1, 0, numbers, beans);
 	}
 
 	private void generateBin() {

@@ -55,7 +55,7 @@ public class MarkInfoTable extends JDialog {
 		caption = "Mark info, base count: " + beansSet.size() + "; extensions count without duplicates";
 		setStandardTitle();
 
-		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosed(WindowEvent e) {

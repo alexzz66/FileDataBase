@@ -149,7 +149,7 @@ public final class ExtensionFrame extends JDialog implements Callable<List<Strin
 		buttons.add(butOk);
 		getContentPane().add(buttons, "South");
 
-		setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		addWindowListener(new WindowAdapter() {
 
 			@Override

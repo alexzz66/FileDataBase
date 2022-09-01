@@ -99,8 +99,8 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 		}
 
 		List<String> cmbItemsList = List.of("all", "no", "invert", "by Type, size", "by Name", "by ExtInfo, mark",
-				"by Full path", "toList all/paths", "toList pathsNoRoot", "textSearch", "check exists", "filesToString",
-				"foldersToString");
+				"by Full path", "toList all/paths", "toList pathsNoRoot", "textSearch", "check exists", "openWithFiles",
+				"openWithFolders");
 
 		int endIndex = cmbItemsList.size() - 1;
 		if (!filesCanExist) {
@@ -143,7 +143,7 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 			return;
 		}
 
-		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosed(WindowEvent e) {
@@ -319,14 +319,14 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 //0:"all", 1:"no", 2:"invert"
 //3:"by Type, size", 4:"by Name", 5:"by ExtInfo, mark",	6:"by Full path"
 //7:"toList all/paths", 8:"toList pathsNoRoot",
-//OPTIONAL >> 9:"textSearch", 10:"check exists", 11: "filesToString", 12: "foldersToString" >> init together if 'filesCanExist'
+//OPTIONAL >> 9:"textSearch", 10:"check exists", 11:"openWithFiles", 12:"openWithFolders" >> init together if 'filesCanExist'
 //indexTwo, app: 0:"only", 1:"add", 2:"sub" , 3:"onlyCase", 4:"addCase", 5:"subCase", 6: "TEST" (optional)
 	private void checking(final int indexOne, int indexTwo) {
 		if (beans.isEmpty() || indexOne < 0 || indexOne >= cmbCheckItems.length) {
 			return;
 		}
 
-		if (indexOne == 11 || indexOne == 12) { // 11: "filesToString", 12: "foldersToString"
+		if (indexOne == 11 || indexOne == 12) { // 11:"openWithFiles", 12:"openWithFolders"
 			toCommandLine(indexOne == 11);
 			return;
 		}
@@ -471,7 +471,7 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 			return;
 		}
 
-		FileDataBase.toCommandLine(this, files ? 1 : 2, 0, numbers, beans);
+		FileDataBase.toCommandLine(this, true, files ? 1 : 2, 0, numbers, beans);
 	}
 
 	private void previousNext(boolean next) {

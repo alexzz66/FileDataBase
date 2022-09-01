@@ -85,12 +85,13 @@ final class BeansFourTableModel implements TableModel {
 		return 5;
 	}
 
+	@Override
 	public String getColumnName(int columnIndex) {
 		return switch (columnIndex) {
-		case 1 -> oneCapt;// "CRC"; "BinFolder"
-		case 2 -> twoCapt;// "Size"; "Start Path"
-		case 3 -> threeCapt;// "Modified";
-		case 4 -> fourCapt;// "Path"; "Found files"
+		case 1 -> oneCapt;
+		case 2 -> twoCapt;
+		case 3 -> threeCapt;
+		case 4 -> fourCapt;
 		default -> "";
 		};
 	}

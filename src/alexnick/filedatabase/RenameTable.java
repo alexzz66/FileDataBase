@@ -118,7 +118,7 @@ public class RenameTable extends JDialog {
 		this.initFrameFinished = false; // to avoid call 'autoApply' while creating this frame
 		this.replaceNoSubstringError = replaceNoSubstringError;
 
-		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosed(WindowEvent e) {

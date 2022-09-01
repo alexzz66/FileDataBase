@@ -20,6 +20,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.Map.Entry;
 
+import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 
@@ -1355,6 +1356,8 @@ public class FileDataBase {
 	 * 
 	 * @param parentComponent may be null or frame, from be called that method; need
 	 *                        for show 'message'
+	 * @param offerOpenWith   if true and result (exist files/folders) not empty,
+	 *                        first will be offer open OpenWithTable
 	 * @param typeInfo        3 (by default): files, folders <br>
 	 *                        1: files only<br>
 	 *                        2: folders only<br>
@@ -1368,19 +1371,19 @@ public class FileDataBase {
 	 *                        3: quiet mode; get result only
 	 * @param numbers         correct numbers, path will be of 'getFour(true, true)'
 	 * @param beans           correct beans
-	 * @return generated EXISTS string or empty
+	 * @return generated string list of EXISTS files or null
 	 */
-	static String toCommandLine(Component parentComponent, int typeInfo, int message, Set<Integer> numbers,
-			List<MyBean> beans) {
+	static List<File> toCommandLine(JDialog parentComponent, boolean offerOpenWith, int typeInfo, int message,
+			Set<Integer> numbers, List<MyBean> beans) {
 		if (nullEmptyList(beans) || nullEmptySet(numbers)) {
-			return "";
+			return null;
 		}
 
 		if (message < 0 || message > 3) {
 			message = 0;
 		}
 
-		boolean quietMode = message == 3;
+		final int idQuiet = 3;
 
 		if (typeInfo < 1 || typeInfo > 3) {
 			typeInfo = 3;
@@ -1394,6 +1397,7 @@ public class FileDataBase {
 
 		var sbExists = new StringBuilder();
 		var sbNoExists = new StringBuilder();
+		List<File> result = new ArrayList<>();
 
 		for (var i : numbers) {
 			if (i < 0 || i >= beans.size()) {
@@ -1419,6 +1423,7 @@ public class FileDataBase {
 				} else {
 					existsCount++;
 					sb = sbExists;
+					result.add(file);
 				}
 
 				if (!sb.isEmpty()) {
@@ -1437,8 +1442,30 @@ public class FileDataBase {
 
 		final String exists = sbExists.toString();
 
-		if (quietMode) {
-			return exists;
+		if (message == idQuiet) {
+			return result;
+		}
+
+		var sbPrefix = new StringBuilder();
+		sbPrefix.append(typeInfoString).append(". Total count of chosen: ").append(numbers.size())
+				.append("; of which errors: ").append(errorCount).append(", exists: ").append(existsCount)
+				.append(", no exists: ").append(noExistsCount).append(CommonLib.NEW_LINE_UNIX)
+				.append(CommonLib.NEW_LINE_UNIX);
+
+		if (offerOpenWith && !result.isEmpty()) {
+			StringBuilder sbOfferConfirm = new StringBuilder(sbPrefix);
+			sbOfferConfirm.append("<YES> open with table").append(CommonLib.NEW_LINE_UNIX);
+			sbOfferConfirm.append("<NO> to string method");
+
+			int confirm = JOptionPane.showConfirmDialog(parentComponent, sbOfferConfirm.toString(), "Open with",
+					JOptionPane.YES_NO_CANCEL_OPTION); // for 'no' - continue;
+
+			if (confirm != JOptionPane.NO_OPTION) {
+				if (confirm == JOptionPane.YES_OPTION) { // call from table? no need 'callable' frame
+					new OpenWithTable(parentComponent, result);
+				}
+				return result;
+			}
 		}
 
 		final String noExists = sbNoExists.toString();
@@ -1449,27 +1476,21 @@ public class FileDataBase {
 		var confirm = JOptionPane.CANCEL_OPTION;
 
 		if (needMessage) {
-
-			var sbResult = new StringBuilder();
-			sbResult.append(typeInfoString).append(". Total count of chosen: ").append(numbers.size())
-					.append("; of which errors: ").append(errorCount).append(", exists: ").append(existsCount)
-					.append(", no exists: ").append(noExistsCount).append(CommonLib.NEW_LINE_UNIX)
-					.append(CommonLib.NEW_LINE_UNIX);
-
+			StringBuilder sbToCmdConfirm = new StringBuilder(sbPrefix);
 			if (!isResults) {
-				sbResult.append("Result is empty");
-				JOptionPane.showMessageDialog(parentComponent, sbResult.toString());
-				return exists;
+				sbToCmdConfirm.append("Result is empty");
+				JOptionPane.showMessageDialog(parentComponent, sbToCmdConfirm.toString());
+				return result;
 			}
 
-			sbResult.append("<YES> exists only, string length: ").append(exists.length())
+			sbToCmdConfirm.append("<YES> exists only, string length: ").append(exists.length())
 					.append(CommonLib.NEW_LINE_UNIX);
-			sbResult.append("<NO> exists / no exists, with string length info: ").append(exists.length()).append(" / ")
-					.append(noExists.length());
+			sbToCmdConfirm.append("<NO> exists / no exists, with string length info: ").append(exists.length())
+					.append(" / ").append(noExists.length());
 
-			sbResult.append(CommonLib.NEW_LINE_UNIX).append(CommonLib.NEW_LINE_UNIX)
+			sbToCmdConfirm.append(CommonLib.NEW_LINE_UNIX).append(CommonLib.NEW_LINE_UNIX)
 					.append("[NB: for Windows command line, the length of result string must be no more 8191 symbols]");
-			confirm = JOptionPane.showConfirmDialog(parentComponent, sbResult.toString(), "to Command line",
+			confirm = JOptionPane.showConfirmDialog(parentComponent, sbToCmdConfirm.toString(), "to Command line",
 					JOptionPane.YES_NO_CANCEL_OPTION);
 
 		} else if (noExists.isEmpty()) {
@@ -1498,7 +1519,7 @@ public class FileDataBase {
 
 			if (exists.isEmpty()) {
 				JOptionPane.showMessageDialog(parentComponent, "Result is empty");
-				return exists;
+				return result;
 			}
 
 			sbResult.append(exists);
@@ -1511,13 +1532,13 @@ public class FileDataBase {
 			sbCmd.append("%1 ").append(exists);
 
 		} else {
-			return exists;
+			return result;
 		}
 
 		saveAndShowList(false, true, 1, getTempPath(name + ".txt"), List.of(sbResult.toString()));
 
 		if (sbCmd == null) {
-			return exists;
+			return result;
 		}
 
 		try {
@@ -1527,7 +1548,7 @@ public class FileDataBase {
 		} catch (Exception e) {
 		}
 
-		return exists;
+		return result;
 	}
 
 } // of main class

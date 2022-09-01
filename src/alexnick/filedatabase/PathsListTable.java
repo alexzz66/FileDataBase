@@ -269,7 +269,7 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 
 		JComboBox<String> cmbActions = new JComboBox<>(
 				new String[] { "export to list", "remove from table", "copy/move files to", "delete files",
-						"rename files", "undo rename files", "show rename log", "filesToString", "foldersToString" });
+						"rename files", "undo rename files", "show rename log", "openWithFiles", "openWithFolders" });
 		cmbActions.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -504,7 +504,7 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 	}
 
 // 0:"export to list", 1:"remove from table", 2:"copy/move files to", 3:"delete files", 4:"rename files", 5:"undo rename files", 
-// 6:"show rename log", 7:"filesToString", 8: "foldersToString"
+// 6:"show rename log", 7:"openWithFiles", 8:"openWithFolders"
 	private void doAction(JComboBox<String> cmbActions) {
 		var index = cmbActions.getSelectedIndex();
 
@@ -584,9 +584,10 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 			return;
 		}
 
-		if (index == 7 || index == 8) { // 7:"filesToString", 8: "foldersToString"
+		if (index == 7 || index == 8) { // 7:"openWithFiles", 8:"openWithFolders"
 			// !!!'needCount' equals 'typeInfo' in 'FileDataBase.toCommandLine'
-			FileDataBase.toCommandLine(this, needCount, 1, setChecked, beans);
+			// first parameter is null, because need 'JDialog'
+			FileDataBase.toCommandLine(null, true, needCount, 1, setChecked, beans);
 			setChecked.clear();
 			return;
 		}

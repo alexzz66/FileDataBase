@@ -37,7 +37,7 @@ public class DuplicateTable extends JDialog implements Callable<List<String>> {
 		super(frame, caption, true);
 		FileDataBase.isShiftDown = false;
 
-		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosed(WindowEvent e) {

@@ -13,7 +13,6 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JDialog;
-import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -41,7 +40,7 @@ public class NamesFrame extends JDialog {
 	public NamesFrame(JDialog dialog, String caption, List<String> columnNewNames, List<String> namesNumbersNoSort0,
 			List<String> namesOldNoSort0, List<String> namesList0) {
 		super(dialog, caption, true);
-		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosed(WindowEvent e) {
