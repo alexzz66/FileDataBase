@@ -1323,6 +1323,56 @@ public class FileDataBase {
 		return addedInfo;
 	}
 
+	// onlyAddSub: 0:"only", 1:"add", 2:"sub"
+	static int[] selectedToCheckedOrNull(int onlyAddSub, BeansFourTableDefault myTable, List<MyBean> beans) {// TODO
+		if (nullEmptyList(beans) || onlyAddSub < 0 || onlyAddSub > 2 || myTable == null) {
+			return null;
+		}
+
+		int[] selectedRows = myTable.getSelectedRows();
+		if (selectedRows.length == 0) {
+			return null;
+		}
+
+		final boolean bOnly = onlyAddSub == 0;
+		final boolean bSub = onlyAddSub == 2;
+
+		Set<Integer> indexesSelectedSet = new HashSet<Integer>();
+		for (int row : selectedRows) {
+			indexesSelectedSet.add(row); // this 'set' must not be empty
+		}
+
+		int[] addedInfo = new int[2]; // plus and minus info
+		addedInfo[0] = 0;
+		addedInfo[1] = 0;
+
+		for (int i = 0; i < beans.size(); i++) {
+			var b = beans.get(i);
+			var selected = indexesSelectedSet.contains(i);
+
+			var res = false;
+			if (bOnly) { // for 'only': selected ==> checked
+				res = selected;
+			} else { // 'add' or 'sub'
+				if (!selected) {
+					continue;
+				}
+				res = !bSub;
+			}
+
+			if (b.check != res) {
+				if (res) {
+					addedInfo[0]++;
+				} else {
+					addedInfo[1]++;
+				}
+				b.check = res;
+			}
+		}
+
+		return addedInfo;
+	}
+
 	static void testInfo(Component parentComponent, List<String> substringsAND, List<String> substringsOr) {
 		var sb = new StringBuilder();
 		sb.append("TEST need for 'textSearch'").append(CommonLib.NEW_LINE_UNIX)
@@ -1346,6 +1396,10 @@ public class FileDataBase {
 		}
 
 		JOptionPane.showMessageDialog(parentComponent, sb.toString());
+	}
+	
+	 static String getTypeInfoString(int typeInfo) {
+		return typeInfo == 1 ? "Files" : typeInfo == 2 ? "Folders" : "FilesFolders";
 	}
 
 	/**
@@ -1389,7 +1443,7 @@ public class FileDataBase {
 			typeInfo = 3;
 		}
 		// 'typeInfoString' uses for file name and information
-		final String typeInfoString = typeInfo == 1 ? "Files" : typeInfo == 2 ? "Folders" : "FilesFolders";
+		final String typeInfoString = getTypeInfoString(typeInfo);
 
 		int errorCount = 0;
 		int existsCount = 0;
@@ -1462,7 +1516,7 @@ public class FileDataBase {
 
 			if (confirm != JOptionPane.NO_OPTION) {
 				if (confirm == JOptionPane.YES_OPTION) { // call from table? no need 'callable' frame
-					new OpenWithTable(parentComponent, result);
+					new OpenWithTable(parentComponent, typeInfo, result);
 				}
 				return result;
 			}
@@ -1550,6 +1604,7 @@ public class FileDataBase {
 
 		return result;
 	}
+
 
 } // of main class
 

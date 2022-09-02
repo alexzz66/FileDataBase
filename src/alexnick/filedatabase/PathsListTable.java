@@ -86,12 +86,13 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 	private int[] lastIndex = { 0, 0, 0 }; // cmbCheckItems, cmbCheckItemsApp, cmbFindPosition indexes
 
 	private String[] cmbCheckItems = new String[] { "all", "no", "invert", "by Signature", "by Number,result",
-			"by Modified", "by Path", "by Name", "textSearch" }; // textSearch LAST index
+			"by Modified", "by Path", "by Name", "textSearch", "sel->checked" }; // textSearch LAST index
 
 // append const indexes from 'cmbCheckItems'; enabled together cmbCheckItemsApp, cmbFindPosition
 	private final int cmbAppEnabStartIndex = 3;
 	private final int cmbAppEnabEndIndex = 7;
 	private final int textSearchIndex = 8; // cmbApp enabled, but cmbAppPos not enabled
+	private final int selectedToCheckedIndex = 9; // cmbApp enabled, but cmbAppPos not enabled
 
 	/**
 	 * @param options          Program options
@@ -217,15 +218,8 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 				}
 			});
 
-			JCheckBox select = new JCheckBox("select");
-			select.setToolTipText("check/uncheck selected items");
-			select.addActionListener(e -> checkSelect(select.isSelected()));
-
 			buttons.add(cmbSingleMulti);
-			buttons.add(select);
-
 			cmbSingleMulti.addKeyListener(FileDataBase.keyListenerShiftDown);
-			select.addKeyListener(FileDataBase.keyListenerShiftDown);
 		}
 
 		var cmbChecking = new JComboBox<String>(cmbCheckItems);
@@ -247,8 +241,8 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 				cmbCheckingAppPosition.setEnabled(enabApp); // 'position' no enabled for textSearch
 
 				enabApp = enabApp || index == textSearchIndex;
-				cmbCheckingApp.setEnabled(enabApp);
 				tfFindSubstrings.setEnabled(enabApp);
+				cmbCheckingApp.setEnabled(enabApp || index == selectedToCheckedIndex);
 			}
 		});
 
@@ -283,7 +277,6 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 		butDoAction.addActionListener(e -> doAction(cmbActions));
 
 //ADDING
-
 		buttons.add(cmbCheckingAppPosition);
 		buttons.add(cmbChecking);
 		buttons.add(cmbCheckingApp);
@@ -342,8 +335,8 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 		cbShowRenameLog.addKeyListener(FileDataBase.keyListenerShiftDown);
 	}
 
-//one, cmpCheckItems:
-//0:"all", 1:"no", 2:"invert", 3:"by Signature", 4:"by Number,result",5:"by Modified", 6:"by Path", 7:"by Name", 8:"textSearch"
+//one, cmbCheckItems:
+//0:"all", 1:"no", 2:"invert", 3:"by Signature", 4:"by Number,result",5:"by Modified", 6:"by Path", 7:"by Name", 8:"textSearch", 9:"sel->checked"
 //two, cmpCheckItemsApp:0:"only", 1:"add", 2:"sub" , 3:"onlyCase", 4:"addCase", 5:"subCase" , 6: "TEST"
 //three:appPos:0:"any", 1:"starts", 2:"ends"	
 	private void checking(int indexOne, int indexTwo, int indexThree) {
@@ -351,13 +344,19 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 			return;
 		}
 
-//defined: cmbAppEnabStartIndex = 3; cmbAppEnabEndIndex = 7; textSearchIndex = 8;
+//defined: cmbAppEnabStartIndex = 3; cmbAppEnabEndIndex = 7; textSearchIndex = 8; selectedToCheckedIndex = 9
 		var bNeedFilterAppPos = (indexOne >= cmbAppEnabStartIndex && indexOne <= cmbAppEnabEndIndex);// by columns only
 		var bNeedFilterApp = bNeedFilterAppPos || indexOne == textSearchIndex; // TfFindSubstrings enabled too
+
 		int indexTwoResult = indexTwo;
 
+		boolean toLowerCase = indexTwo <= 2;
+		if (indexTwo >= 3 && indexTwo <= 5) {
+			indexTwoResult -= 3; // 3..5 -> 0..2
+		}
+
 		if (indexTwo < 0 || indexTwo >= cmbCheckItemsApp.length) {
-			if (bNeedFilterApp) {
+			if (bNeedFilterApp || indexOne == selectedToCheckedIndex) {
 				return;
 			}
 
@@ -372,7 +371,7 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 			indexThree = 0; // for 'all','no','invert' no matters, but in array writes correct number
 		}
 
-		boolean test = bNeedFilterApp && indexTwo == 6;// TEST
+		boolean test = (bNeedFilterApp || indexOne == selectedToCheckedIndex) && indexTwo == 6;// TEST
 
 		if (test && (indexOne == textSearchIndex)) { // TEST text search
 			int[] addedInfo = FileDataBase.testTextSearchOrNull(beans);
@@ -385,17 +384,28 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 			return;
 		}
 
-		boolean toLowerCase = indexTwo <= 2;
-		if (!toLowerCase) {
-			indexTwoResult -= 3; // 3..5 -> 0..2
+		if (indexOne == selectedToCheckedIndex) {
+			if (test) { // chosen 'TEST' but not 'textSearch'
+				FileDataBase.testInfo(this, null, null);
+				return;
+			}
+
+			int[] addedInfo = FileDataBase.selectedToCheckedOrNull(indexTwoResult, myTable, beans);
+			if (addedInfo == null) {
+				return;
+			}
+
+			int[] index = { indexOne, indexTwo, indexThree };
+			updating(index, addedInfo, 0);
+			return;
 		}
 
 		int[] addedInfo = new int[2]; // plus and minus info
 		addedInfo[0] = 0;
 		addedInfo[1] = 0;
 
-		boolean bAdd = bNeedFilterApp && indexTwoResult == 1;
-		boolean bSub = !bAdd && bNeedFilterApp && indexTwoResult == 2;
+		final boolean bAdd = bNeedFilterApp && indexTwoResult == 1;
+		final boolean bSub = !bAdd && bNeedFilterApp && indexTwoResult == 2;
 
 		List<String> substringsAND = null;
 		List<String> substringsOr = null;
@@ -410,7 +420,7 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 				return;
 			}
 
-			if (test) {
+			if (test) { // chosen 'TEST' but not 'textSearch'
 				FileDataBase.testInfo(this, substringsAND, substringsOr);
 				return;
 			}
@@ -483,24 +493,6 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 		int[] index = { indexOne, indexTwo, indexThree };
 		updating(index, addedInfo, 0);
 
-	}
-
-	private void checkSelect(boolean selected) {
-		var rows = myTable.getSelectedRows();
-		if (rows.length == 0) {
-			return;
-		}
-		var needUpdate = false;
-		for (var row : rows) {
-			if (beans.get(row).check == selected) {
-				continue;
-			}
-			needUpdate = true;
-			beans.get(row).check = selected;
-		}
-		if (needUpdate) {
-			updating(null, null, 0);
-		}
 	}
 
 // 0:"export to list", 1:"remove from table", 2:"copy/move files to", 3:"delete files", 4:"rename files", 5:"undo rename files", 
@@ -949,7 +941,7 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 			updating(null, null, 0);
 			return;
 		} catch (Exception e) {
-			JOptionPane.showMessageDialog(this, e.getMessage() + ", window be closed");
+			JOptionPane.showMessageDialog(this, e.getMessage() + ", window will be closed");
 			dispose();
 		}
 	}
