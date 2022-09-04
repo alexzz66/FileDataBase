@@ -1,13 +1,20 @@
 package alexnick.filedatabase;
 
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
+import alexnick.CommonLib;
 
 public class SortBeans {
 	final static int sortNoDefined = -42;
-	final static int sortCheck_ThenFour = 0;
-	final static int sortCheck_Shift_ThenFourName = 42;
-	final static int sortCheck_ThenStartNumber = 142;
+
+	final static int checkStartID = 1_000_000;
+
+	final static int sortCheck = checkStartID + 1;
+	final static int sortCheck_Shift_ThenFourName = checkStartID + 2;
+	final static int sortCheck_ThenFourStartNumber = checkStartID + 3;
 
 	final static int sortOne = 1;
 	final static int sortOne_Shift_CheckOnly = -1;
@@ -43,23 +50,66 @@ public class SortBeans {
 	final static int sortServiceStringTwoNoCheckForNull = 5012;
 
 	final static int sortBinPathNoCheckForNull = 6000; // in lower case
+	final static int sortSelectedIfNoEmpty = 7000;
 
 	private final static String initAppendCaption = ", sorted by ";
 
 	private String appendCaption = initAppendCaption;
 	private boolean isAppCaptionInQuotes = false;
+	private boolean beansWasSorted = false;
 
 	public SortBeans(int sortType, String sortCaption, List<MyBean> beans) {
-		if (beans != null && beans.size() > 1) {
-			sorting(sortType, sortCaption, beans);
+		sorting(sortType, sortCaption, beans);
+	}
+
+	public SortBeans(int sortType, String sortCaption, List<MyBean> beans, BeansFourTableDefault myTable) {
+		Set<Integer> setSelected = getSelectedRowsFilesOrEmpty(myTable);
+
+		if (sortType == sortSelectedIfNoEmpty && setSelected.isEmpty()) {
+			return;
+		}
+
+		for (int i = 0; i < beans.size(); i++) {
+			beans.get(i).selectedForSorting = setSelected.contains(i);
+		}
+
+		sorting(sortType, sortCaption, beans);
+		myTable.updateUI();
+		setSelectionRowsFiles(setSelected, beans, myTable);
+	}
+
+	private void setSelectionRowsFiles(Set<Integer> setSelected, List<MyBean> beans, BeansFourTableDefault myTable) {
+		myTable.clearSelection();
+		if (CommonLib.nullEmptySet(setSelected)) {
+			return;
+		}
+
+		for (var i = 0; i < beans.size(); i++) {
+			if (beans.get(i).selectedForSorting) {
+				myTable.addRowSelectionInterval(i, i);
+			}
 		}
 	}
 
+	static Set<Integer> getSelectedRowsFilesOrEmpty(BeansFourTableDefault myTable) {
+		Set<Integer> setSelected = new HashSet<Integer>();
+		for (var row : myTable.getSelectedRows()) {
+			setSelected.add(row);
+		}
+		return setSelected;
+	}
+
 	private void sorting(int sortType, String sortCaption, List<MyBean> beans) {
-		boolean isSortType = true;
+		if (beans == null || beans.size() < 2) {
+			return;
+		}
+
+		boolean beansWasSorted = true;
 		switch (sortType) {
-		case sortCheck_ThenFour -> sortCheck_ThenFour(beans);
-		case sortCheck_ThenStartNumber -> sortCheck_ThenStartNumber(beans);
+		case sortCheck -> sortCheck(beans);
+		case sortCheck_ThenFourStartNumber -> sortCheck_ThenFourStartNumber(beans);
+
+		case sortSelectedIfNoEmpty -> sortSelectedIfNoEmpty(beans);
 		case sortOne -> sortOne(beans);
 		case sortOneLowerCase -> sortOneLowerCase(beans);
 		case sortTwo -> sortTwo(beans);
@@ -88,10 +138,11 @@ public class SortBeans {
 		case sortServiceStringOneNoCheckForNull -> sortServiceStringOneNoCheckForNull(beans);
 		case sortServiceStringTwoNoCheckForNull -> sortServiceStringTwoNoCheckForNull(beans);
 		case sortBinPathNoCheckForNull -> sortBinPathNoCheckForNull(beans);
-		default -> isSortType = false;
+
+		default -> beansWasSorted = false;
 		}
 		;
-		if (isSortType) {
+		if (beansWasSorted) {
 			appToCaptionInQuotes(sortCaption);
 		}
 	}
@@ -104,19 +155,7 @@ public class SortBeans {
 		return o1.getNameFromFour(true).compareTo(o2.getNameFromFour(true));
 	}
 
-	private void sortCheck_ThenFour(List<MyBean> beans) {
-		beans.sort(new Comparator<MyBean>() {
-			@Override
-			public int compare(MyBean o1, MyBean o2) {
-				if (o1.getCheck() == o2.getCheck()) {
-					return o1.getStartNumberFromFour() - o2.getStartNumberFromFour();
-				}
-				return o1.getCheck() ? -1 : 1;
-			}
-		});
-	}
-
-	private void sortCheck_ThenStartNumber(List<MyBean> beans) {
+	private void sortCheck(List<MyBean> beans) {
 		beans.sort(new Comparator<MyBean>() {
 			@Override
 			public int compare(MyBean o1, MyBean o2) {
@@ -136,6 +175,34 @@ public class SortBeans {
 					return defaultCompareName(o1, o2);
 				}
 				return o1.getCheck() ? -1 : 1;
+			}
+		});
+	}
+
+	private void sortCheck_ThenFourStartNumber(List<MyBean> beans) {
+		beans.sort(new Comparator<MyBean>() {
+			@Override
+			public int compare(MyBean o1, MyBean o2) {
+				if (o1.getCheck() == o2.getCheck()) {
+					return o1.getStartNumberFromFour() - o2.getStartNumberFromFour();
+				}
+				return o1.getCheck() ? -1 : 1;
+			}
+		});
+	}
+
+	private void sortFourStartNumber(List<MyBean> beans) {
+		beans.sort(Comparator.comparingInt(bean -> bean.getStartNumberFromFour()));
+	}
+
+	private void sortSelectedIfNoEmpty(List<MyBean> beans) {
+		beans.sort(new Comparator<MyBean>() {
+			@Override
+			public int compare(MyBean o1, MyBean o2) {
+				if (o1.selectedForSorting == o2.selectedForSorting) {
+					return defaultCompare(o1, o2);
+				}
+				return o1.selectedForSorting ? -1 : 1;
 			}
 		});
 	}
@@ -354,10 +421,6 @@ public class SortBeans {
 		});
 	}
 
-	private void sortFourStartNumber(List<MyBean> beans) {
-		beans.sort(Comparator.comparingInt(bean -> bean.getStartNumberFromFour()));
-	}
-
 	private void appToCaptionInQuotes(String s) {
 		if (isAppCaptionInQuotes || s.isEmpty()) {
 			return;
@@ -485,6 +548,10 @@ public class SortBeans {
 				return o1Check ? -1 : 1;
 			}
 		});
+	}
+
+	public boolean isBeansWasSorted() {
+		return beansWasSorted;
 	}
 
 }

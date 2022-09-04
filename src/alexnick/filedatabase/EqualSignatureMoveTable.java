@@ -212,7 +212,7 @@ public class EqualSignatureMoveTable extends JDialog {
 		final String column = (columnIndex >= 1 && columnIndex <= 3) ? columns[columnIndex - 1] : columns[3];
 
 		if (columnIndex == 0) {
-			sortType = SortBeans.sortCheck_ThenFour;
+			sortType = SortBeans.sortCheck;
 		} else if (columnIndex == 1) {
 			sortType = SortBeans.sortOne;
 			sortCaption = column;
@@ -237,7 +237,11 @@ public class EqualSignatureMoveTable extends JDialog {
 
 		lastSortType = sortType;
 		setStandardTitle();
-		var sortBeans = new SortBeans(sortType, sortCaption, beans);
+		var sortBeans = new SortBeans(sortType, sortCaption, beans, myTable);
+		if (!sortBeans.isBeansWasSorted()) {
+			return;
+		}
+
 		setNewTitle(standardTitle.concat(sortBeans.getAppendCaption()));
 	}
 

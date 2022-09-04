@@ -1397,8 +1397,8 @@ public class FileDataBase {
 
 		JOptionPane.showMessageDialog(parentComponent, sb.toString());
 	}
-	
-	 static String getTypeInfoString(int typeInfo) {
+
+	static String getTypeInfoString(int typeInfo) {
 		return typeInfo == 1 ? "Files" : typeInfo == 2 ? "Folders" : "FilesFolders";
 	}
 
@@ -1604,7 +1604,6 @@ public class FileDataBase {
 
 		return result;
 	}
-
 
 } // of main class
 

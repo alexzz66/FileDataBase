@@ -29,6 +29,7 @@ import java.util.Scanner;
 import java.util.Set;
 
 import javax.swing.JFileChooser;
+import javax.swing.filechooser.FileFilter;
 
 /**
  * @author alexey
@@ -1012,7 +1013,7 @@ public class CommonLib {
 
 	/**
 	 * 
-	 * @return null if error or selected user directory
+	 * @return null if error or selected user canonical directory
 	 */
 	public static Path getDestPathGUI(boolean inviteOnConsole) {
 		JFileChooser chooser = new JFileChooser("/");
@@ -1034,6 +1035,44 @@ public class CommonLib {
 		} catch (Exception e) {
 			return null;
 		}
+	}
+
+	public static boolean checkExecutableExtension(String rowString) {
+		if (nullEmptyString(rowString)) {
+			return false;
+		}
+		var name = rowString.toLowerCase();
+		return name.endsWith(".exe") || name.endsWith(".bat") || name.endsWith(".cmd");
+	}
+
+	/**
+	 * 
+	 * @return null if no selected or file WITHOUT ANY CHECKING
+	 */
+	public static File getDestExecFileGUI(boolean inviteOnConsole) {
+		JFileChooser chooser = new JFileChooser("/");
+		chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+		chooser.setFileFilter(new FileFilter() {
+
+			@Override
+			public String getDescription() {
+				return "files exe;bat;cmd";
+			}
+
+			@Override
+			public boolean accept(File f) {
+				if (f.isDirectory()) {
+					return true;
+				}
+				return checkExecutableExtension(f.getName());
+			}
+		});
+
+		if (inviteOnConsole) {
+			System.out.println("Choose executable file ...");
+		}
+		int result = chooser.showDialog(null, "Choose file exe;bat;cmd");
+		return result == JFileChooser.APPROVE_OPTION ? chooser.getSelectedFile() : null;
 	}
 
 	/**

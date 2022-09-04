@@ -311,7 +311,7 @@ public class CompareTable extends JFrame implements Callable<Map<Path, Integer>>
 			}
 		} else {
 			if (columnIndex == 0) {
-				sortType = SortBeans.sortCheck_ThenFour;
+				sortType = SortBeans.sortCheck;
 				sortCaption = "Checked -> " + column;
 			} else if (columnIndex == 1) {
 				sortType = SortBeans.sortOne;
@@ -341,7 +341,11 @@ public class CompareTable extends JFrame implements Callable<Map<Path, Integer>>
 		}
 		lastSortType = sortType;
 		setStandardTitle();
-		var sortBeans = new SortBeans(sortType, sortCaption, beans);
+		var sortBeans = new SortBeans(sortType, sortCaption, beans, myTable);
+		if (!sortBeans.isBeansWasSorted()) {
+			return;
+		}
+
 		setNewTitle(caption.concat(sortBeans.getAppendCaption()));
 	}
 

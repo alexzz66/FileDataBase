@@ -809,7 +809,7 @@ public class BeanViewTable extends JDialog {
 			}
 		} else {
 			if (columnIndex == 0) {
-				sortType = SortBeans.sortCheck_ThenFour;
+				sortType = SortBeans.sortCheck;
 				sortCaption = "Checked -> " + column;
 			} else if (columnIndex == 1) {
 				sortType = SortBeans.sortOneLowerCase;
@@ -839,7 +839,12 @@ public class BeanViewTable extends JDialog {
 		}
 		lastSortType = sortType;
 		setStandardTitle();
-		var sortBeans = new SortBeans(sortType, sortCaption, beans);
+
+		var sortBeans = new SortBeans(sortType, sortCaption, beans, myTable);
+		if (!sortBeans.isBeansWasSorted()) {
+			return;
+		}
+
 		setNewTitle(caption.concat(sortBeans.getAppendCaption()));
 	}
 

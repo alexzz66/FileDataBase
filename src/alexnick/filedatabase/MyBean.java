@@ -15,7 +15,8 @@ public class MyBean {
 	private String four;
 	private String fourApp;
 
-	Boolean check = false;
+	boolean check = false;
+	boolean selectedForSorting = false; //for SORT ONLY
 	int serviceIntOne = 0;
 	int serviceIntTwo = 0;
 	int serviceIntThree = 0;
