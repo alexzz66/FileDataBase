@@ -3,6 +3,8 @@ package alexnick.filedatabase;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.Toolkit;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
@@ -268,6 +270,16 @@ public class OpenWithTable extends JDialog {
 		JComboBox<String> cmbActions = new JComboBox<String>(cmbActionsItems);
 		butAction = new JButton("do");
 		butAction.addActionListener(e -> doAction(cmbActions.getSelectedIndex()));
+
+		var keyAdapterEnter = new KeyAdapter() {
+			public void keyPressed(KeyEvent e) {
+				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+					doAction(cmbActions.getSelectedIndex());
+				}
+			}
+		};
+
+		cmbActions.addKeyListener(keyAdapterEnter);
 
 		buttons.add(cbArg1);
 		buttons.add(tfArg1);

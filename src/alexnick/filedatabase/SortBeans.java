@@ -104,7 +104,7 @@ public class SortBeans {
 			return;
 		}
 
-		boolean beansWasSorted = true;
+		beansWasSorted = true;
 		switch (sortType) {
 		case sortCheck -> sortCheck(beans);
 		case sortCheck_ThenFourStartNumber -> sortCheck_ThenFourStartNumber(beans);
