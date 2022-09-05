@@ -134,12 +134,20 @@ public class OpenWithTable extends JDialog {
 		});
 
 		initComponents();
+		sortProgByName(false);
 
 		var t = Toolkit.getDefaultToolkit().getScreenSize();
 		setBounds(0, 0, t.width - 100, t.height - 100);
 
 		setLocationRelativeTo(null);
 		setVisible(true);
+	}
+
+	private void sortProgByName(boolean needUpdateTable) {
+		new SortBeans(SortBeans.sortOneLowerCase, "", beansProg);
+		if (needUpdateTable) {
+			myTableProg.updateUI();
+		}
 	}
 
 	private void sortBySelected() {
@@ -449,7 +457,7 @@ public class OpenWithTable extends JDialog {
 			bean.binPath = path;
 			beansProg.add(bean);
 
-			myTableProg.updateUI();
+			sortProgByName(true);
 
 			programProperties.put(path.toString(), descr);
 			saveProgramProperties();

@@ -147,39 +147,47 @@ public class SortBeans {
 		}
 	}
 
-	private int defaultCompare(MyBean o1, MyBean o2) {
+	private int sortFourLowerCase(MyBean o1, MyBean o2) { // BASIC: by four lower case without fourApp
 		return o1.getFourLowerCase(false, false).compareTo(o2.getFourLowerCase(false, false));
 	}
 
-	private int defaultCompareName(MyBean o1, MyBean o2) {
+	private void sortFourLowerCase(List<MyBean> beans) { // by four lower case without fourApp
+		beans.sort(Comparator.comparing(bean -> bean.getFourLowerCase(false, false)));
+	}
+
+	private int sortFourNameLowerCase(MyBean o1, MyBean o2) { // BASIC: by name lower case from four without fourApp
 		return o1.getNameFromFour(true).compareTo(o2.getNameFromFour(true));
 	}
 
-	private void sortCheck(List<MyBean> beans) {
+	private void sortFourNameLowerCase(List<MyBean> beans) { // by name lower case from four without fourApp
+		beans.sort(Comparator.comparing(bean -> bean.getNameFromFour(true)));
+	}
+
+	private void sortCheck(List<MyBean> beans) { // by check then four
 		beans.sort(new Comparator<MyBean>() {
 			@Override
 			public int compare(MyBean o1, MyBean o2) {
 				if (o1.getCheck() == o2.getCheck()) {
-					return defaultCompare(o1, o2);
+					return sortFourLowerCase(o1, o2);
 				}
 				return o1.getCheck() ? -1 : 1;
 			}
 		});
 	}
 
-	private void sortCheck_Shift_ThenFourName(List<MyBean> beans) {
+	private void sortCheck_Shift_ThenFourName(List<MyBean> beans) { // by checked then name from four
 		beans.sort(new Comparator<MyBean>() {
 			@Override
 			public int compare(MyBean o1, MyBean o2) {
 				if (o1.getCheck() == o2.getCheck()) {
-					return defaultCompareName(o1, o2);
+					return sortFourNameLowerCase(o1, o2);
 				}
 				return o1.getCheck() ? -1 : 1;
 			}
 		});
 	}
 
-	private void sortCheck_ThenFourStartNumber(List<MyBean> beans) {
+	private void sortCheck_ThenFourStartNumber(List<MyBean> beans) { // by checked then start number from four
 		beans.sort(new Comparator<MyBean>() {
 			@Override
 			public int compare(MyBean o1, MyBean o2) {
@@ -191,51 +199,51 @@ public class SortBeans {
 		});
 	}
 
-	private void sortFourStartNumber(List<MyBean> beans) {
+	private void sortFourStartNumber(List<MyBean> beans) { // by start number from four
 		beans.sort(Comparator.comparingInt(bean -> bean.getStartNumberFromFour()));
 	}
 
-	private void sortSelectedIfNoEmpty(List<MyBean> beans) {
+	private void sortSelectedIfNoEmpty(List<MyBean> beans) { // by selected then four
 		beans.sort(new Comparator<MyBean>() {
 			@Override
 			public int compare(MyBean o1, MyBean o2) {
 				if (o1.selectedForSorting == o2.selectedForSorting) {
-					return defaultCompare(o1, o2);
+					return sortFourLowerCase(o1, o2);
 				}
 				return o1.selectedForSorting ? -1 : 1;
 			}
 		});
 	}
 
-	private void sortOne(List<MyBean> beans) {
+	private void sortOne(List<MyBean> beans) { // by one then four
 		beans.sort(new Comparator<MyBean>() {
 			@Override
 			public int compare(MyBean o1, MyBean o2) {
 				var s1 = o1.getOne();
 				var s2 = o2.getOne();
 				if (s1.equals(s2)) {
-					return defaultCompare(o1, o2);
+					return sortFourLowerCase(o1, o2);
 				}
 				return s1.compareTo(s2);
 			}
 		});
 	}
 
-	private void sortOneLowerCase(List<MyBean> beans) {
+	private void sortOneLowerCase(List<MyBean> beans) { // by one to lower case then four
 		beans.sort(new Comparator<MyBean>() {
 			@Override
 			public int compare(MyBean o1, MyBean o2) {
 				var s1 = o1.getOneLowerCase();
 				var s2 = o2.getOneLowerCase();
 				if (s1.equals(s2)) {
-					return defaultCompare(o1, o2);
+					return sortFourLowerCase(o1, o2);
 				}
 				return s1.compareTo(s2);
 			}
 		});
 	}
 
-	private void sortOne_Shift_CheckOnly(List<MyBean> beans) {
+	private void sortOne_Shift_CheckOnly(List<MyBean> beans) { // by checked only then one then four
 		beans.sort(new Comparator<MyBean>() {
 			@Override
 			public int compare(MyBean o1, MyBean o2) {
@@ -248,7 +256,7 @@ public class SortBeans {
 					var s1 = o1.getOne();
 					var s2 = o2.getOne();
 					if (s1.equals(s2)) {
-						return defaultCompare(o1, o2);
+						return sortFourLowerCase(o1, o2);
 					}
 					return s1.compareTo(s2);
 				}
@@ -257,7 +265,7 @@ public class SortBeans {
 		});
 	}
 
-	private void sortOneLowerCase_Shift_CheckOnly(List<MyBean> beans) {
+	private void sortOneLowerCase_Shift_CheckOnly(List<MyBean> beans) { // by checked only then one lower case then four
 		beans.sort(new Comparator<MyBean>() {
 			@Override
 			public int compare(MyBean o1, MyBean o2) {
@@ -270,7 +278,7 @@ public class SortBeans {
 					var s1 = o1.getOneLowerCase();
 					var s2 = o2.getOneLowerCase();
 					if (s1.equals(s2)) {
-						return defaultCompare(o1, o2);
+						return sortFourLowerCase(o1, o2);
 					}
 					return s1.compareTo(s2);
 				}
@@ -279,35 +287,35 @@ public class SortBeans {
 		});
 	}
 
-	private void sortTwo(List<MyBean> beans) {
+	private void sortTwo(List<MyBean> beans) { // by two then four
 		beans.sort(new Comparator<MyBean>() {
 			@Override
 			public int compare(MyBean o1, MyBean o2) {
 				var s1 = o1.getTwo();
 				var s2 = o2.getTwo();
 				if (s1.equals(s2)) {
-					return defaultCompare(o1, o2);
+					return sortFourLowerCase(o1, o2);
 				}
 				return s1.compareTo(s2);
 			}
 		});
 	}
 
-	private void sortTwoLowerCase(List<MyBean> beans) {
+	private void sortTwoLowerCase(List<MyBean> beans) { // by two lower case then four
 		beans.sort(new Comparator<MyBean>() {
 			@Override
 			public int compare(MyBean o1, MyBean o2) {
 				var s1 = o1.getTwo().toLowerCase();
 				var s2 = o2.getTwo().toLowerCase();
 				if (s1.equals(s2)) {
-					return defaultCompare(o1, o2);
+					return sortFourLowerCase(o1, o2);
 				}
 				return s1.compareTo(s2);
 			}
 		});
 	}
 
-	private void sortTwo_Shift_CheckOnly(List<MyBean> beans) {
+	private void sortTwo_Shift_CheckOnly(List<MyBean> beans) { // by checked only then two then four
 		beans.sort(new Comparator<MyBean>() {
 			@Override
 			public int compare(MyBean o1, MyBean o2) {
@@ -320,7 +328,7 @@ public class SortBeans {
 					var s1 = o1.getTwo();
 					var s2 = o2.getTwo();
 					if (s1.equals(s2)) {
-						return defaultCompare(o1, o2);
+						return sortFourLowerCase(o1, o2);
 					}
 					return s1.compareTo(s2);
 				}
@@ -329,35 +337,35 @@ public class SortBeans {
 		});
 	}
 
-	private void sortThree(List<MyBean> beans) {
+	private void sortThree(List<MyBean> beans) { // by three then four
 		beans.sort(new Comparator<MyBean>() {
 			@Override
 			public int compare(MyBean o1, MyBean o2) {
 				var s1 = o1.getThree();
 				var s2 = o2.getThree();
 				if (s1.equals(s2)) {
-					return defaultCompare(o1, o2);
+					return sortFourLowerCase(o1, o2);
 				}
 				return s1.compareTo(s2);
 			}
 		});
 	}
 
-	private void sortThreeLowerCase(List<MyBean> beans) {
+	private void sortThreeLowerCase(List<MyBean> beans) { // by three lower case then four
 		beans.sort(new Comparator<MyBean>() {
 			@Override
 			public int compare(MyBean o1, MyBean o2) {
 				var s1 = o1.getThree().toLowerCase();
 				var s2 = o2.getThree().toLowerCase();
 				if (s1.equals(s2)) {
-					return defaultCompare(o1, o2);
+					return sortFourLowerCase(o1, o2);
 				}
 				return s1.compareTo(s2);
 			}
 		});
 	}
 
-	private void sortThree_Shift_CheckOnly(List<MyBean> beans) {
+	private void sortThree_Shift_CheckOnly(List<MyBean> beans) { // by checked only then three then four
 		beans.sort(new Comparator<MyBean>() {
 			@Override
 			public int compare(MyBean o1, MyBean o2) {
@@ -370,7 +378,7 @@ public class SortBeans {
 					var s1 = o1.getThree();
 					var s2 = o2.getThree();
 					if (s1.equals(s2)) {
-						return defaultCompare(o1, o2);
+						return sortFourLowerCase(o1, o2);
 					}
 					return s1.compareTo(s2);
 				}
@@ -379,11 +387,7 @@ public class SortBeans {
 		});
 	}
 
-	private void sortFourLowerCase(List<MyBean> beans) {
-		beans.sort(Comparator.comparing(bean -> bean.getFourLowerCase(false, false)));
-	}
-
-	private void sortFourLowerCase_Shift_CheckOnly(List<MyBean> beans) {
+	private void sortFourLowerCase_Shift_CheckOnly(List<MyBean> beans) { // by checked only then four
 		beans.sort(new Comparator<MyBean>() {
 			@Override
 			public int compare(MyBean o1, MyBean o2) {
@@ -393,18 +397,14 @@ public class SortBeans {
 					if (!o1Check) { // both unchecked
 						return 0;
 					}
-					return defaultCompare(o1, o2);
+					return sortFourLowerCase(o1, o2);
 				}
 				return o1Check ? -1 : 1;
 			}
 		});
 	}
 
-	private void sortFourNameLowerCase(List<MyBean> beans) {
-		beans.sort(Comparator.comparing(bean -> bean.getNameFromFour(true)));
-	}
-
-	private void sortFourNameLowerCase_Shift_CheckOnly(List<MyBean> beans) {
+	private void sortFourNameLowerCase_Shift_CheckOnly(List<MyBean> beans) { // by checked only then name lower case
 		beans.sort(new Comparator<MyBean>() {
 			@Override
 			public int compare(MyBean o1, MyBean o2) {
@@ -414,7 +414,7 @@ public class SortBeans {
 					if (!o1Check) { // both unchecked
 						return 0;
 					}
-					return defaultCompareName(o1, o2);
+					return sortFourNameLowerCase(o1, o2);
 				}
 				return o1Check ? -1 : 1;
 			}
@@ -434,68 +434,68 @@ public class SortBeans {
 	}
 
 //SERVICE SORT	
-	private void sortServiceIntOne(List<MyBean> beans) {
+	private void sortServiceIntOne(List<MyBean> beans) { // by serviceIntOne then four
 		beans.sort(new Comparator<MyBean>() {
 			@Override
 			public int compare(MyBean o1, MyBean o2) {
 				if (o1.serviceIntOne == o2.serviceIntOne) {
-					return defaultCompare(o1, o2);
+					return sortFourLowerCase(o1, o2);
 				}
 				return o1.serviceIntOne - o2.serviceIntOne;
 			}
 		});
 	}
 
-	private void sortServiceIntTwo(List<MyBean> beans) {
+	private void sortServiceIntTwo(List<MyBean> beans) { // by serviceIntTwo then four
 		beans.sort(new Comparator<MyBean>() {
 			@Override
 			public int compare(MyBean o1, MyBean o2) {
 				if (o1.serviceIntTwo == o2.serviceIntTwo) {
-					return defaultCompare(o1, o2);
+					return sortFourLowerCase(o1, o2);
 				}
 				return o1.serviceIntTwo - o2.serviceIntTwo;
 			}
 		});
 	}
 
-	private void sortServiceStringOneNoCheckForNull(List<MyBean> beans) {
+	private void sortServiceStringOneNoCheckForNull(List<MyBean> beans) { // by serviceStringOne then four
 		beans.sort(new Comparator<MyBean>() {
 			@Override
 			public int compare(MyBean o1, MyBean o2) {
 				var s1 = o1.serviceStringOne;
 				var s2 = o2.serviceStringOne;
 				if (s1.equals(s2)) {
-					return defaultCompare(o1, o2);
+					return sortFourLowerCase(o1, o2);
 				}
 				return s1.compareTo(s2);
 			}
 		});
 	}
 
-	private void sortServiceStringTwoNoCheckForNull(List<MyBean> beans) {
+	private void sortServiceStringTwoNoCheckForNull(List<MyBean> beans) { // by serviceStringTwo then four
 		beans.sort(new Comparator<MyBean>() {
 			@Override
 			public int compare(MyBean o1, MyBean o2) {
 				var s1 = o1.serviceStringTwo;
 				var s2 = o2.serviceStringTwo;
 				if (s1.equals(s2)) {
-					return defaultCompare(o1, o2);
+					return sortFourLowerCase(o1, o2);
 				}
 				return s1.compareTo(s2);
 			}
 		});
 	}
 
-	private int compareBinPathNoCheckForNull(MyBean o1, MyBean o2) {
+	private int compareBinPathNoCheckForNull(MyBean o1, MyBean o2) { // BASIC: by binPath then four
 		var s1 = o1.binPath.toString().toLowerCase();
 		var s2 = o2.binPath.toString().toLowerCase();
 		if (s1.equals(s2)) {
-			return defaultCompare(o1, o2);
+			return sortFourLowerCase(o1, o2);
 		}
 		return s1.compareTo(s2);
 	}
 
-	private void sortBinPathNoCheckForNull(List<MyBean> beans) {
+	private void sortBinPathNoCheckForNull(List<MyBean> beans) { // by binPath then four
 		beans.sort(new Comparator<MyBean>() {
 			@Override
 			public int compare(MyBean o1, MyBean o2) {
@@ -504,7 +504,7 @@ public class SortBeans {
 		});
 	}
 
-	private void sortServiceIntThreeThenBinPathNoCheckForNull(List<MyBean> beans) {
+	private void sortServiceIntThreeThenBinPathNoCheckForNull(List<MyBean> beans) { // by serviceIntThree then binPath
 		beans.sort(new Comparator<MyBean>() {
 			@Override
 			public int compare(MyBean o1, MyBean o2) {
@@ -516,19 +516,19 @@ public class SortBeans {
 		});
 	}
 
-	private void sortServiceLong(List<MyBean> beans) {
+	private void sortServiceLong(List<MyBean> beans) { // by serviceLong then four
 		beans.sort(new Comparator<MyBean>() {
 			@Override
 			public int compare(MyBean o1, MyBean o2) {
 				if (o1.serviceLong == o2.serviceLong) {
-					return defaultCompare(o1, o2);
+					return sortFourLowerCase(o1, o2);
 				}
 				return o1.serviceLong > o2.serviceLong ? 1 : -1;
 			}
 		});
 	}
 
-	private void sortServiceLong_Shift_CheckOnly(List<MyBean> beans) {
+	private void sortServiceLong_Shift_CheckOnly(List<MyBean> beans) { // by checked only then serviceLong then four
 		beans.sort(new Comparator<MyBean>() {
 			@Override
 			public int compare(MyBean o1, MyBean o2) {
@@ -540,7 +540,7 @@ public class SortBeans {
 					}
 
 					if (o1.serviceLong == o2.serviceLong) {
-						return defaultCompare(o1, o2);
+						return sortFourLowerCase(o1, o2);
 					}
 					return o1.serviceLong > o2.serviceLong ? 1 : -1;
 				}
@@ -550,7 +550,7 @@ public class SortBeans {
 		});
 	}
 
-	public boolean isBeansWasSorted() {
+	boolean isBeansWasSorted() {
 		return beansWasSorted;
 	}
 
