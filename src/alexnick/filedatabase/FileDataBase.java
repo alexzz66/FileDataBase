@@ -1324,7 +1324,7 @@ public class FileDataBase {
 	}
 
 	// onlyAddSub: 0:"only", 1:"add", 2:"sub"
-	static int[] selectedToCheckedOrNull(int onlyAddSub, BeansFourTableDefault myTable, List<MyBean> beans) {// TODO
+	static int[] selectedToCheckedOrNull(int onlyAddSub, BeansFourTableDefault myTable, List<MyBean> beans) {
 		if (nullEmptyList(beans) || onlyAddSub < 0 || onlyAddSub > 2 || myTable == null) {
 			return null;
 		}

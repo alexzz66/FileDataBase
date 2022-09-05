@@ -38,6 +38,8 @@ public final class ExtensionFrame extends JDialog implements Callable<List<Strin
 	private Set<String> extsResult = new HashSet<String>();
 	private List<String> extsList = new ArrayList<String>();
 
+	private final String extSeparatorChar = ":";
+
 	Set<String> getExtsResult() {
 		return extsResult;
 	}
@@ -180,17 +182,22 @@ public final class ExtensionFrame extends JDialog implements Callable<List<Strin
 		if (tfExtGroups == null) {
 			return;
 		}
+
 		var s = tfExtGroups.getText();
 		if (s.isEmpty()) {
 			return;
 		}
+
 		var selected = cbCheck.isSelected();
+		s = extSeparatorChar + s + extSeparatorChar;
+
 		for (var i = 0; i < cbArray.length; i++) {
 			if (cbArray[i].isSelected() == selected) {
 				continue;
 			}
-			var s2 = getTrimmedExt(extsList.get(i));
-			if (s.contains(s2)) { // 's' not empty
+
+			var s2 = extSeparatorChar + getTrimmedExt(extsList.get(i)) + extSeparatorChar;
+			if (s.contains(s2)) {
 				cbArray[i].setSelected(selected);
 			}
 		}
@@ -234,13 +241,12 @@ public final class ExtensionFrame extends JDialog implements Callable<List<Strin
 			}
 		}
 
-		final String extSeparatorChar = ":";
 		var groupsNamesKeySet = propertyGroups.keySet();
 
 		Set<String> extsListSetNoFound = new HashSet<String>();
 		extsListSetNoFound.addAll(extsListSet);
 
-		for (var ext : extsListSet) {
+		for (var ext : extsListSet) { // new extensions set
 			var extFounded = false;
 			var extCheck = extSeparatorChar + ext + extSeparatorChar;
 			for (var grn : groupsNamesKeySet) {
@@ -249,19 +255,24 @@ public final class ExtensionFrame extends JDialog implements Callable<List<Strin
 					continue;
 				}
 				var grnValue = propertyGroups.getProperty(groupsName, "").toLowerCase();
+
 				if (grnValue.contains(" ")) {
 					grnValue = grnValue.replace(" ", "");
 				}
+
 				if (grnValue.contains(";")) {
 					grnValue = grnValue.replace(";", extSeparatorChar);
 				}
+
 				if (grnValue.isEmpty()) {
 					continue;
 				}
 				grnValue = extSeparatorChar + grnValue + extSeparatorChar;
+
 				if (!grnValue.contains(extCheck)) { // 'extCheck' not empty
 					continue;
 				}
+
 				hm.compute(groupsName,
 						(k, v) -> v == null ? ext.concat(extSeparatorChar) : v.concat(ext).concat(extSeparatorChar));
 				extFounded = true;
