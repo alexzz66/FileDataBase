@@ -73,7 +73,7 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 	// append const indexes from 'cmbCheckItems'
 	private final int cmbAppEnabStartIndex;
 	private final int cmbAppEnabEndIndex;
-	private final int textSearchIndex; // must be -42 (if not defined) or corrected (cmbItemsList.size - 2)
+	private final int textSearchIndex; // must be -42 (if not defined) or corrected index in cmbCheckItems
 
 	/**
 	 * @param frame           may be 'null' or 'this' in case calling from some
@@ -111,7 +111,7 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 		cmbAppEnabStartIndex = 3;
 		cmbAppEnabEndIndex = 6;
 
-		textSearchIndex = filesCanExist ? (cmbItemsList.size() - 2) : -42;
+		textSearchIndex = filesCanExist ? 9 : -42;
 
 		List<String> cmbItemsAppList = List.of("only", "add", "sub", "onlyCase", "addCase", "subCase", "TEST");
 		endIndex = cmbItemsAppList.size() - 1;
@@ -471,7 +471,7 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 			return;
 		}
 
-		FileDataBase.toCommandLine(this, true, files ? 1 : 2, 0, numbers, beans);
+		FileDataBase.toCommandLine(this, 1, files ? 1 : 2, 0, numbers, beans);
 	}
 
 	private void previousNext(boolean next) {

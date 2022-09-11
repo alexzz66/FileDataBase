@@ -277,7 +277,7 @@ public class CommonLib {
 		return formatter.format(date);
 	}
 
-	// s as '2022.08.13_15:03:56 (ñá)'; formatter 'yyyy.MM.dd_HH:mm:ss'
+	// s as '2022.08.13_15:03:56 (sat)'; formatter 'yyyy.MM.dd_HH:mm:ss'
 	public static LocalDateTime getLocalDateFromFormatterOrNull(String s) {
 		if (nullEmptyString(s)) {
 			return null;

@@ -510,7 +510,7 @@ public class BeanViewTable extends JDialog {
 			numbers.add(i);
 		}
 
-		FileDataBase.toCommandLine(this, true, 1, 0, numbers, beans);
+		FileDataBase.toCommandLine(this, 1, 1, 0, numbers, beans);
 	}
 
 	private void generateBin() {

@@ -611,7 +611,7 @@ public class OpenWithTable extends JDialog {
 		}
 
 		if (index == 5) { // to string
-			FileDataBase.toCommandLine(this, false, typeInfo, 0, setChecked, beansFiles);
+			FileDataBase.toCommandLine(this, 0, typeInfo, 0, setChecked, beansFiles);
 			return;
 		}
 

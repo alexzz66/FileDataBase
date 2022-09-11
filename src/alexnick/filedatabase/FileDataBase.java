@@ -1410,8 +1410,11 @@ public class FileDataBase {
 	 * 
 	 * @param parentComponent may be null or frame, from be called that method; need
 	 *                        for show 'message'
-	 * @param offerOpenWith   if true and result (exist files/folders) not empty,
-	 *                        first will be offer open OpenWithTable
+	 * @param behaviour       if result (exist files/folders) not empty:<br>
+	 *                        0 (by default): do not offer open OpenWithTable (to
+	 *                        string only)<br>
+	 *                        1: offer open OpenWithTable<br>
+	 *                        2: open OpenWithTable without confirm
 	 * @param typeInfo        3 (by default): files, folders <br>
 	 *                        1: files only<br>
 	 *                        2: folders only<br>
@@ -1427,7 +1430,7 @@ public class FileDataBase {
 	 * @param beans           correct beans
 	 * @return generated string list of EXISTS files or null
 	 */
-	static List<File> toCommandLine(JDialog parentComponent, boolean offerOpenWith, int typeInfo, int message,
+	static List<File> toCommandLine(JDialog parentComponent, int behaviour, int typeInfo, int message,
 			Set<Integer> numbers, List<MyBean> beans) {
 		if (nullEmptyList(beans) || nullEmptySet(numbers)) {
 			return null;
@@ -1435,6 +1438,10 @@ public class FileDataBase {
 
 		if (message < 0 || message > 3) {
 			message = 0;
+		}
+
+		if (behaviour < 0 || behaviour > 2) {
+			behaviour = 0;
 		}
 
 		final int idQuiet = 3;
@@ -1506,13 +1513,17 @@ public class FileDataBase {
 				.append(", no exists: ").append(noExistsCount).append(CommonLib.NEW_LINE_UNIX)
 				.append(CommonLib.NEW_LINE_UNIX);
 
-		if (offerOpenWith && !result.isEmpty()) {
-			StringBuilder sbOfferConfirm = new StringBuilder(sbPrefix);
-			sbOfferConfirm.append("<YES> open with table").append(CommonLib.NEW_LINE_UNIX);
-			sbOfferConfirm.append("<NO> to string method");
+		if (behaviour > 0 && !result.isEmpty()) {
+			int confirm = (behaviour == 2) ? JOptionPane.YES_OPTION : JOptionPane.CANCEL_OPTION;
 
-			int confirm = JOptionPane.showConfirmDialog(parentComponent, sbOfferConfirm.toString(), "Open with",
-					JOptionPane.YES_NO_CANCEL_OPTION); // for 'no' - continue;
+			if (confirm != JOptionPane.YES_OPTION) {
+				StringBuilder sbOfferConfirm = new StringBuilder(sbPrefix);
+				sbOfferConfirm.append("<YES> open with table").append(CommonLib.NEW_LINE_UNIX);
+				sbOfferConfirm.append("<NO> to string method");
+
+				confirm = JOptionPane.showConfirmDialog(parentComponent, sbOfferConfirm.toString(), "Open with",
+						JOptionPane.YES_NO_CANCEL_OPTION); // for 'no' - continue;
+			}
 
 			if (confirm != JOptionPane.NO_OPTION) {
 				if (confirm == JOptionPane.YES_OPTION) { // call from table? no need 'callable' frame

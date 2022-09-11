@@ -261,9 +261,9 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 		cbShowRenameLog.setEnabled(false);
 		cbShowRenameLog.setToolTipText("show rename log after rename/undo");
 
-		JComboBox<String> cmbActions = new JComboBox<>(
-				new String[] { "export to list", "remove from table", "copy/move files to", "delete files",
-						"rename files", "undo rename files", "show rename log", "openWithFiles", "openWithFolders" });
+		JComboBox<String> cmbActions = new JComboBox<>(new String[] { "export to list", "remove from table",
+				"copy/move files to", "delete files", "rename files", "undo rename files", "show rename log",
+				"openWithFiles", "openWithFolders", "items to string" });
 		cmbActions.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -496,7 +496,7 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 	}
 
 // 0:"export to list", 1:"remove from table", 2:"copy/move files to", 3:"delete files", 4:"rename files", 5:"undo rename files", 
-// 6:"show rename log", 7:"openWithFiles", 8:"openWithFolders"
+// 6:"show rename log", 7:"openWithFiles", 8:"openWithFolders", 9:"items to string"
 	private void doAction(JComboBox<String> cmbActions) {
 		var index = cmbActions.getSelectedIndex();
 
@@ -505,7 +505,9 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 			return;
 		}
 
-		if (index < 0 || index > 8 || beans.isEmpty()) {
+		final int MAX_INDEX = 9;
+
+		if (index < 0 || index > MAX_INDEX || beans.isEmpty()) {
 			return;
 		}
 
@@ -515,7 +517,7 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 		final int FILES_RENAME_UNDO = 5;
 
 //needCount 1:count files only; 2: count folders 3:count all
-		final int needCount = index == 8 ? 2 : index <= 1 ? 3 : 1;// for index 2,3,4,5,7
+		final int needCount = index == 8 ? 2 : (index <= 1 || index == 9) ? 3 : 1;// for index 2,3,4,5,7
 
 		String stringFiles = needCount == 1 ? " (files only)" : needCount == 2 ? " (folders only)" : "";
 
@@ -576,10 +578,11 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 			return;
 		}
 
-		if (index == 7 || index == 8) { // 7:"openWithFiles", 8:"openWithFolders"
+		if (index == 7 || index == 8 || index == 9) { // 7:"openWithFiles", 8:"openWithFolders", 9:"items to string"
 			// !!!'needCount' equals 'typeInfo' in 'FileDataBase.toCommandLine'
 			// first parameter is null, because need 'JDialog'
-			FileDataBase.toCommandLine(null, true, needCount, 1, setChecked, beans);
+			int behaviour = (index == 7 || index == 8) ? 2 : 0; // open with / to string :: both without confirmation
+			FileDataBase.toCommandLine(null, behaviour, needCount, 1, setChecked, beans);
 			setChecked.clear();
 			return;
 		}
