@@ -52,6 +52,21 @@ public class CommonLib {
 	public static final SimpleDateFormat formatter = new SimpleDateFormat("yyyy.MM.dd_HH:mm:ss (E)");
 	private static SimpleDateFormat formatterFileName = null;// uses in 'getFormatDateForFileName' only
 
+	private static Set<Integer> restrictedWindowsCharsSet = null;
+
+	static Set<Integer> getRestrictedWindowsCharsSet() {
+		if (restrictedWindowsCharsSet == null) {
+			restrictedWindowsCharsSet = new HashSet<Integer>();
+			// Set.of('/', '\\', ':', '*', '?', '\"', '<', '>', '|');
+			var s = "/\\:*?\"<>|";
+			for (var i = 0; i < s.length(); i++) {
+				restrictedWindowsCharsSet.add(s.codePointAt(i));
+			}
+		}
+
+		return restrictedWindowsCharsSet;
+	}
+
 //when 'start java' in power shell, need set focus if is command 'pause' below
 	public static final String FOCUS_INFO = "Press ANY TIMES on SPACE and ENTER, if not focused." + NEW_LINE_UNIX;
 
@@ -1648,7 +1663,7 @@ public class CommonLib {
 	 * Removes or replaces restricted symbols Windows / \ : * ? " < > |
 	 * 
 	 * @param type   0 (by default): checking only, returns 'source' or empty (if
-	 *               found);
+	 *               restricted symbols including 0..31 (service chars) found);
 	 *               <p>
 	 * 
 	 *               1: removing: will be replaced all restricted symbols on "";
@@ -1661,6 +1676,8 @@ public class CommonLib {
 	 *               <p>
 	 * 
 	 *               4: replacing that symbols on "_";
+	 *               <p>
+	 *               NB: service windows chars (0..31) will be replaced on "" only
 	 * @param source not null string, for search restricted symbols
 	 * @return for 'type'= 0 : 'source' as is or empty; for other - replaced string
 	 */
@@ -1669,27 +1686,35 @@ public class CommonLib {
 			return "";
 		}
 
-		Set<Character> set = Set.of('/', '\\', ':', '*', '?', '\"', '<', '>', '|');
-
 		if (type < 0 || type > 4) {
 			type = 0;
 		}
 
+		Set<Integer> set = getRestrictedWindowsCharsSet();
+
 		String replaced = (type == 2) ? " " : (type == 3) ? "-" : (type == 4) ? "_" : "";
+		boolean replacedIsEmpty = replaced.isEmpty();
 
-		for (char c : set) {
-			if (source.isEmpty()) {
-				return "";
-			}
+		var sb = new StringBuilder();
 
-			if (source.indexOf(c) >= 0) {
+		for (int i = 0; i < source.length(); i++) {
+			var cp = source.codePointAt(i);
+			if (cp < 32 || set.contains(cp)) {
 				if (type == 0) {
 					return "";
 				}
-				source = source.replace("" + c, replaced);
+
+				if (cp < 32 || replacedIsEmpty) {
+					continue;
+				}
+
+				sb.append(replaced);
+			} else {
+				sb.append(source.charAt(i));
 			}
 		}
-		return source;
+
+		return sb.toString();
 	}
 
 	/**

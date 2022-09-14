@@ -136,6 +136,7 @@ public class FileDataBase {
 
 			if (sbOptions.toString().contains(Const.OPTIONS_TEST_FDB)) { // test methods
 				System.out.println("start 'test_fdb' mode...");
+
 			} else { // normal program start
 				new Program(mode, sbOptions.toString(), parameters);
 			}

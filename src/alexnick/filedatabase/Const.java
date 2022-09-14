@@ -214,4 +214,5 @@ public class Const {
 	static final String ERROR_OLD_DELETE_ON_MOVING = "errorOldDeleteOnMoving.txt";
 	static final String NOT_CHOSEN = "not chosen";
 	static final Color LIGHT_COLOR = new Color(238, 238, 238);
+
 }
