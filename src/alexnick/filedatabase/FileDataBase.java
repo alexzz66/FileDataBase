@@ -24,7 +24,6 @@ import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 
-import alexnick.CommonLib;
 import alexnick.CopyMove;
 
 import static alexnick.CommonLib.*;
@@ -619,8 +618,7 @@ public class FileDataBase {
 			return null;
 		}
 
-		String sDat = CommonLib.changeEndOfStringOrEmpty(path.toString(), Const.extensionBinList,
-				Const.extensionBinData);
+		String sDat = changeEndOfStringOrEmpty(path.toString(), Const.extensionBinList, Const.extensionBinData);
 		if (sDat.isEmpty()) {
 			return null;
 		}
@@ -676,7 +674,7 @@ public class FileDataBase {
 					realStartPath = x2;
 					// set real start path
 					// !!! 'x2' for existing disks, MUST START WITH '<' and ENDS on '> '
-					if (realDiskInBraceOrEmpty.length() < 4 || !CommonLib.correctWindowsStartPath(x2)) { // means_empty
+					if (realDiskInBraceOrEmpty.length() < 4 || !correctWindowsStartPath(x2)) { // means_empty
 						x2 = Const.NO_DISK_PLUS + x2;// "<NO_DISK> "
 					} else { // 'realDiskInBraceOrEmpty' == '<E:\> '
 
@@ -977,7 +975,7 @@ public class FileDataBase {
 	}
 
 	static String getMarkFromPropertiesOrEmpty(String signature) {
-		if (!initMarkIsProperty() || CommonLib.nullEmptySet(markPropertySet)) {
+		if (!initMarkIsProperty() || nullEmptySet(markPropertySet)) {
 			return "";
 		}
 		return markIsProperty.getProperty(signature, "");
@@ -1084,11 +1082,11 @@ public class FileDataBase {
 	// finally init b.one; after all other parameters init
 	static void formatBeanOneForEqualTable(String prefix, MyBean b) {
 		StringBuilder sb = new StringBuilder();
-		CommonLib.appendNotNullEmpty(prefix, sb);
+		appendNotNullEmpty(prefix, sb);
 
 		sb.append(Const.BRACE_START);
 
-		sb.append(CommonLib.formatInt(b.serviceIntThree, 3, null, null));
+		sb.append(formatInt(b.serviceIntThree, 3, null, null));
 		if (b.serviceIntTwo > 0) { // equalSignIdDestCount
 			sb.append("--" + b.serviceIntTwo);
 		}
@@ -1101,7 +1099,7 @@ public class FileDataBase {
 			sb.append("; registerOnly");
 		}
 
-		sb.append(Const.BRACE_END_WITH_SPACE).append(CommonLib.bytesToKBMB(false, 3, b.serviceLong));
+		sb.append(Const.BRACE_END_WITH_SPACE).append(bytesToKBMB(false, 3, b.serviceLong));
 		b.setOne(sb.toString());
 	}
 
@@ -1189,7 +1187,7 @@ public class FileDataBase {
 			}
 		}
 
-		var substringsOr = CommonLib.splitStringBySeparatorOrNull(true, true, Const.textFieldFindORSeparator, rowString,
+		var substringsOr = splitStringBySeparatorOrNull(true, true, Const.textFieldFindORSeparator, rowString,
 				toLowerCase);
 
 		if (nullEmptyList(substringsOr)) {
@@ -1198,7 +1196,7 @@ public class FileDataBase {
 
 		substringsOrForReturn.addAll(substringsOr);
 		return sAND.isEmpty() ? null
-				: CommonLib.splitStringBySeparatorOrNull(true, true, Const.textFieldFindORSeparator, sAND, toLowerCase);
+				: splitStringBySeparatorOrNull(true, true, Const.textFieldFindORSeparator, sAND, toLowerCase);
 	}
 
 //s may be as int:int; may be :int; 'arCodePointsForReturn' must be created with length == 2
@@ -1246,7 +1244,7 @@ public class FileDataBase {
 	 * @return 'true' if found at least one 'subString' in 'string'
 	 */
 	static boolean findSubStringsInString(int findPosition, int toLowerCase, String string, List<String> subStrings) {
-		if (CommonLib.nullEmptyString(string) || CommonLib.nullEmptyList(subStrings)) {
+		if (nullEmptyString(string) || nullEmptyList(subStrings)) {
 			return false;
 		}
 
@@ -1259,7 +1257,7 @@ public class FileDataBase {
 		}
 
 		for (var subString : subStrings) {
-			if (CommonLib.nullEmptyString(subString)) {
+			if (nullEmptyString(subString)) {
 				continue;
 			}
 
@@ -1474,26 +1472,25 @@ public class FileDataBase {
 	static void testInfo(Component parentComponent, List<String> substringsAND, List<String> substringsOr,
 			int[] arCodePoints) {
 		var sb = new StringBuilder();
-		sb.append("TEST need for 'textSearch'").append(CommonLib.NEW_LINE_UNIX)
-				.append("To first column will be added '<test:' and lines count in file")
-				.append(CommonLib.NEW_LINE_UNIX).append("If not error, that row will be checked.")
-				.append(CommonLib.NEW_LINE_UNIX).append(CommonLib.NEW_LINE_UNIX)
+		sb.append("TEST need for 'textSearch'").append(NEW_LINE_UNIX)
+				.append("To first column will be added '<test:' and lines count in file").append(NEW_LINE_UNIX)
+				.append("If not error, that row will be checked.").append(NEW_LINE_UNIX).append(NEW_LINE_UNIX)
 				.append("Information for current search:");
 
-		sb.append(CommonLib.NEW_LINE_UNIX).append("Substrings AND");
+		sb.append(NEW_LINE_UNIX).append("Substrings AND");
 		if (nullEmptyList(substringsAND)) {
 			sb.append(": not defined");
 		} else {
-			sb.append(CommonLib.NEW_LINE_UNIX).append(substringsAND.toString());
+			sb.append(NEW_LINE_UNIX).append(substringsAND.toString());
 		}
 
-		sb.append(CommonLib.NEW_LINE_UNIX).append(CommonLib.NEW_LINE_UNIX).append("Substrings OR");
+		sb.append(NEW_LINE_UNIX).append(NEW_LINE_UNIX).append("Substrings OR");
 		if (nullEmptyList(substringsOr)) {
 			sb.append(": not defined");
 		} else {
-			sb.append(CommonLib.NEW_LINE_UNIX).append(substringsOr.toString());
+			sb.append(NEW_LINE_UNIX).append(substringsOr.toString());
 			if (arCodePoints != null && arCodePoints.length == 2 && arCodePoints[1] > 0) {
-				sb.append(CommonLib.NEW_LINE_UNIX).append("Char search from ").append(arCodePoints[0]).append(" to ")
+				sb.append(NEW_LINE_UNIX).append("Char search from ").append(arCodePoints[0]).append(" to ")
 						.append(arCodePoints[1]);
 			}
 		}
@@ -1613,15 +1610,14 @@ public class FileDataBase {
 		var sbPrefix = new StringBuilder();
 		sbPrefix.append(typeInfoString).append(". Total count of chosen: ").append(numbers.size())
 				.append("; of which errors: ").append(errorCount).append(", exists: ").append(existsCount)
-				.append(", no exists: ").append(noExistsCount).append(CommonLib.NEW_LINE_UNIX)
-				.append(CommonLib.NEW_LINE_UNIX);
+				.append(", no exists: ").append(noExistsCount).append(NEW_LINE_UNIX).append(NEW_LINE_UNIX);
 
 		if (behaviour > 0 && !result.isEmpty()) {
 			int confirm = (behaviour == 2) ? JOptionPane.YES_OPTION : JOptionPane.CANCEL_OPTION;
 
 			if (confirm != JOptionPane.YES_OPTION) {
 				StringBuilder sbOfferConfirm = new StringBuilder(sbPrefix);
-				sbOfferConfirm.append("<YES> open with table").append(CommonLib.NEW_LINE_UNIX);
+				sbOfferConfirm.append("<YES> open with table").append(NEW_LINE_UNIX);
 				sbOfferConfirm.append("<NO> to string method");
 
 				confirm = JOptionPane.showConfirmDialog(parentComponent, sbOfferConfirm.toString(), "Open with",
@@ -1651,12 +1647,11 @@ public class FileDataBase {
 				return result;
 			}
 
-			sbToCmdConfirm.append("<YES> exists only, string length: ").append(exists.length())
-					.append(CommonLib.NEW_LINE_UNIX);
+			sbToCmdConfirm.append("<YES> exists only, string length: ").append(exists.length()).append(NEW_LINE_UNIX);
 			sbToCmdConfirm.append("<NO> exists / no exists, with string length info: ").append(exists.length())
 					.append(" / ").append(noExists.length());
 
-			sbToCmdConfirm.append(CommonLib.NEW_LINE_UNIX).append(CommonLib.NEW_LINE_UNIX)
+			sbToCmdConfirm.append(NEW_LINE_UNIX).append(NEW_LINE_UNIX)
 					.append("[NB: for Windows command line, the length of result string must be no more 8191 symbols]");
 			confirm = JOptionPane.showConfirmDialog(parentComponent, sbToCmdConfirm.toString(), "to Command line",
 					JOptionPane.YES_NO_CANCEL_OPTION);
@@ -1676,10 +1671,9 @@ public class FileDataBase {
 		if (confirm == JOptionPane.NO_OPTION) { // with info; 1 file creates
 
 			sbResult.append(typeInfoString).append(" <EXISTS, count: ").append(existsCount).append("; length: ")
-					.append(exists.length()).append(">").append(CommonLib.NEW_LINE_UNIX).append(exists)
-					.append(CommonLib.NEW_LINE_UNIX);
+					.append(exists.length()).append(">").append(NEW_LINE_UNIX).append(exists).append(NEW_LINE_UNIX);
 			sbResult.append("<NO EXISTS, count: ").append(noExistsCount).append("; length: ").append(noExists.length())
-					.append(">").append(CommonLib.NEW_LINE_UNIX).append(noExists).append(CommonLib.NEW_LINE_UNIX);
+					.append(">").append(NEW_LINE_UNIX).append(noExists).append(NEW_LINE_UNIX);
 
 			name = prefix.concat(typeInfoString).concat("_fullInfo");
 

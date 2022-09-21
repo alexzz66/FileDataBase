@@ -1,7 +1,5 @@
 package alexnick.filedatabase;
 
-import static alexnick.CommonLib.readFile;
-
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +21,7 @@ public class BinCreator {
 // 'binPath' folder name for saving result, need for checking, if '*.bin' be saved before; 'listFiles' not null and no empty
 // if 'needCalcID3 != Const.ID3_EXTRACT_NO' -> after calling this method, need saving/null id3Options; 
 	private void createBinList(int needCalcID3, String startPath, Path binPath, List<String> listFiles) {
-		List<String> oldBinList = readFile(2, 0, binPath); // read anyway, let's 'no exists'
+		List<String> oldBinList = CommonLib.readFile(2, 0, binPath); // read anyway, let's 'no exists'
 		List<String> listFilesNewForBin = new ArrayList<String>();
 		listFilesNewForBin.addAll(listFiles); // be new paths only
 

@@ -16,7 +16,6 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.FutureTask;
 
-import alexnick.CommonLib;
 import alexnick.CopyMove;
 
 import static alexnick.CopyMove.*;
@@ -242,7 +241,7 @@ public class Program {
 			}
 
 			var sb = new StringBuilder();
-			sb.append(CommonLib.secondsToString(1, true, time, null, null));
+			sb.append(secondsToString(1, true, time, null, null));
 			sb.append(" [").append(dateModifiedOwn).append(" - ").append(dateModifiedAnother).append("]");
 
 			int type = time > 0 ? 1 : 3; // export or import update
