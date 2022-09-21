@@ -157,8 +157,8 @@ public class MarkInfoTable extends JDialog {
 				if (checkNow == 1) {
 
 					substringsOr = new ArrayList<String>();
-					substringsAND = FileDataBase.getSubstringsAND_DivideByOR_NullIfError(true, true, findLowerCase,
-							substringsOr);
+					substringsAND = FileDataBase.getSubstringsAND_DivideByOR_NullIfError(true, true, true,
+							findLowerCase, substringsOr, null);
 
 					if (substringsOr.isEmpty()) {
 						checkNow = 2;

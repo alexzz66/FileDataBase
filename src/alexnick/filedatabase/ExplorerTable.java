@@ -376,19 +376,28 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 
 		List<String> substringsAND = null;
 		List<String> substringsOr = null;
+		int[] arCodePoints = null;
 
 		if (bNeedFilterApp) { // by column, textSearch
 			substringsOr = new ArrayList<String>();
-			substringsAND = FileDataBase.getSubstringsAND_DivideByOR_NullIfError(true, toLowerCase,
-					tfFindColumn.getText(), substringsOr);
+			arCodePoints = new int[2];
+
+			substringsAND = FileDataBase.getSubstringsAND_DivideByOR_NullIfError(test, true, toLowerCase,
+					tfFindColumn.getText(), substringsOr, arCodePoints);
+
+			if (arCodePoints[1] <= 0) {
+				arCodePoints = null;
+			}
 
 			if (substringsOr.isEmpty()) {
 				updating(lastIndex, null);
-				return;
+				if (!test) { // for 'test' return below
+					return;
+				}
 			}
 
 			if (test) {
-				FileDataBase.testInfo(this, substringsAND, substringsOr);
+				FileDataBase.testInfo(this, substringsAND, substringsOr, arCodePoints);
 				return;
 			}
 		}
@@ -409,7 +418,7 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 						// res == false
 					} else {
 						var count = FileDataBase.getTextSearchResult(false, toLowerCase ? 1 : 0, b.getFour(false, true),
-								substringsAND, substringsOr);
+								substringsAND, substringsOr, arCodePoints);
 						if (count > 0) {
 							res = true;
 						} else if (count == -1) {

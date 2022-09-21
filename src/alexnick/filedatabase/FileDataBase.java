@@ -705,7 +705,7 @@ public class FileDataBase {
 
 			case Const.ALIAS_DATE -> {
 				if (x3.equals(e)) {
-					// 'x3' set as 2022.04.24_17:36:37 (вс)
+					// 'x3' set as 2022.04.24_17:36:37 (sun)
 					x3 = datList.get(i + 1);
 					count++;
 				}
@@ -1106,6 +1106,8 @@ public class FileDataBase {
 	}
 
 	/**
+	 * @param test                  if true, no message for 'arCodePointsForReturn',
+	 *                              confirm set as 'yes'
 	 * @param needANDexcluding      if 'true', will be found
 	 *                              Const.textFieldLastANDSeparator on end of
 	 *                              'rowString', then will be set as result<br>
@@ -1118,18 +1120,56 @@ public class FileDataBase {
 	 * @param substringsOrForReturn must not be null; will be clear and filling
 	 *                              result substrings (by OR separator)<br>
 	 *                              If error, returns EMPTY list
+	 * @param arCodePointsForReturn if not null and length == 2 and rowString in
+	 *                              specified format, this array will be filled
+	 *                              after confirmation; if cancelled/error, will be
+	 *                              set as [0,0]
 	 * @return null if not defined 'needANDexcluding' or error; else will be AND
 	 *         substrings, not EMPTY
 	 */
-	static List<String> getSubstringsAND_DivideByOR_NullIfError(boolean needANDexcluding, boolean toLowerCase,
-			String rowString, List<String> substringsOrForReturn) {
-
+	static List<String> getSubstringsAND_DivideByOR_NullIfError(boolean test, boolean needANDexcluding,
+			boolean toLowerCase, String rowString, List<String> substringsOrForReturn, int[] arCodePointsForReturn) {
 		if (nullEmptyString(rowString) || rowString.equals(Const.textFieldFindORSeparator)
 				|| substringsOrForReturn == null) {
 			return null;
 		}
 
 		substringsOrForReturn.clear();
+		if (arCodePointsForReturn != null) {
+			for (int i = 0; i < arCodePointsForReturn.length; i++) {
+				arCodePointsForReturn[i] = 0;
+			}
+
+			if (arCodePointsForReturn.length == 2 && rowString.startsWith(Const.textFieldFindORSeparator)) {
+				var result = divideStringOrNull(rowString.substring(Const.textFieldFindORSeparator.length()),
+						arCodePointsForReturn);
+
+				if (result) {
+					int confirm = test ? JOptionPane.YES_OPTION : JOptionPane.CANCEL_OPTION;
+
+					if (confirm != JOptionPane.YES_OPTION) {
+						var s = formatConfirmYesNoMessage("Select search type:",
+								"by char from " + arCodePointsForReturn[0] + " to " + arCodePointsForReturn[1],
+								"text search as is", null);
+						confirm = JOptionPane.showConfirmDialog(null, s, "Search by char codes",
+								JOptionPane.YES_NO_CANCEL_OPTION);
+					}
+
+					if (confirm == JOptionPane.YES_OPTION) { // must be correct return 'OR' anyway (need for testInfo)
+						substringsOrForReturn.add(rowString.substring(Const.textFieldFindORSeparator.length()));
+						return null;
+					}
+
+					if (confirm != JOptionPane.NO_OPTION) { // means'cancel', empty 'OR' substrings, cancel search
+						return null;
+					}
+				}
+				// 'no option'
+				arCodePointsForReturn[0] = 0;
+				arCodePointsForReturn[1] = 0; // checking by that index, if '0' - no search by char codes
+			}
+		}
+
 		String sAND = "";
 
 		if (needANDexcluding) {
@@ -1149,7 +1189,7 @@ public class FileDataBase {
 			}
 		}
 
-		var substringsOr = CommonLib.splitStringBySeparatorOrNull(Const.textFieldFindORSeparator, rowString,
+		var substringsOr = CommonLib.splitStringBySeparatorOrNull(true, true, Const.textFieldFindORSeparator, rowString,
 				toLowerCase);
 
 		if (nullEmptyList(substringsOr)) {
@@ -1158,7 +1198,38 @@ public class FileDataBase {
 
 		substringsOrForReturn.addAll(substringsOr);
 		return sAND.isEmpty() ? null
-				: CommonLib.splitStringBySeparatorOrNull(Const.textFieldFindORSeparator, sAND, toLowerCase);
+				: CommonLib.splitStringBySeparatorOrNull(true, true, Const.textFieldFindORSeparator, sAND, toLowerCase);
+	}
+
+//s may be as int:int; may be :int; 'arCodePointsForReturn' must be created with length == 2
+	private static boolean divideStringOrNull(String s, int[] arCodePointsForReturn) {
+		try {
+			if (s.length() < 2 || arCodePointsForReturn.length != 2) { // 's' example '0:' or ':1'
+				return false;
+			}
+
+			int pos = s.indexOf(":");
+			String s0 = "";
+			String s1 = "";
+
+			if (pos >= 0) {
+				s0 = s.substring(0, pos);
+				s1 = s.substring(pos + 1);
+			}
+
+			if (!s0.isEmpty() || !s1.isEmpty()) {
+				arCodePointsForReturn[0] = s0.isEmpty() ? 0 : Integer.valueOf(s0);
+				arCodePointsForReturn[1] = s1.isEmpty() ? Integer.MAX_VALUE : Integer.valueOf(s1);
+				if (arCodePointsForReturn[0] <= arCodePointsForReturn[1] && arCodePointsForReturn[1] > 0) { // max_must_be>0
+					return true;
+				}
+			}
+		} catch (Exception e) {
+		}
+
+		arCodePointsForReturn[0] = 0;
+		arCodePointsForReturn[1] = 0;
+		return false;
 	}
 
 	/**
@@ -1231,13 +1302,20 @@ public class FileDataBase {
 	 * @param subStringsOr     substrings for finding, if search 'FIRST' without
 	 *                         result, will be SECOND search<br>
 	 *                         This parameter MUST NOT BE null/empty
+	 * @param arCodePoints     if not null: search by chars codes, rules:<br>
+	 *                         length must be 2 (minimal char code, maximal char
+	 *                         code)<br>
+	 *                         maximal must be >= minimal and > 0<br>
+	 *                         parameter 'toLowerCase' may be 1 or 3 for set file
+	 *                         strings to lower case<br>
+	 *                         parameter 'subStringsOr' must not be null/empty
 	 * @return if test == false: '-1' case error; '0': not found; '1': found at
 	 *         least one 'subString' in 'string'<br>
 	 *         if test == true: -1: case error, or count of lines
 	 */
 
 	static int getTextSearchResult(boolean test, int toLowerCase, String rowStringForPath, List<String> subStringsAND,
-			List<String> subStringsOr) {
+			List<String> subStringsOr, int[] arCodePoints) {
 		if (!test && nullEmptyList(subStringsOr)) {
 			return -1;
 		}
@@ -1253,6 +1331,14 @@ public class FileDataBase {
 			return -1;
 		}
 
+		boolean searchByChars = false;
+
+		if (!test && arCodePoints != null) { // for 'test' not used
+			if ((arCodePoints.length == 2) && (arCodePoints[0] <= arCodePoints[1]) && arCodePoints[1] > 0) {
+				searchByChars = true;
+			}
+		}
+
 		try (var br = Files.newBufferedReader(file.toPath())) {
 
 			if (test) {
@@ -1261,11 +1347,22 @@ public class FileDataBase {
 
 			String string;
 
-			boolean needAnd = notNullEmptyList(subStringsAND);
+			boolean needAnd = !searchByChars && notNullEmptyList(subStringsAND);
 
 			while ((string = br.readLine()) != null) {
 
-				var res = needAnd ? FileDataBase.findSubStringsInString(0, toLowerCase, string, subStringsAND) : true;
+				if (searchByChars) {
+					for (int i = 0; i < string.length(); i++) {
+						int c = string.charAt(i);
+						if (c >= arCodePoints[0] && c <= arCodePoints[1]) {
+							return 1;
+						}
+					}
+					continue;
+				}
+
+				boolean res = needAnd ? FileDataBase.findSubStringsInString(0, toLowerCase, string, subStringsAND)
+						: true;
 
 				if (res && FileDataBase.findSubStringsInString(0, toLowerCase, string, subStringsOr)) {
 					return 1;
@@ -1303,7 +1400,7 @@ public class FileDataBase {
 			} else if (one.startsWith(Const.BRACE_START_TEST)) {
 				res = true; // was done test and it not a error
 			} else { // set TEST to 'one'
-				var count = getTextSearchResult(true, 0, b.getFour(false, true), null, null);
+				var count = getTextSearchResult(true, 0, b.getFour(false, true), null, null, null);
 				res = count > 0;
 
 				String onePrefix = res ? Const.BRACE_START_TEST + count + Const.BRACE_END_WITH_SPACE
@@ -1374,7 +1471,8 @@ public class FileDataBase {
 		return addedInfo;
 	}
 
-	static void testInfo(Component parentComponent, List<String> substringsAND, List<String> substringsOr) {
+	static void testInfo(Component parentComponent, List<String> substringsAND, List<String> substringsOr,
+			int[] arCodePoints) {
 		var sb = new StringBuilder();
 		sb.append("TEST need for 'textSearch'").append(CommonLib.NEW_LINE_UNIX)
 				.append("To first column will be added '<test:' and lines count in file")
@@ -1394,6 +1492,10 @@ public class FileDataBase {
 			sb.append(": not defined");
 		} else {
 			sb.append(CommonLib.NEW_LINE_UNIX).append(substringsOr.toString());
+			if (arCodePoints != null && arCodePoints.length == 2 && arCodePoints[1] > 0) {
+				sb.append(CommonLib.NEW_LINE_UNIX).append("Char search from ").append(arCodePoints[0]).append(" to ")
+						.append(arCodePoints[1]);
+			}
 		}
 
 		JOptionPane.showMessageDialog(parentComponent, sb.toString());

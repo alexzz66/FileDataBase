@@ -357,19 +357,28 @@ public class BeanViewTable extends JDialog {
 
 		List<String> substringsAND = null;
 		List<String> substringsOr = null;
+		int[] arCodePoints = null;
 
 		if (bEnabTfFindSubstrings) {
 			substringsOr = new ArrayList<String>();
-			substringsAND = FileDataBase.getSubstringsAND_DivideByOR_NullIfError(true, toLowerCase,
-					tfFindSubstrings.getText(), substringsOr);
+			arCodePoints = new int[2];
+
+			substringsAND = FileDataBase.getSubstringsAND_DivideByOR_NullIfError(test, true, toLowerCase,
+					tfFindSubstrings.getText(), substringsOr, arCodePoints);
+
+			if (arCodePoints[1] <= 0) {
+				arCodePoints = null;
+			}
 
 			if (substringsOr.isEmpty()) {
 				updating(lastIndex, null);
-				return;
+				if (!test) { // for 'test' return below
+					return;
+				}
 			}
 
 			if (test) {
-				FileDataBase.testInfo(this, substringsAND, substringsOr);
+				FileDataBase.testInfo(this, substringsAND, substringsOr, arCodePoints);
 				return;
 			}
 		} else if (test && bNeedFilterApp) {
@@ -397,12 +406,14 @@ public class BeanViewTable extends JDialog {
 						// res == false
 					} else {
 						var count = FileDataBase.getTextSearchResult(false, toLowerCase ? 1 : 0, b.getFour(false, true),
-								substringsAND, substringsOr);
+								substringsAND, substringsOr, arCodePoints);
+
 						if (count > 0) {
 							res = true;
 						} else if (count == -1) {
 							b.setOne(Const.BRACE_TEST_ERROR_FULL + one);
 						}
+
 					}
 
 				} else { // by column 5..8->1..4; find' not null here
@@ -959,7 +970,8 @@ public class BeanViewTable extends JDialog {
 			}
 
 			substringsOr = new ArrayList<String>();
-			substringsAND = FileDataBase.getSubstringsAND_DivideByOR_NullIfError(true, true, substrings, substringsOr);
+			substringsAND = FileDataBase.getSubstringsAND_DivideByOR_NullIfError(true, true, true, substrings,
+					substringsOr, null);
 
 			if (substringsOr.isEmpty()) {
 				return;

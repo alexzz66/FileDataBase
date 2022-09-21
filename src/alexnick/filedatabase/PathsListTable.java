@@ -386,7 +386,7 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 
 		if (indexOne == selectedToCheckedIndex) {
 			if (test) { // chosen 'TEST' but not 'textSearch'
-				FileDataBase.testInfo(this, null, null);
+				FileDataBase.testInfo(this, null, null, null);
 				return;
 			}
 
@@ -409,19 +409,28 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 
 		List<String> substringsAND = null;
 		List<String> substringsOr = null;
+		int[] arCodePoints = null;
 
 		if (bNeedFilterApp) {
 			substringsOr = new ArrayList<String>();
-			substringsAND = FileDataBase.getSubstringsAND_DivideByOR_NullIfError(true, toLowerCase,
-					tfFindSubstrings.getText(), substringsOr);
+			arCodePoints = new int[2];
+
+			substringsAND = FileDataBase.getSubstringsAND_DivideByOR_NullIfError(test, true, toLowerCase,
+					tfFindSubstrings.getText(), substringsOr, arCodePoints);
+
+			if (arCodePoints[1] <= 0) {
+				arCodePoints = null;
+			}
 
 			if (substringsOr.isEmpty()) {
 				updating(lastIndex, null, 0);
-				return;
+				if (!test) { // for 'test' return below
+					return;
+				}
 			}
 
 			if (test) { // chosen 'TEST' but not 'textSearch'
-				FileDataBase.testInfo(this, substringsAND, substringsOr);
+				FileDataBase.testInfo(this, substringsAND, substringsOr, arCodePoints);
 				return;
 			}
 		}
@@ -441,7 +450,7 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 						// res == false
 					} else {
 						var count = FileDataBase.getTextSearchResult(false, toLowerCase ? 1 : 0, b.getFour(false, true),
-								substringsAND, substringsOr);
+								substringsAND, substringsOr, arCodePoints);
 						if (count > 0) {
 							res = true;
 						} else if (count == -1) {

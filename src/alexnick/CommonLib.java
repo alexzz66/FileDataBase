@@ -2049,14 +2049,18 @@ public class CommonLib {
 	}
 
 	/**
-	 * @param separator   must not be null/empty; 'rowString' will be divided by
-	 *                    that
-	 * @param rowString   must not be null/empty
-	 * @param toLowerCase if true, each result string will be set to lower case
+	 * @param addSeparatorIfStarts if true and 'rowString' starts with 'separator',
+	 *                             separator will be added to result
+	 * @param noDuplicates         if true, equal lines not will be added to result
+	 * @param separator            must not be null/empty; 'rowString' will be
+	 *                             divided by that
+	 * @param rowString            must not be null/empty
+	 * @param toLowerCase          if true, each result string will be set to lower
+	 *                             case
 	 * @return null or not empty list of substrings from 'rowString'
 	 */
-	public static List<String> splitStringBySeparatorOrNull(final String separator, String rowString,
-			boolean toLowerCase) {
+	public static List<String> splitStringBySeparatorOrNull(boolean addSeparatorIfStarts, boolean noDuplicates,
+			final String separator, String rowString, boolean toLowerCase) {
 		if (nullEmptyString(separator) || nullEmptyString(rowString)) {
 			return null;
 		}
@@ -2069,6 +2073,11 @@ public class CommonLib {
 			int limit = 100000; // just in case, max limit
 			int separatorLength = separator.length();
 
+			if (addSeparatorIfStarts && rowString.startsWith(separator)) {
+				result.add(separator);
+				rowString = rowString.substring(separatorLength);
+			}
+
 			while (!rowString.isEmpty() && limit > 0) {
 				limit--;
 				int posSeparatorInFind = rowString.indexOf(separator);
@@ -2076,7 +2085,19 @@ public class CommonLib {
 				var subString = posSeparatorInFind >= 0 ? rowString.substring(0, posSeparatorInFind) : rowString;
 
 				if (!subString.isEmpty()) {
-					result.add(toLowerCase ? subString.toLowerCase() : subString);
+					var s = toLowerCase ? subString.toLowerCase() : subString;
+					if (noDuplicates) {
+						for (var ss : result) {
+							if (ss.equals(s)) {
+								s = "";
+								break;
+							}
+						}
+					}
+
+					if (!s.isEmpty()) {
+						result.add(s);
+					}
 				}
 
 				if (posSeparatorInFind < 0) {

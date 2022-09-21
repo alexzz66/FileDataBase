@@ -246,8 +246,8 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 
 		if (bNeedFilterApp && indexOne >= cmbAppEnabStartFindColumnIndex) { // by column
 			substringsOr = new ArrayList<String>();
-			substringsAND = FileDataBase.getSubstringsAND_DivideByOR_NullIfError(true, true, tfFindColumn.getText(),
-					substringsOr);
+			substringsAND = FileDataBase.getSubstringsAND_DivideByOR_NullIfError(true, true, true,
+					tfFindColumn.getText(), substringsOr, null);
 
 			if (substringsOr.isEmpty()) {
 				updating(lastIndex, null);
