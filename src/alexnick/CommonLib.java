@@ -1720,17 +1720,25 @@ public class CommonLib {
 	/**
 	 * Formats 'new name' to correct file name
 	 * 
+	 * @removeDoubleSpaces if true, all ' ' spaces will be set to ' '
 	 * @param limit   must be from 10 to 200 symbols; by default will be set 100
 	 * @param newName must be not null/empty, must be without extension
 	 * @return formatted string, or empty string, if error
 	 */
-	public static String getCorrectFileNameToRename(int limit, String newName) {
+	public static String getCorrectFileNameToRename(boolean removeDoubleSpaces, int limit, String newName) {
 		if (nullEmptyString(newName)) {
 			return "";
 		}
 
 		limit = (limit < 10 || limit > 200) ? 100 : limit;
 		newName = removeRestrictedWindowsChars(1, newName);
+
+		if (removeDoubleSpaces) {
+			while (newName.contains("  ")) {
+				newName = newName.replace("  ", " ");
+			}
+		}
+
 		newName = trimWithDot(newName);
 
 		if (newName.isEmpty()) {

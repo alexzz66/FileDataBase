@@ -35,7 +35,7 @@ public class FileDataBase {
 	static boolean isShiftDown = false;
 
 	static boolean id3IsPropertyChanged = false;
-	volatile static Properties id3IsProperty = null;
+	volatile static Properties id3IsProperty = null;		
 
 	private static boolean markIsPropertyChanged = false;
 //!!! both must be set 'null' together; and 'markPropertySet' updated after changing 'markIsProperty'

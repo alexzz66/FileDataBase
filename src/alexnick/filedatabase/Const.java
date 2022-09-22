@@ -28,6 +28,7 @@ public class Const {
 //by default, id3 will be extracted for NEW added 'mp3' to '*.bin'
 	static final String OPTIONS_ID3_CONFIRM = ";id3confirm;";
 	static final String OPTIONS_ID3_NO = ";id3no;"; // no extract id3 for 'mp3'
+	static final String OPTIONS_RENAME_NO_REMOVE_DBL_SPACES= ";renamenoremovedblspaces;";
 
 	static final String OPTIONS_FINAL_PAUSE = ";finalpause;";
 	static final String OPTIONS_DO_BAK_TO_COPY_MOVE = ";bak;";

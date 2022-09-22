@@ -1,6 +1,7 @@
 package alexnick.filedatabase;
 
 import static alexnick.CommonLib.dateModifiedToString;
+import static alexnick.CommonLib.setInfo;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
@@ -94,6 +95,8 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 	private final int textSearchIndex = 8; // cmbApp enabled, but cmbAppPos not enabled
 	private final int selectedToCheckedIndex = 9; // cmbApp enabled, but cmbAppPos not enabled
 
+	private final boolean removeDoubleSpaces;
+
 	/**
 	 * @param options          Program options
 	 * @param needCalculateCrc need calculated crc in column 'Signature'
@@ -102,6 +105,11 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 	public PathsListTable(String options, boolean needCalculateCrc, List<File> listFullPaths) {
 		FileDataBase.isShiftDown = false;
 		pathSaveRenameLog = FileDataBase.getTempPath("renameLog.txt");
+
+		removeDoubleSpaces = !options.contains(Const.OPTIONS_RENAME_NO_REMOVE_DBL_SPACES);
+		if (!removeDoubleSpaces) {
+			setInfo(2, "option", "RENAME NO REMOVE DBL SPACES", null, null);
+		}
 
 		this.replaceNoSubstringError = options.contains(Const.OPTIONS_RENAME_REPLACE_NO_SUBSTRING_ERROR);
 		this.needCalculateCrc = needCalculateCrc;
@@ -701,7 +709,7 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 
 			boolean result = true; // user press 'OK'
 
-			var newName = CommonLib.getCorrectFileNameToRename(100, inf.result);
+			var newName = CommonLib.getCorrectFileNameToRename(removeDoubleSpaces, 100, inf.result);
 
 			if (newName.isEmpty() || newName.equals(oldName)) {
 				errorMessage = "Result name is empty or no changed";
@@ -808,68 +816,69 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 		return renameItem(i, ar[0], oldPath, newPath);
 	}
 
-	private String doRename(final String errorInfo, List<Path> renameList) {
-		var renameTable = new RenameTable(this, replaceNoSubstringError, renameList);
-		if (renameTable.getIsCheckResult() == Const.MR_RENAME) {
-			int chosenToRename = renameTable.getChosenToRename();
-			var beansRename = renameTable.getBeans();
-
-			if (chosenToRename <= 0 || CommonLib.nullEmptyList(beansRename)) {
-				return errorInfo + " to rename";
-			}
-
-			increaseRenameNumber(false);
-
-			int countRenameError = 0;
-			int countRenamed = 0;
-
-			for (var beanRen : beansRename) {
-				if (setChecked.isEmpty()) {
-					break;
-				}
-
-				if (!beanRen.check || CommonLib.nullEmptyString(beanRen.serviceStringOne)) {
-					continue;
-				}
-
-				Path newPath = Path.of(beanRen.serviceStringOne);
-				Path oldPath = beanRen.binPath;
-
-				if (newPath != null && setCheckedPaths.contains(oldPath)) {
-					int foundNumber = -1;
-
-					for (var i : setChecked) { // find in table by 'binPath'
-						if (beans.get(i).binPath.equals(oldPath)) {
-							foundNumber = i;
-							break;
-						}
-					}
-
-					if (foundNumber >= 0) {
-						if (renameItem(foundNumber, beanRen.getOne(), oldPath, newPath)) {
-							countRenamed++;
-						} else {
-							countRenameError++;
-						}
-
-						setChecked.remove(foundNumber);
-						setCheckedPaths.remove(oldPath);
-					}
-
-				}
-			}
-
-			if ((countRenamed + countRenameError) > 0) {
-				updating(null, null, getNeedSaveType());
-			}
-
-			var sb = new StringBuilder();
-			sb.append("Rename operation number: ").append(renameNumber).append(". Chosen to rename: ")
-					.append(chosenToRename).append(CommonLib.NEW_LINE_UNIX + "Renamed count: ").append(countRenamed)
-					.append(CommonLib.NEW_LINE_UNIX + "Error rename count: ").append(countRenameError);
-			return sb.toString();
+	private String doRename(final String errorInfo, List<Path> renameList) { // TODO need ext to UPPER lower??
+		var renameTable = new RenameTable(this, replaceNoSubstringError, removeDoubleSpaces, renameList);
+		if (renameTable.getIsCheckResult() != Const.MR_RENAME) {
+			return "";
 		}
-		return "";
+
+		int chosenToRename = renameTable.getChosenToRename();
+		var beansRename = renameTable.getBeans();
+
+		if (chosenToRename <= 0 || CommonLib.nullEmptyList(beansRename)) {
+			return errorInfo + " to rename";
+		}
+
+		increaseRenameNumber(false);
+
+		int countRenameError = 0;
+		int countRenamed = 0;
+
+		for (var beanRen : beansRename) {
+			if (setChecked.isEmpty()) {
+				break;
+			}
+
+			if (!beanRen.check || CommonLib.nullEmptyString(beanRen.serviceStringOne)) {
+				continue;
+			}
+
+			Path newPath = Path.of(beanRen.serviceStringOne);
+			Path oldPath = beanRen.binPath;
+
+			if (newPath != null && setCheckedPaths.contains(oldPath)) {
+				int foundNumber = -1;
+
+				for (var i : setChecked) { // find in table by 'binPath'
+					if (beans.get(i).binPath.equals(oldPath)) {
+						foundNumber = i;
+						break;
+					}
+				}
+
+				if (foundNumber >= 0) {
+					if (renameItem(foundNumber, beanRen.getOne(), oldPath, newPath)) {
+						countRenamed++;
+					} else {
+						countRenameError++;
+					}
+
+					setChecked.remove(foundNumber);
+					setCheckedPaths.remove(oldPath);
+				}
+
+			}
+		}
+
+		if ((countRenamed + countRenameError) > 0) {
+			updating(null, null, getNeedSaveType());
+		}
+
+		var sb = new StringBuilder();
+		sb.append("Rename operation number: ").append(renameNumber).append(". Chosen to rename: ")
+				.append(chosenToRename).append(CommonLib.NEW_LINE_UNIX + "Renamed count: ").append(countRenamed)
+				.append(CommonLib.NEW_LINE_UNIX + "Error rename count: ").append(countRenameError);
+		return sb.toString();
 	}
 
 	private void increaseRenameNumber(boolean undo) {

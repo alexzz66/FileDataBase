@@ -112,9 +112,11 @@ public class RenameTable extends JDialog {
 	volatile private int lastSortType = SortBeans.sortNoDefined;
 
 	ActionListener autoApply = (e -> renaiming(false));
+	private final boolean removeDoubleSpaces;
 
-	public RenameTable(JFrame frame, boolean replaceNoSubstringError, List<Path> paths) {
+	public RenameTable(JFrame frame, boolean replaceNoSubstringError, boolean removeDoubleSpaces, List<Path> paths) {
 		super(frame, true);
+		this.removeDoubleSpaces = removeDoubleSpaces;
 		this.initFrameFinished = false; // to avoid call 'autoApply' while creating this frame
 		this.replaceNoSubstringError = replaceNoSubstringError;
 
@@ -274,8 +276,8 @@ public class RenameTable extends JDialog {
 	/**
 	 * Apply components settings
 	 * 
-	 * @param checkForRename if 'true', before 'doRename', be checked existing files
-	 *                       and be set flags in table if can rename
+	 * @param checkForRename if 'true', before 'doRename', will be checked existing
+	 *                       files and will be set flags in table if can rename
 	 * @return if 'checkForRename', filling b.serviceString and returns checked
 	 *         count
 	 */
@@ -353,6 +355,7 @@ public class RenameTable extends JDialog {
 								|| indexResult == INDEX_RENAME_RESULT_OK)) {
 							var path = checkForRenameFile(indexResult == INDEX_RENAME_RESULT_REGISTER_CHANGED_ONLY, i,
 									newPathsInLowerCaseSet);
+
 							if (path == null) {
 								indexResult = INDEX_RENAME_RESULT_FILE_CHECK_ERROR;
 								if (cbStopOnError.isSelected()) {
@@ -363,6 +366,7 @@ public class RenameTable extends JDialog {
 								b.serviceStringOne = path.toString();
 								checkCount++;
 							}
+
 						}
 					}
 				}
@@ -511,7 +515,7 @@ public class RenameTable extends JDialog {
 				index = defaultCmbLengthLimitIndex;
 			}
 			int limit = Integer.valueOf(cmbLengthLimit.getItemAt(index));
-			result = CommonLib.getCorrectFileNameToRename(limit, result);
+			result = CommonLib.getCorrectFileNameToRename(removeDoubleSpaces, limit, result);
 		} catch (Exception e) {
 			return "";
 		}
@@ -754,8 +758,8 @@ public class RenameTable extends JDialog {
 		var sortBeans = new SortBeans(sortType, sortCaption, beans, myTable);
 		if (!sortBeans.isBeansWasSorted()) {
 			return;
-		}	
-		
+		}
+
 		setNewTitle(standardTitle.concat(sortBeans.getAppendCaption()));
 	}
 
