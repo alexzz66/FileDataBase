@@ -57,9 +57,6 @@ public class Const {
 
 	static final String OPTIONS_COMPARETWOBIN_NOFULLPATHS = ";comparetwobinnofullpaths;";
 
-//when select 'replaceSourceDest...' for rename file, and no found 'source' in 'name', be set as rename error
-	static final String OPTIONS_RENAME_REPLACE_NO_SUBSTRING_ERROR = ";replacenosubstringerror;";
-
 	static final String OPTIONS_ONE_PATHSLIST_YES = ";modeoneplyes;"; // query to open 'PathsListTable' for
 																		// MODE_STOP_ONE
 	static final String EXTEMPTY = "<empty>";

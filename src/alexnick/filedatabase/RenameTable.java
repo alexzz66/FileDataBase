@@ -107,18 +107,20 @@ public class RenameTable extends JDialog {
 	private JCheckBox cbStopOnError;
 
 	private int startNumbering = Integer.MAX_VALUE;
-	private boolean replaceNoSubstringError;
 	private boolean initFrameFinished;
 	volatile private int lastSortType = SortBeans.sortNoDefined;
 
 	ActionListener autoApply = (e -> renaiming(false));
 	private final boolean removeDoubleSpaces;
 
-	public RenameTable(JFrame frame, boolean replaceNoSubstringError, boolean removeDoubleSpaces, List<Path> paths) {
+	private boolean substringsOrAndArCodePointsInited = false;
+	private List<String> substringsOr = null;
+	private int[] arCodePoints = new int[2];
+
+	public RenameTable(JFrame frame, boolean removeDoubleSpaces, List<Path> paths) {
 		super(frame, true);
 		this.removeDoubleSpaces = removeDoubleSpaces;
 		this.initFrameFinished = false; // to avoid call 'autoApply' while creating this frame
-		this.replaceNoSubstringError = replaceNoSubstringError;
 
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		addWindowListener(new WindowAdapter() {
@@ -330,6 +332,7 @@ public class RenameTable extends JDialog {
 			}
 
 			int indexResult = INDEX_RENAME_RESULT_NO_DEFINED;
+			substringsOrAndArCodePointsInited = false; // re init before 'getNewNameOrEmpty'
 
 			for (int i = 0; i < beans.size(); i++) { // 'b.one' -> 'b.two'; resultTo 'b.three'
 				var b = beans.get(i);
@@ -419,7 +422,8 @@ public class RenameTable extends JDialog {
 	}
 
 	/**
-	 * Get new name from 'name' as defined components settings
+	 * Get new name from 'name' as defined components settings<br>
+	 * NB: before calling this method need substringsOrAndArCodePointsInited = false
 	 * 
 	 * @param bFirstItem
 	 * @param noSortIndex
@@ -522,7 +526,8 @@ public class RenameTable extends JDialog {
 		return result;
 	}
 
-	// index must not be 0, 9; 'name' not null/empty
+// index must not be 0, 9; 'name' not null/empty
+//!!! called from 'getNewNameOrEmpty' where before that 'substringsOrAndArCodePointsInited' == false
 	private boolean setChangedNameOrFalseOrThrow(final int index, final String name, final String one, final String two,
 			final String three, StringBuilder sb) throws InterruptedException {
 //0:"noChangeName", 1: "substringFromLength", 2:"endsubstringFromLength",3:"replaceFromLengthDest", 4:"endreplaceFromLengthDest",
@@ -530,6 +535,8 @@ public class RenameTable extends JDialog {
 //10:"changeToRandom5",11: "changeToRandom6", 12:"changeToRandom7",13: "changeToRandom8", 14: "changeNameTo"		
 
 //enabled, if index >> one: 14;  one,two:1,2,5,6,7;  one,two,three:3,4; no:0,8,9,10,11,12,13;
+//!!! for 7:"replaceSourceDest(all)", 'String one' may be as ??int:int or string??string??string	
+//!!! but for other indices - as is
 		if (index == 14) {
 			CommonLib.appendNotNullEmpty(one, sb);
 			return true;
@@ -578,25 +585,107 @@ public class RenameTable extends JDialog {
 			return false;// not must be so...
 		}
 
-// remains 5,6,7 >> replace one -> two
-		if (one.isEmpty()) {
-			return false; // no defined, think as error
+// remains 5,6,7 >> replace one -> two	
+		if (index == 7) { // replaceSourceDest(all)
+			var newName = replaceAllByTemplateOrNull(one, two, name);
+			if (newName == null) {
+				return false;
+			}
+
+			CommonLib.appendNotNullEmpty(newName, sb);
+			return true;
+		}
+
+// remains 5,6
+		if (one.isEmpty() || one.equals(two)) {
+			return false;
 		}
 
 		var pos = index == 6 ? name.lastIndexOf(one) : name.indexOf(one);
 		if (pos < 0) { // no found substring, by default 'no error', else set in 'options'
 			sb.append(name);
-			return !replaceNoSubstringError;
+			return false;
 		}
 
-		if (index == 7) {
-			CommonLib.appendNotNullEmpty(name.replace(one, two), sb);
-		} else {
-			CommonLib.appendNotNullEmpty(name.substring(0, pos), sb);
-			CommonLib.appendNotNullEmpty(two, sb);
-			CommonLib.appendNotNullEmpty(name.substring(pos + one.length()), sb);
-		}
+		CommonLib.appendNotNullEmpty(name.substring(0, pos), sb);
+		CommonLib.appendNotNullEmpty(two, sb);
+		CommonLib.appendNotNullEmpty(name.substring(pos + one.length()), sb);
+
 		return true;
+	}
+
+// 'source' must not be null; if empty - no replacing; may be as ??int:int or string??string??string	
+//'dest' must not be not null; may be empty
+//return null if error or new name, that may be empty
+//!!!called from 'getNewNameOrEmpty'->'setChangedNameOrFalseOrThrow' where before that 'substringsOrAndArCodePointsInited' == false	
+	private String replaceAllByTemplateOrNull(final String source, final String dest, String name) {
+		if (source.isEmpty() || name.isEmpty() || source.equals(dest)) {
+			return null;
+		}
+
+		if (!source.contains(Const.textFieldFindORSeparator)) {
+			return name.contains(source) ? name.replace(source, dest) : null;
+		}
+
+		if (!substringsOrAndArCodePointsInited) {
+			substringsOrAndArCodePointsInited = true;
+			substringsOr = new ArrayList<String>();
+			arCodePoints[0] = 0;
+			arCodePoints[1] = 0;
+			FileDataBase.getSubstringsAND_DivideByOR_NullIfError(true, false, false, source, substringsOr,
+					arCodePoints);
+		}
+
+		if (arCodePoints[1] > 0) { // correct char codes
+			boolean res = false;
+			int equalDestCharCode = dest.length() == 1 ? dest.codePointAt(0) : -42;
+			var sb = new StringBuilder();
+
+			for (int i = 0; i < name.length(); i++) {
+				int c = name.codePointAt(i);
+
+				if (c >= arCodePoints[0] && c <= arCodePoints[1] && c != equalDestCharCode) {
+					res = true;
+					if (!dest.isEmpty()) {
+						sb.append(dest);
+					}
+
+				} else {
+					sb.append(name.charAt(i));
+				}
+			}
+			return res ? sb.toString() : null;
+		}
+
+		if (CommonLib.nullEmptyList(substringsOr)) {
+			return null;
+		}
+
+		if (substringsOr.size() == 1) {
+			var s = substringsOr.get(0);
+			return name.contains(s) ? name.replace(s, dest) : null;
+		}
+
+		String stub = "\r"; // sources in 'substringsOr' and name must not contains it
+		boolean res = false;
+
+		if (name.contains(stub)) { // must not be so
+			name = name.replace(stub, "");
+		}
+
+		for (var s : substringsOr) {
+			if (s.isEmpty() || s.equals(dest) || !name.contains(s) || s.contains(stub)) {
+				continue;
+			}
+
+			name = name.replace(s, stub);
+			res = true;
+			if (name.isEmpty()) {
+				break;
+			}
+		}
+		// if 'dest' contains 'stub' - no matters
+		return res ? name.replace(stub, dest) : null;
 	}
 
 	private void initComponentsForRenaming() {// on constructor
@@ -637,7 +726,12 @@ public class RenameTable extends JDialog {
 		cmbNameWork.setToolTipText(
 				"name change variants; for 'from' indexes from 0; for 'end...' starts at the end of name");
 
-		tfNameWorkOne = new JTextField(4);
+		tfNameWorkOne = new JTextField(6);
+		var sb = new StringBuilder();
+		sb.append("for 'replaceSourceDest(all)' may be '").append(Const.textFieldFindORSeparator)
+				.append("charCode:charCode' or 'string").append(Const.textFieldFindORSeparator).append("string'");
+		tfNameWorkOne.setToolTipText(sb.toString());
+
 		tfNameWorkTwo = new JTextField(4);
 		tfNameWorkThree = new JTextField(4);
 

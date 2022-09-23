@@ -73,7 +73,6 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 	volatile private int lastSortType = SortBeans.sortNoDefined;
 	private boolean needCalculateCrc;
 
-	private boolean replaceNoSubstringError;
 	private int renameNumber = 0; // increases before rename/undo
 
 	private List<String> renameLog = new ArrayList<String>();
@@ -111,7 +110,6 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 			setInfo(2, "option", "RENAME NO REMOVE DBL SPACES", null, null);
 		}
 
-		this.replaceNoSubstringError = options.contains(Const.OPTIONS_RENAME_REPLACE_NO_SUBSTRING_ERROR);
 		this.needCalculateCrc = needCalculateCrc;
 
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -817,7 +815,7 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 	}
 
 	private String doRename(final String errorInfo, List<Path> renameList) { // TODO need ext to UPPER lower??
-		var renameTable = new RenameTable(this, replaceNoSubstringError, removeDoubleSpaces, renameList);
+		var renameTable = new RenameTable(this, removeDoubleSpaces, renameList);
 		if (renameTable.getIsCheckResult() != Const.MR_RENAME) {
 			return "";
 		}

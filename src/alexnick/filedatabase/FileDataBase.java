@@ -35,7 +35,7 @@ public class FileDataBase {
 	static boolean isShiftDown = false;
 
 	static boolean id3IsPropertyChanged = false;
-	volatile static Properties id3IsProperty = null;		
+	volatile static Properties id3IsProperty = null;
 
 	private static boolean markIsPropertyChanged = false;
 //!!! both must be set 'null' together; and 'markPropertySet' updated after changing 'markIsProperty'
@@ -1137,7 +1137,13 @@ public class FileDataBase {
 			for (int i = 0; i < arCodePointsForReturn.length; i++) {
 				arCodePointsForReturn[i] = 0;
 			}
+		}
 
+		if (rowString.equals(Const.textFieldFindORSeparator)) {
+			return null;
+		}
+
+		if (arCodePointsForReturn != null) {
 			if (arCodePointsForReturn.length == 2 && rowString.startsWith(Const.textFieldFindORSeparator)) {
 				var result = divideStringOrNull(rowString.substring(Const.textFieldFindORSeparator.length()),
 						arCodePointsForReturn);
@@ -1351,7 +1357,7 @@ public class FileDataBase {
 
 				if (searchByChars) {
 					for (int i = 0; i < string.length(); i++) {
-						int c = string.charAt(i);
+						int c = string.codePointAt(i);
 						if (c >= arCodePoints[0] && c <= arCodePoints[1]) {
 							return 1;
 						}
