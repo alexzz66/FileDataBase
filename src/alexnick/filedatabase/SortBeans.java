@@ -44,7 +44,11 @@ public class SortBeans {
 
 	final static int sortServiceIntOne = 5001;
 	final static int sortServiceIntTwo = 5002;
-	final static int sortServiceIntThreeThenBinPathNoCheckForNull = 5003;
+
+	final static int sortServiceIntThree = 5003;
+	final static int sortServiceIntThreeThenCheck = 5004;
+	final static int sortServiceIntThreeThenBinPathNoCheckForNull = 5005;
+	final static int sortServiceIntThreeThenThree = 5006;
 
 	final static int sortServiceStringOneNoCheckForNull = 5011;
 	final static int sortServiceStringTwoNoCheckForNull = 5012;
@@ -133,7 +137,12 @@ public class SortBeans {
 
 		case sortServiceIntOne -> sortServiceIntOne(beans);
 		case sortServiceIntTwo -> sortServiceIntTwo(beans);
+
+		case sortServiceIntThree -> sortServiceIntThree(beans);
+		case sortServiceIntThreeThenCheck -> sortServiceIntThreeThenCheck(beans);
 		case sortServiceIntThreeThenBinPathNoCheckForNull -> sortServiceIntThreeThenBinPathNoCheckForNull(beans);
+		case sortServiceIntThreeThenThree -> sortServiceIntThreeThenThree(beans);
+
 		case sortServiceLong -> sortServiceLong(beans);
 		case sortServiceStringOneNoCheckForNull -> sortServiceStringOneNoCheckForNull(beans);
 		case sortServiceStringTwoNoCheckForNull -> sortServiceStringTwoNoCheckForNull(beans);
@@ -486,6 +495,34 @@ public class SortBeans {
 		});
 	}
 
+	private void sortServiceIntThree(List<MyBean> beans) { // by serviceIntThree then four
+		beans.sort(new Comparator<MyBean>() {
+			@Override
+			public int compare(MyBean o1, MyBean o2) {
+				if (o1.serviceIntThree == o2.serviceIntThree) {
+					return sortFourLowerCase(o1, o2);
+				}
+				return o1.serviceIntThree - o2.serviceIntThree;
+			}
+		});
+	}
+
+	private void sortServiceIntThreeThenCheck(List<MyBean> beans) { // by serviceIntThree then check
+		beans.sort(new Comparator<MyBean>() {
+			@Override
+			public int compare(MyBean o1, MyBean o2) {
+				if (o1.serviceIntThree == o2.serviceIntThree) {
+					boolean o1Check = o1.getCheck();
+					if (o1Check == o2.getCheck()) {
+						return sortFourLowerCase(o1, o2);
+					}
+					return o1Check ? -1 : 1;
+				}
+				return o1.serviceIntThree - o2.serviceIntThree;
+			}
+		});
+	}
+
 	private int compareBinPathNoCheckForNull(MyBean o1, MyBean o2) { // BASIC: by binPath then four
 		var s1 = o1.binPath.toString().toLowerCase();
 		var s2 = o2.binPath.toString().toLowerCase();
@@ -510,6 +547,23 @@ public class SortBeans {
 			public int compare(MyBean o1, MyBean o2) {
 				if (o1.serviceIntThree == o2.serviceIntThree) {
 					return compareBinPathNoCheckForNull(o1, o2);
+				}
+				return o1.serviceIntThree - o2.serviceIntThree;
+			}
+		});
+	}
+
+	private void sortServiceIntThreeThenThree(List<MyBean> beans) { // by serviceIntThree then three
+		beans.sort(new Comparator<MyBean>() {
+			@Override
+			public int compare(MyBean o1, MyBean o2) {
+				if (o1.serviceIntThree == o2.serviceIntThree) {
+					var s1 = o1.getThree();
+					var s2 = o2.getThree();
+					if (s1.equals(s2)) {
+						return sortFourLowerCase(o1, o2);
+					}
+					return s1.compareTo(s2);
 				}
 				return o1.serviceIntThree - o2.serviceIntThree;
 			}

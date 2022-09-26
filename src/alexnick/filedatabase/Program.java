@@ -370,7 +370,7 @@ public class Program {
 		sb.append("; import ").append(countImport).append(" / ").append(listImport.size());
 		addLog(sb.toString(), true, logList);
 		saveAndShowList(false, true, 1, FileDataBase.getTempPath("SyncBinResult.txt"), logList);
-	}
+	} // end of syncBin()
 
 	private void deleteEmptyDir(List<String> parameters) {
 		final String errorMessage = "For deleting empty folders required ONE folder in parameters";
@@ -724,10 +724,7 @@ public class Program {
 				Files.delete(binPath);
 			}
 
-//need this?  if (binPathDouble != null && binPathDouble.toFile().exists()) {
-//				Files.delete(binPathDouble);
-//			  }
-
+//need this? if (binPathDouble != null && binPathDouble.toFile().exists()) {Files.delete(binPathDouble);}
 			return false;
 		}
 
@@ -834,7 +831,7 @@ public class Program {
 				+ "otherwise be set 'exchange' copying method");
 		List<String> list = new ArrayList<String>();
 		list.add(
-				"'Standard log': 'newList', 'newerList', 'newerEqualSizeList' be in full format; all others list - in short format");// 0
+				"'Standard log': 'newList', 'newerList', 'newerEqualSizeList' will be in full format; all others list - in short format");// 0
 		list.add("'Extended log': 'oldList', 'olderList' also be in full format");// 1
 		list.add("'Full log': all lists in full format"); // 2
 		list.add("SELECT FOLDER, 'standard log'"); // 3
@@ -1545,7 +1542,7 @@ public class Program {
 		return false;
 	}
 
-// finds disk for dublicate repository, confirm about, that must not be 'diskMain'
+// finds disk for duplicate repository, confirm about, that must not be 'diskMain'
 //'doubleRepo' if false, will be written 'ANOTHER REPO'; else 'DOUBLE REPO'
 	private Path getAnotherRepoOrNull(boolean doubleRepo, boolean existDirCheck, String diskMain) {
 		try {

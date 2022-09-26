@@ -32,10 +32,13 @@ public class DuplicateTable extends JDialog implements Callable<List<String>> {
 	private JTextField tfSkipInfo = null;
 	private boolean[] sortedListExtSkipped = null;
 	private String[] sortedListExts = null;
+	private int lastSortType = SortBeans.sortNoDefined;
+	private String standardTitle;
 
 	public DuplicateTable(JFrame frame, String caption, List<MyBean> beans0) { // list not null
-		super(frame, caption, true);
+		super(frame, true);
 		FileDataBase.isShiftDown = false;
+		this.standardTitle = caption;
 
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		addWindowListener(new WindowAdapter() {
@@ -57,6 +60,17 @@ public class DuplicateTable extends JDialog implements Callable<List<String>> {
 		myTable = new BeansFourTableDefault(ListSelectionModel.SINGLE_SELECTION, true, true, true, "CRC", "Size",
 				"Modified", "Path", beans);
 		myTable.addKeyListener(FileDataBase.keyListenerShiftDown);
+
+		myTable.getTableHeader().addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if (e.getClickCount() == 1 && e.getButton() == 1) {
+					sorting(myTable.convertColumnIndexToModel(myTable.columnAtPoint(e.getPoint())));
+				}
+			}
+
+		});
+
 		myTable.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
@@ -222,11 +236,62 @@ public class DuplicateTable extends JDialog implements Callable<List<String>> {
 		butCancel.addKeyListener(FileDataBase.keyListenerShiftDown);
 		butToList.addKeyListener(FileDataBase.keyListenerShiftDown);
 
+		setStandardTitle();
+		new SortBeans(SortBeans.sortServiceIntThree, "", beans);
 		var t = Toolkit.getDefaultToolkit().getScreenSize();
 		setBounds(0, 0, t.width - 200, t.height - 200);
 
 		setLocationRelativeTo(null);
 		setVisible(true);
+	}
+
+//"check", "CRC", "Size", "Modified", "Path": need columnIndex 0,3,4
+	private void sorting(int columnIndex) {// TODO Auto-generated method stub
+		if (columnIndex < 0 || beans.size() < 2) {
+			return;
+		}
+
+		int sortType = SortBeans.sortNoDefined;
+		String sortCaption;
+		boolean noDubleSort = false;
+
+		if (columnIndex == 0) {
+			sortType = SortBeans.sortServiceIntThreeThenCheck;
+			sortCaption = "Check -> Path";
+		} else if (columnIndex == 3) {
+			sortType = SortBeans.sortServiceIntThreeThenThree;
+			sortCaption = "Modified";
+			noDubleSort = true;
+		} else if (columnIndex == 4) {
+			sortType = SortBeans.sortServiceIntThree;
+			sortCaption = "Path";
+			noDubleSort = true;
+		} else {
+			return;
+		}
+
+		if (sortType == lastSortType && noDubleSort) {
+			return;
+		}
+
+		lastSortType = sortType;
+		setStandardTitle();
+		var sortBeans = new SortBeans(sortType, sortCaption, beans, myTable);
+		if (!sortBeans.isBeansWasSorted()) {
+			return;
+		}
+
+		setNewTitle(standardTitle.concat(sortBeans.getAppendCaption()));
+	}
+
+	private void setStandardTitle() {
+		setNewTitle(standardTitle);
+	}
+
+	private void setNewTitle(String s) {
+		if (!getTitle().equals(s)) {
+			setTitle(s);
+		}
 	}
 
 //indexType: 0: all,except first; 1: all, except second; 2: all; 3: nothing; 4:invert
