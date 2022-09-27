@@ -595,10 +595,13 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 				.append(columnsForCompare[1]);
 
 		sb.append(CommonLib.NEW_LINE_UNIX).append(CommonLib.NEW_LINE_UNIX).append("[No]: swap 'SOURCE' and 'DEST'")
-				.append(Const.UPDATE_BIN_COMPARING_REMINDER);
+				.append(CommonLib.NEW_LINE_UNIX).append(CommonLib.NEW_LINE_UNIX)
+				.append("[Cancel]: compare of equals / cancel").append(Const.UPDATE_BIN_COMPARING_REMINDER);
+
 		var confirm = JOptionPane.showConfirmDialog(this, sb.toString(), "Compare two *.bin",
 				JOptionPane.YES_NO_CANCEL_OPTION);
 
+		boolean equalComparing = false;
 		if (confirm == JOptionPane.NO_OPTION) { // SWAP
 			var path = binPaths[0];
 			binPaths[0] = binPaths[2];
@@ -611,8 +614,13 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 			var tmp = existsStartPaths[0];
 			existsStartPaths[0] = existsStartPaths[1];
 			existsStartPaths[1] = tmp;
-		} else if (confirm != JOptionPane.YES_OPTION) {
-			return;
+		} else if (confirm != JOptionPane.YES_OPTION) { // equal comparing
+			if (JOptionPane.showConfirmDialog(this,
+					"Will be found duplicates by size and crc; then shown in table. Continue?", "Compare of equals",
+					JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) {
+				return;
+			}
+			equalComparing = true;
 		}
 
 //!!!'compareLogType' = 2 recommended for full log format, because need information about equals paths/signatures
@@ -621,8 +629,8 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 
 //!!! copyMode MUST BE '0', because comparing only, without checking start path exists	
 // binPaths: 0, 1: source: startPath,binPath; 2, 3: dest: startPath, binPath
-			var cf = new CompareFolders(false, program, compareLogType, 0, binPaths[0].toString(), binPaths[1],
-					binPaths[2].toString(), binPaths[3], existsStartPaths[0]);
+			var cf = new CompareFolders(false, equalComparing, program, compareLogType, 0, binPaths[0].toString(),
+					binPaths[1], binPaths[2].toString(), binPaths[3], existsStartPaths[0]);
 			if (cf.getIsCheckResult() == Const.MR_NEED_UPDATE_BASE) {
 				isCheckResult = Const.MR_NEED_UPDATE_BASE;
 				pathForUpdate = binPaths[0];

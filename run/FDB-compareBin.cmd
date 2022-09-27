@@ -2,7 +2,7 @@
 cd /d %~d0%~p0
 cd ../bin
 start /b /high java alexnick.filedatabase.FileDataBase -cb:finalPause; %*
-pause
+
 :mode -s (sync, syncBin) synchronize OWN repository with a repository on ANOTHER disk; option can be 'finalPause' only; another options no matter
 
 :FOR ALL OTHER MODES >>

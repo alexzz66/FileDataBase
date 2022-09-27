@@ -31,13 +31,17 @@ public class CompareFolders {
 	private Path destStartPath;
 
 	private int copyMode;
-	private int compareLogType;
+	private final int compareLogType;
 
 	private boolean doBakToCopyMove;
 
 	private Map<String, SetStringClass> equalSignMap; // List<MyBean> equalSignBeans;
 	volatile private int equalSignId = 0;
 	private Program program;
+	private final boolean equalComparing; // if true, need init 2 list >>
+	private List<MyBean> equalComparingFullBeans;
+	private List<MyBean> equalComparingSignatureOnlyBeans;
+
 	private int isCheckResult = Const.MR_NO_CHOOSED;
 
 	public int getIsCheckResult() {
@@ -46,6 +50,8 @@ public class CompareFolders {
 
 	/**
 	 * @param querySavingResult     if true, need query before saving result file
+	 * @param equalComparing        if true, will be comparing equals only; then
+	 *                              showed in EqualComparingTable
 	 * @param program               class, not must be null
 	 * @param compareLogType        0 (by default):new, newer and newerEqualSize in
 	 *                              log; other lists in short format (no more limit,
@@ -73,10 +79,16 @@ public class CompareFolders {
 	 * @throws Exception if any errors
 	 */
 //method called with  'copymode' > 0 -> for Const.MODE_STOP_FOUR (when 'bin created')
-	public CompareFolders(boolean querySavingResult, Program program, int compareLogType, int copyMode,
-			String sourceStartPathString, Path sourceBinPath, String destStartPathString, Path destBinPath,
-			boolean sourceStartPathExists) throws Exception {
+	public CompareFolders(boolean querySavingResult, final boolean equalComparing, Program program, int compareLogType,
+			int copyMode, String sourceStartPathString, Path sourceBinPath, String destStartPathString,
+			Path destBinPath, boolean sourceStartPathExists) throws Exception {
 		this.program = program;
+		this.equalComparing = equalComparing;
+		if (equalComparing) {
+			equalComparingFullBeans = new ArrayList<MyBean>();
+			equalComparingSignatureOnlyBeans = new ArrayList<MyBean>();
+		}
+
 		this.copyMode = copyMode < 0 || copyMode > 4 ? 0 : copyMode;
 		this.compareLogType = compareLogType < 0 || compareLogType > 2 ? 0 : compareLogType;
 		this.doBakToCopyMove = program.getOptions().contains(Const.OPTIONS_DO_BAK_TO_COPY_MOVE);
@@ -95,14 +107,15 @@ public class CompareFolders {
 			CommonLib.setInfo(2, "option", "CompareTwoBin NO_FULL_PATHS", null, null);
 			bNeedFullPaths = false;
 		}
-		equalSignMap = copyMode == 0 && sourceStartPathExists ? new TreeMap<String, SetStringClass>() : null;
+		equalSignMap = copyMode == 0 && sourceStartPathExists && !equalComparing ? new TreeMap<String, SetStringClass>()
+				: null;
 		isCheckResult = doCompareFolders(querySavingResult, bNeedFullPaths);
 	}
 
 	// !!! for 'copyMode' == 0 -> no check exist start path; 'binPath' check only
 	private Path[] checkParametersOrThrow(String startPathString, Path binPath) throws Exception {
 		if (CommonLib.nullEmptyString(startPathString)) {
-			throw new IllegalArgumentException("Start path must not be null/empty");
+			CommonLib.errorArgument("Start path must not be null/empty");
 		}
 
 		File binPathFile = null;
@@ -111,7 +124,7 @@ public class CompareFolders {
 
 		if (binPath == null && copyMode != 0) {
 			if (!startPathFile.exists()) {
-				throw new IllegalArgumentException("Path must exist " + startPathString);
+				CommonLib.errorArgument("Path must exist " + startPathString);
 			}
 
 			// 'getUpdatedBinFile' writes start info on console
@@ -125,7 +138,7 @@ public class CompareFolders {
 		}
 
 		if (!binPathFile.exists() || binPathFile.isDirectory()) {
-			throw new IllegalArgumentException("Path of *.bin must exist " + binPathFile);
+			CommonLib.errorArgument("Path of *.bin must exist " + binPathFile);
 		}
 
 		Path[] paths = new Path[2];
@@ -133,7 +146,7 @@ public class CompareFolders {
 		paths[1] = binPathFile.getCanonicalFile().toPath();
 
 		if (paths[0] == null || paths[1] == null) {
-			throw new IllegalArgumentException("Error of checking parameters for comparing");
+			CommonLib.errorArgument("Error of checking parameters for comparing");
 		}
 
 		return paths;
@@ -143,34 +156,42 @@ public class CompareFolders {
 		var result = Const.MR_NO_CHOOSED;
 		Path pathLog = null;
 		try {
-			if (copyMode == 4) {
-				var confirmList = new ArrayList<String>();
-				confirmList.add("NO COPY");
-				confirmList.add("'backUp method'");
-				confirmList.add("'backUp method' with offer creating new folder");
-				confirmList.add("'exchange method', 'source start path' will be changed on 'dest start path");
-				copyMode = CommonLib.pauseQueryList(confirmList, null);
-				if (copyMode < 0 || copyMode > 3) {
-					copyMode = 0;
+			String logTypeInfo = "";
+
+			if (equalComparing) {
+				copyMode = 0; // think that in this mode no be copying
+			} else {
+				if (copyMode == 4) {
+					var confirmList = new ArrayList<String>();
+					confirmList.add("NO COPY");
+					confirmList.add("'backUp method'");
+					confirmList.add("'backUp method' with offer creating new folder");
+					confirmList.add("'exchange method', 'source start path' will be changed on 'dest start path");
+					copyMode = CommonLib.pauseQueryList(confirmList, null);
+					if (copyMode < 0 || copyMode > 3) {
+						copyMode = 0;
+					}
 				}
+				// !!! adding to 'compareLog': without '\n', need for correct line in 'contents'
+				CommonLib.addLog(CommonLib.ADDLOG_DATE, false, compareLog);
+				CommonLib.addLog("Sourse info, folder: " + sourceStartPath + "; bin: " + sourceBinPath, false,
+						compareLog);
+				CommonLib.addLog("Destination info, folder: " + destStartPath + "; bin: " + destBinPath, false,
+						compareLog);
+				String type = copyMode == 3 ? "exchange" : copyMode == 0 ? "no copy" : "backUpCopy"; // for 1,2
+				if (copyMode == 2) {
+					type = type.concat(" with offer creanting new folder");
+				}
+
+				logTypeInfo = CommonLib.NEW_LINE_UNIX + "Copy method: " + type;
+				compareLog.add("");
+				compareLog.add("Copy method: " + type);
+
+				type = compareLogType == 2 ? "Full log" : compareLogType == 1 ? "Extended log" : "Standard log";
+
+				logTypeInfo += CommonLib.NEW_LINE_UNIX + "Log format: " + type;
+				compareLog.add("Log format: " + type);
 			}
-			// !!! adding to 'compareLog': without '\n', need for correct line in 'contents'
-			CommonLib.addLog(CommonLib.ADDLOG_DATE, false, compareLog);
-			CommonLib.addLog("Sourse info, folder: " + sourceStartPath + "; bin: " + sourceBinPath, false, compareLog);
-			CommonLib.addLog("Destination info, folder: " + destStartPath + "; bin: " + destBinPath, false, compareLog);
-			String type = copyMode == 3 ? "exchange" : copyMode == 0 ? "no copy" : "backUpCopy"; // for 1,2
-			if (copyMode == 2) {
-				type = type.concat(" with offer creanting new folder");
-			}
-
-			String logTypeInfo = CommonLib.NEW_LINE_UNIX + "Copy method: " + type;
-			compareLog.add("");
-			compareLog.add("Copy method: " + type);
-
-			type = compareLogType == 2 ? "Full log" : compareLogType == 1 ? "Extended log" : "Standard log";
-
-			logTypeInfo += CommonLib.NEW_LINE_UNIX + "Log format: " + type;
-			compareLog.add("Log format: " + type);
 
 			ArrayList<String> newList = new ArrayList<>();
 			ArrayList<String> newerList = new ArrayList<>();
@@ -184,9 +205,25 @@ public class CompareFolders {
 
 			if (!divideTwoBinOnSix(startSource, startDest, newList, newerList, oldList, olderList, equalList,
 					equalSignList)) {
-				CommonLib.addLog(CommonLib.ADDLOG_SEP, true, compareLog);
-				CommonLib.addLog("error dividing *.bin lists ", true, compareLog);
+				final String err = "error dividing *.bin lists ";
+
+				if (equalComparing) {
+					JOptionPane.showMessageDialog(null, err);
+				} else {
+					CommonLib.addLog(CommonLib.ADDLOG_SEP, true, compareLog);
+					CommonLib.addLog(err, true, compareLog);
+				}
 				return result;
+			}
+
+			if (equalComparing) { // TODO
+				if (equalComparingFullBeans.isEmpty() && equalComparingSignatureOnlyBeans.isEmpty()) {
+					JOptionPane.showMessageDialog(null, "No found equals paths");
+					return result;
+				}
+				JOptionPane.showMessageDialog(null, "full size: " + equalComparingFullBeans.size() + "; sign size: "
+						+ equalComparingSignatureOnlyBeans.size());
+				return result; // no action for return; means no need update base
 			}
 
 			var limit = 100;
@@ -207,6 +244,7 @@ public class CompareFolders {
 
 			// compareLogType == 2 or 1, 'oldList', 'olderList' writes in full format
 			caption = "oldList";
+
 			sizeForReturn = CommonLib.writeListToConsole(true, 0, limit,
 					"oldList : files is in 'destination' folder, but no found in 'source' folder", compareLogType > 0,
 					compareLog, oldList);
@@ -218,11 +256,11 @@ public class CompareFolders {
 					compareLog, olderList);
 			contents.add(format(caption, sizeForReturn));
 
-			List<MyBean> beans = copyMode > 0 ? new ArrayList<MyBean>() : null;
 			// 'newList', 'newerList', 'newerListEqualSize' must be wrote in full format
 			ArrayList<Path> extractPathNew = new ArrayList<>();
 
 			caption = "newList";
+			List<MyBean> beans = copyMode > 0 ? new ArrayList<MyBean>() : null;
 			sizeForReturn = CommonLib.writeListToConsole(false, // is sorting in 'getTotalSizeSortAndGetPaths'
 					getTotalSizeSortAndGetPaths(0, sourceStartPathString, "newList", newList, extractPathNew, beans),
 					limit, "newList : files in 'source' folder no found in 'destination' folder", true, compareLog,
@@ -231,8 +269,9 @@ public class CompareFolders {
 
 			ArrayList<String> newerListEqualSize = new ArrayList<String>();
 
-//from 'newerList' be extracted strings, that contains 'ProgrConst.EQUAL_SIZE';
-//that is be in result, if in both lists: paths->equals and sizes->equals; but crc->noEquals and date->newer	
+			// from 'newerList' be extracted strings, that contains 'ProgrConst.EQUAL_SIZE';
+			// that is be in result, if in both lists: paths->equals and sizes->equals; but
+			// crc->noEquals and date->newer
 			divideNewerList(newerList, newerListEqualSize);
 
 			ArrayList<Path> extractPathNewer = new ArrayList<>();
@@ -676,6 +715,7 @@ public class CompareFolders {
 		return result;
 	}
 
+//for 'equalComparing' must be init and empty 2 lists; will be filled 	
 	private boolean divideTwoBinOnSix(String startSource, String startDest, ArrayList<String> newList,
 			ArrayList<String> newerList, ArrayList<String> oldList, ArrayList<String> olderList,
 			ArrayList<String> equalList, ArrayList<String> equalSignList) {
@@ -703,7 +743,7 @@ public class CompareFolders {
 					continue;
 				}
 				// equals paths, in lower case, without 'startPath'
-				if (f1ArrLowerCase[i].equals(f2ArrLowerCase[j])) {
+				if (f1ArrLowerCase[i].equals(f2ArrLowerCase[j])) { // TODO
 					fillEqualsLists(startSource, startDest, f1List.get(i), f2List.get(j), newerList, olderList,
 							equalList);
 					f1ArrLowerCase[i] = "";
@@ -719,14 +759,19 @@ public class CompareFolders {
 		if (!f1ListTrimmed.isEmpty() && !f2ListTrimmed.isEmpty()) {
 			extractDupSignatures(startSource, startDest, f1ListTrimmed, f2ListTrimmed, equalSignList);
 		}
-		ConverterBinFunc.fillBinList(startSource, "1", f1ListTrimmed, newList);
-		ConverterBinFunc.fillBinList(startDest, "1", f2ListTrimmed, oldList);
+
+		if (!equalComparing) {
+			ConverterBinFunc.fillBinList(startSource, "1", f1ListTrimmed, newList);
+			ConverterBinFunc.fillBinList(startDest, "1", f2ListTrimmed, oldList);
+		}
+
 		return true;
 	}
 
 // extract from no-empty sorted lists (new,old) equal signatures (size,crc) -> move it in equalSignList (created, empty)
+//for 'equalComparing' must be init 2 lists; will be filled 		
 	private void extractDupSignatures(String startSource, String startDest, List<String> fNew, List<String> fOld,
-			List<String> equalSignList) {
+			List<String> equalSignList) { // TODO
 		var fNewCur = 0;
 		var sign = "";
 		var isCaption = false;
@@ -764,6 +809,7 @@ public class CompareFolders {
 					if (!equalSignList.isEmpty()) {
 						equalSignList.add(" -----");
 					}
+
 					equalSignList.add(" ~signature: " + sign);
 					equalSignList.add(" ~new list:");
 				}
@@ -782,11 +828,18 @@ public class CompareFolders {
 		}
 	}
 
-	private void extractToEqualSignMap(boolean source, int i, String sign, String startPath, String binItem,
+//'source' it's 'new' if true (also it is 'one' for equalComparing beans)	
+	private void extractToEqualSignMap(boolean source, int index, String sign, String startPath, String binItem,
 			List<String> binList, List<String> equalSignList) {
+		binList.set(index, "");
+		if (equalComparing) {
+			var s = ConverterBinFunc.getPathStringFromBinItem(null, "", binItem, "", null, null, null, null, 0);
+			var bean = new MyBean(sign, ConverterBinFunc.getAppendInf(binItem), source ? s : "", source ? "" : s, "");
+			equalComparingFullBeans.add(bean);
+			return;
+		}
 		var s = ConverterBinFunc.getPathStringFromBinItem(null, startPath, binItem, "", null, null, null, null, 0);
 		equalSignList.add(s + " " + ConverterBinFunc.getAppendInf(binItem));
-		binList.set(i, "");
 
 		if (equalSignMap == null || s.isEmpty()) {
 			return;
@@ -804,7 +857,7 @@ public class CompareFolders {
 // returns sorted, only no-empty lines from list to result, 'arr' and 'list' must have the same size
 	private List<String> getListWithoutEmpty(String[] arr, List<String> list) throws IllegalArgumentException {
 		if (arr.length != list.size()) {
-			throw new IllegalArgumentException("error compare, no equals elements");
+			CommonLib.errorArgument("error compare, no equals elements");
 		}
 		List<String> res = new ArrayList<>();
 		for (int i = 0; i < list.size(); i++) {
@@ -816,25 +869,64 @@ public class CompareFolders {
 		return res;
 	}
 
-	// take two strings from bin, equals by full path, sorts to lists
+// take two strings from bin, equals by full path (in lower case), sorts to lists
+//for 'equalComparing' must be init 2 lists; will be filled 		
 	private void fillEqualsLists(String startSource, String startDest, String s1, String s2,
 			ArrayList<String> newerList, ArrayList<String> olderList, ArrayList<String> equalList) {
 		long[] arrDateSizeCrc1 = ConverterBinFunc.getDecodeDateSizeCrc(s1);
 		long[] arrDateSizeCrc2 = ConverterBinFunc.getDecodeDateSizeCrc(s2);
 
-		var sub = s2.substring(0, s2.indexOf('*'));
+		// on flash disk, date modified without msec
+		final int milliSecondRound = 2000;
+
+		final long diff = arrDateSizeCrc1[0] - arrDateSizeCrc2[0];
+		final long diffAbs = diff < 0 ? -diff : diff;
+
+//from 'bean' in  as "00029664(7f1ecdcd)17856328230*<Path\Name>ext"
+		var sub = s2.substring(0, s2.indexOf('*')); // sub: 00029664(7f1ecdcd)17856328230
 		if (arrDateSizeCrc1[0] == 0 || arrDateSizeCrc2[0] == 0 || sub.length() < 20) {
-			equalList.add("<error compare> "
-					+ ConverterBinFunc.getPathStringFromBinItem(null, "", s1, "", null, null, null, null, 0));
+			if (!equalComparing) {
+				equalList.add("<error compare> "
+						+ ConverterBinFunc.getPathStringFromBinItem(null, "", s1, "", null, null, null, null, 0));
+			}
+			return;
+		}
+
+		if (equalComparing) {
+			if ((arrDateSizeCrc1[1] == arrDateSizeCrc2[1]) && (arrDateSizeCrc1[1] == arrDateSizeCrc2[1])) { // size,crc
+				// sign, diff, onePath, twoPath
+				int pos = sub.indexOf(')');
+				if (pos < 10) { // min: "aabbccdd(0)" == 11
+					return;
+				}
+
+				var sbDiff = new StringBuilder();
+
+				if (diffAbs < milliSecondRound) {
+					sbDiff.append("equals: less ").append(milliSecondRound);
+				} else {
+					sbDiff.append(diff);
+					if (diffAbs >= 1000) { // more 'second'
+						sbDiff.append(",").append(CommonLib.getDifferentTimeOrEmpty(diffAbs));
+					}
+				}
+
+				s1 = ConverterBinFunc.getPathStringFromBinItem(null, "", s1, "", null, null, null, null, 0);
+				s2 = ConverterBinFunc.getPathStringFromBinItem(null, "", s2, "", null, null, null, null, 0);
+				var bean = new MyBean(sub.substring(0, pos + 1), sbDiff.toString(), s1, s2, "");
+				equalComparingFullBeans.add(bean);
+			}
+
 			return;
 		}
 
 		StringBuilder sb = new StringBuilder();
 		sb.append(Const.BRACE_START); // need for extract paths
 		boolean bIsEqual = false;
-		if (arrDateSizeCrc1[1] == arrDateSizeCrc2[1]) {
-			sb.append(Const.EQUAL_SIZE); // ProgrConst.EQUAL_SIZE uses for extract 'equal sizes' from newer list
-			if (arrDateSizeCrc1[2] == arrDateSizeCrc2[2]) {
+
+		if (arrDateSizeCrc1[1] == arrDateSizeCrc2[1]) { // equal sizes
+			sb.append(Const.EQUAL_SIZE); // Const.EQUAL_SIZE uses for extract 'equal sizes' from newer list
+			if (arrDateSizeCrc1[2] == arrDateSizeCrc2[2]) { // equal crc
 				sb.append("; crc(").append(Long.toHexString(arrDateSizeCrc1[2])).append(")");
 				bIsEqual = true;
 			}
@@ -843,11 +935,7 @@ public class CompareFolders {
 		}
 
 		sb.append("; ");
-		long diff = arrDateSizeCrc1[0] - arrDateSizeCrc2[0];
-		long diffAbs = diff < 0 ? -diff : diff;
 
-		// on flash disk, date modified without msec
-		final int milliSecondRound = 2000;
 		if (diffAbs < milliSecondRound) {
 			sb.append("equal ");
 		}
@@ -859,7 +947,7 @@ public class CompareFolders {
 		sb.append(ConverterBinFunc.getPathStringFromBinItem(null, "", s1, sub, null, null, null, null, 0));
 
 		if (bIsEqual) {
-			// refer to equals, if equals sizes and crc
+			// refers to equals: equal sizes and crc
 			equalList.add(sb.toString());
 		} else if (arrDateSizeCrc1[0] > arrDateSizeCrc2[0]) {
 			newerList.add(startSource + sb.toString());

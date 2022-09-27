@@ -36,7 +36,7 @@ public class DuplicateTable extends JDialog implements Callable<List<String>> {
 	private String standardTitle;
 
 	public DuplicateTable(JFrame frame, String caption, List<MyBean> beans0) { // list not null
-		super(frame, true);
+		super(frame, caption, true);
 		FileDataBase.isShiftDown = false;
 		this.standardTitle = caption;
 
@@ -236,7 +236,6 @@ public class DuplicateTable extends JDialog implements Callable<List<String>> {
 		butCancel.addKeyListener(FileDataBase.keyListenerShiftDown);
 		butToList.addKeyListener(FileDataBase.keyListenerShiftDown);
 
-		setStandardTitle();
 		new SortBeans(SortBeans.sortServiceIntThree, "", beans);
 		var t = Toolkit.getDefaultToolkit().getScreenSize();
 		setBounds(0, 0, t.width - 200, t.height - 200);
@@ -246,7 +245,7 @@ public class DuplicateTable extends JDialog implements Callable<List<String>> {
 	}
 
 //"check", "CRC", "Size", "Modified", "Path": need columnIndex 0,3,4
-	private void sorting(int columnIndex) {// TODO Auto-generated method stub
+	private void sorting(int columnIndex) {
 		if (columnIndex < 0 || beans.size() < 2) {
 			return;
 		}

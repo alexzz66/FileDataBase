@@ -35,34 +35,34 @@ import alexnick.CommonLib;
 public class ConverterBinFunc {
 
 	/**
-	 * @param columnBinFolderId3Mark   if not null, be info for table columns
+	 * @param columnBinFolderId3Mark   if not null, will be info for table columns
 	 *                                 'BinFolder [ID3] **mark'| Size,Signature'
 	 *                                 instead of 'CRC | Size'; <br>
 	 *                                 in same time, initialized
 	 *                                 BinCreator.id3IsProperty
-	 * @param startPath                disk/folder must be not empty for write inf
+	 * @param startPath                disk/folder must not be empty for write info
 	 *                                 about duplicates to binInf, else must be
 	 *                                 null/empty
 	 * @param binItem                  string from *.bin file, not must be empty
 	 * @param appendInf                must be null/empty, but if length == 1
-	 *                                 (example "1") then be written info about size
-	 *                                 and date modified (be taken from 'binItem');
-	 *                                 if length > 1 and correct 'appendInf', be
-	 *                                 also added after ' : ' info (be taken from
-	 *                                 'appendInf')
+	 *                                 (example "1") then will be written info about
+	 *                                 size and date modified (will be taken from
+	 *                                 'binItem'); if length > 1 and correct
+	 *                                 'appendInf', will be also added after ' : '
+	 *                                 info (will be taken from 'appendInf')
 	 * @param binPath                  must be null, but if beans is filling, and
-	 *                                 binPath not null - be added
+	 *                                 binPath not null - will be added
 	 * @param setExts                  initialized where need set extension only,
 	 *                                 empty as Const.EXTEMPTY
-	 * @param beans                    if not null, be filling
-	 * @param checkSetLowerCase        if not null and beans not null, be checked,
-	 *                                 if that set contains current path, it not be
-	 *                                 added to beans; <br>
+	 * @param beans                    if not null, will be filled
+	 * @param checkSetLowerCase        if not null and beans not null, will be
+	 *                                 checked, if that set contains current path,
+	 *                                 it will not be added to beans; <br>
 	 *                                 If set not contains current path, it will be
 	 *                                 added to set
 	 * @param serviceIntThreeToAddBean if beans not null, this parameter will be set
 	 *                                 as 'serviceIntThree'; as default must be '0'
-	 * @return extracted path string from 'binItem', be added startPath, if no
+	 * @return extracted path string from 'binItem', will be added startPath, if no
 	 *         empty, and appendInf if not null/empty
 	 */
 	static String getPathStringFromBinItem(String[] columnBinFolderId3Mark, String startPath, String binItem,

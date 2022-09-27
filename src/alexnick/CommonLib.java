@@ -1607,7 +1607,7 @@ public class CommonLib {
 
 		sourceDisk = Path.of(sourceDisk).getRoot().toFile().toString().toUpperCase();
 		if (nullEmptyString(sourceDisk)) {
-			throw new IllegalArgumentException("source disk must not be null or empty");
+			errorArgument("source disk must not be null or empty");
 		}
 
 		sourceDisk = fileSeparatorAddIfNeed(false, true, sourceDisk);
