@@ -39,11 +39,11 @@ public class EqualSignatureRenameTable extends JDialog {
 	private int isCheckResult = Const.MR_NO_CHOOSED;
 	private List<String> renameLog = new ArrayList<>();
 
-	public List<String> getRenameLog() {
+	List<String> getRenameLog() {
 		return renameLog;
 	}
 
-	public int getIsCheckResult() {
+	int getIsCheckResult() {
 		return isCheckResult;
 	}
 

@@ -1,8 +1,5 @@
 package alexnick.filedatabase;
 
-import static alexnick.CommonLib.bytesToKBMB;
-import static alexnick.CommonLib.dateModifiedToString;
-
 import java.io.File;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -144,8 +141,8 @@ public class ConverterBinFunc {
 			crc = e;
 			modified = e;
 		} else {
-			size = bytesToKBMB(false, 0, arrInf[1]);
-			modified = dateModifiedToString(arrInf[0]);
+			size = CommonLib.bytesToKBMB(false, 0, arrInf[1]);
+			modified = CommonLib.dateModifiedToString(arrInf[0]);
 			if (columnBinFolderId3Mark != null) { // that is size == 3:binFolder,viewNoId3,viewNoMark
 
 				String signature = "";
@@ -210,7 +207,7 @@ public class ConverterBinFunc {
 	 * 
 	 * @param startPath  if not null/empty, be added before each result string
 	 * @param appendInf  must be null/empty, but if length == 1 (example "1") then
-	 *                   be written info about size and date modified (be taken from
+	 *                   be written info about size and date modified (will be taken from
 	 *                   'binItem'); if length > 1 and correct 'appendInf', be also
 	 *                   added after ' : ' info (be taken from 'appendInf')
 	 * @param rowList    not must be null/empty
@@ -320,9 +317,9 @@ public class ConverterBinFunc {
 	static String getFileInf(boolean needWriteSize, long lastModified, long size) {
 		String sInf;
 		try {
-			sInf = dateModifiedToString(lastModified);
+			sInf = CommonLib.dateModifiedToString(lastModified);
 			if (needWriteSize)
-				sInf += "; " + bytesToKBMB(false, 0, size);
+				sInf += "; " + CommonLib.bytesToKBMB(false, 0, size);
 		} catch (Exception e) {
 			sInf = "";
 		}

@@ -527,7 +527,7 @@ public class Program {
 
 //!!! copyMode MUST BE '0', because comparing only, without checking start path exists	
 // binPaths: 0, 1: source: startPath,binPath; 2, 3: dest: startPath, binPath
-			new CompareFolders(true, false, this, compareLogType, 0, oneStartPath, one, twoStartPath, two, false);
+			new CompareFolders(true, false, this, compareLogType, 0, oneStartPath, one, twoStartPath, two, null, null);
 
 		} catch (Exception e) {
 			System.out.println("Error of comparing *.bin: " + e.getMessage());
@@ -990,7 +990,7 @@ public class Program {
 
 		if (!destStartPathString.isEmpty()) {
 			new CompareFolders(copyMode > 0, false, this, compareLogType, copyMode, startPath, binPath,
-					destStartPathString, null, false);
+					destStartPathString, null, null, null);
 		}
 	}
 

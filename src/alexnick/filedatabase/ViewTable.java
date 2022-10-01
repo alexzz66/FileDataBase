@@ -580,9 +580,12 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 	}
 
 	private void compareTwoBin() {
-		String[] columnsForCompare = new String[2];
+		String[] binFoldersForConfirmAndEqualTable = new String[2];
+		String[] startPathsForConfirm = new String[2];
 		boolean[] existsStartPaths = new boolean[2];
-		Path[] binPaths = getBinPathForCompareOrNull(existsStartPaths, columnsForCompare);
+		Path[] binPaths = getBinPathForCompareOrNull(existsStartPaths, startPathsForConfirm,
+				binFoldersForConfirmAndEqualTable);
+
 		if (binPaths == null) {
 			JOptionPane.showMessageDialog(this,
 					"For compare *.bin, check 2 items in table, they must be with correct 'StartPath' and 'BinPath'");
@@ -591,8 +594,9 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 
 		var sb = new StringBuilder();
 		sb.append("Will be compared two *.bin from start paths:").append(CommonLib.NEW_LINE_UNIX).append("SOURCE: ")
-				.append(columnsForCompare[0]).append(CommonLib.NEW_LINE_UNIX).append("DEST: ")
-				.append(columnsForCompare[1]);
+				.append(startPathsForConfirm[0]).append(binFoldersForConfirmAndEqualTable[0])
+				.append(CommonLib.NEW_LINE_UNIX).append("DEST: ").append(startPathsForConfirm[1])
+				.append(binFoldersForConfirmAndEqualTable[1]);
 
 		sb.append(CommonLib.NEW_LINE_UNIX).append(CommonLib.NEW_LINE_UNIX).append("[No]: swap 'SOURCE' and 'DEST'")
 				.append(CommonLib.NEW_LINE_UNIX).append(CommonLib.NEW_LINE_UNIX)
@@ -630,7 +634,7 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 //!!! copyMode MUST BE '0', because comparing only, without checking start path exists	
 // binPaths: 0, 1: source: startPath,binPath; 2, 3: dest: startPath, binPath
 			var cf = new CompareFolders(false, equalComparing, program, compareLogType, 0, binPaths[0].toString(),
-					binPaths[1], binPaths[2].toString(), binPaths[3], existsStartPaths[0]);
+					binPaths[1], binPaths[2].toString(), binPaths[3], existsStartPaths, binFoldersForConfirmAndEqualTable);
 			if (cf.getIsCheckResult() == Const.MR_NEED_UPDATE_BASE) {
 				isCheckResult = Const.MR_NEED_UPDATE_BASE;
 				pathForUpdate = binPaths[0];
@@ -642,9 +646,11 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 
 	}
 
-// 0, 1: source: startPath,binPath; 2, 3: dest: startPath, binPath; 'columnsForCompare' created and size == 2
-//'existsStartPaths' will be filling of start paths exist information, must be created and size == 2
-	private Path[] getBinPathForCompareOrNull(boolean[] existsStartPaths, String[] columnsForCompare) {
+// 0, 1: source: startPath,binPath; 2, 3: dest: startPath, binPath;
+//'existsStartPaths' will be filled of start paths exist information, created and size == 2; FOR RETURN
+//'startPathsForConfirm','binFoldersForConfirmAndEqualTable' created and size == 2; FOR RETURN	
+	private Path[] getBinPathForCompareOrNull(boolean[] existsStartPaths, String[] startPathsForConfirm,
+			String[] binFoldersForConfirmAndEqualTable) {
 		if (printCount(lastIndex, null, null) == null) { // null, if checked items no contains 'countBinItems'
 															// (serviceIntOne)
 			return null;
@@ -661,13 +667,15 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 				if (bp1 == null) {
 					return null;
 				}
-				columnsForCompare[0] = formatColumnForCompare(b, existsStartPaths[0]);
+				startPathsForConfirm[0] = formatStartPathsForConfirm(b, existsStartPaths[0]);
+				binFoldersForConfirmAndEqualTable[0] = b.getOne();
 			} else if (bp2 == null) {
 				bp2 = checkBinPathOrNull(b, 1, existsStartPaths);
 				if (bp2 == null) {
 					return null;
 				}
-				columnsForCompare[1] = formatColumnForCompare(b, existsStartPaths[1]);
+				startPathsForConfirm[1] = formatStartPathsForConfirm(b, existsStartPaths[1]);
+				binFoldersForConfirmAndEqualTable[1] = b.getOne();
 			} else { // more 2 items checked
 				return null;
 			}
@@ -683,8 +691,8 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 		return res;
 	}
 
-	private String formatColumnForCompare(MyBean b, boolean exists) {
-		return (exists ? "(exists) " : "") + "\"" + b.getTwo() + "\" " + b.getOne(); // column as is, for confirmation;
+	private String formatStartPathsForConfirm(MyBean b, boolean exists) {
+		return (exists ? "(exists) " : "") + "\"" + b.getTwo() + "\" ";
 	}
 
 // 'null' if error, or paths is correct; 'existsStartPaths' must be created

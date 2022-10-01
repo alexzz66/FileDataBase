@@ -72,16 +72,18 @@ public class CompareFolders {
 	 * @param destStartPathString   must not be null/empty
 	 * @param destBinPathFile       if 'null', be updated '*.bin' file;<br>
 	 *                              else: must be exists
-	 * @param sourceStartPathExists for 'copyMode' == 0 => if 'true' (call from
-	 *                              'CompareTwoBin' of ViewTable), and
-	 *                              'equalSignList' not empty,<br>
-	 *                              may be showed EqualSign Table for renaming
+	 * @param existsStartPaths      uses for 'copyMode==0'; two booleans, 0:source
+	 *                              start path exists; 1:dest start path exists<br>
+	 *                              if not need, must be null
+	 * @param binFolders            uses for EqualComparingTable; 0:source (one)
+	 *                              binFolder; 1:dest (two) binFolder<br>
+	 *                              if not need, must be null
 	 * @throws Exception if any errors
 	 */
 //method called with  'copymode' > 0 -> for Const.MODE_STOP_FOUR (when 'bin created')
 	public CompareFolders(boolean querySavingResult, final boolean equalComparing, Program program, int compareLogType,
 			int copyMode, String sourceStartPathString, Path sourceBinPath, String destStartPathString,
-			Path destBinPath, boolean sourceStartPathExists) throws Exception {
+			Path destBinPath, boolean[] existsStartPaths, String[] binFolders) throws Exception {
 		this.program = program;
 		this.equalComparing = equalComparing;
 		if (equalComparing) {
@@ -89,27 +91,36 @@ public class CompareFolders {
 			equalComparingSignatureOnlyBeans = new ArrayList<MyBean>();
 		}
 
+		boolean sourceStartPathExists = (existsStartPaths != null) && (existsStartPaths.length == 2)
+				&& (existsStartPaths[0]);
+
 		this.copyMode = copyMode < 0 || copyMode > 4 ? 0 : copyMode;
 		this.compareLogType = compareLogType < 0 || compareLogType > 2 ? 0 : compareLogType;
 		this.doBakToCopyMove = program.getOptions().contains(Const.OPTIONS_DO_BAK_TO_COPY_MOVE);
+
 		// !!! for 'copyMode' == 0 -> no check exist start path
 		Path[] paths = checkParametersOrThrow(sourceStartPathString, sourceBinPath);
+
 		this.sourceStartPath = paths[0];
 		this.sourceBinPath = paths[1];
 		this.sourceStartPathString = CommonLib.fileSeparatorAddIfNeed(false, true, this.sourceStartPath.toString());
 
 		paths = checkParametersOrThrow(destStartPathString, destBinPath);
+
 		this.destStartPath = paths[0];
 		this.destBinPath = paths[1];
 		this.destStartPathString = CommonLib.fileSeparatorAddIfNeed(false, true, this.destStartPath.toString());
-		boolean bNeedFullPaths = copyMode == 0; // copyMode == 0 when be click on button 'CompareTwoBin' in ViewTable
+
+		boolean bNeedFullPaths = copyMode == 0 && !equalComparing; // copyMode == 0 on click ViewTable->CompareTwoBin
+
 		if (bNeedFullPaths && program.getOptions().contains(Const.OPTIONS_COMPARETWOBIN_NOFULLPATHS)) {
 			CommonLib.setInfo(2, "option", "CompareTwoBin NO_FULL_PATHS", null, null);
 			bNeedFullPaths = false;
 		}
+
 		equalSignMap = copyMode == 0 && sourceStartPathExists && !equalComparing ? new TreeMap<String, SetStringClass>()
 				: null;
-		isCheckResult = doCompareFolders(querySavingResult, bNeedFullPaths);
+		isCheckResult = doCompareFolders(querySavingResult, bNeedFullPaths, existsStartPaths, binFolders);
 	}
 
 	// !!! for 'copyMode' == 0 -> no check exist start path; 'binPath' check only
@@ -152,7 +163,8 @@ public class CompareFolders {
 		return paths;
 	}
 
-	private int doCompareFolders(boolean querySavingResult, boolean bNeedFullPaths) { // arg trimmed, lowercase
+	private int doCompareFolders(boolean querySavingResult, boolean bNeedFullPaths, boolean[] existsStartPaths,
+			String[] binFolders) {
 		var result = Const.MR_NO_CHOOSED;
 		Path pathLog = null;
 		try {
@@ -216,13 +228,15 @@ public class CompareFolders {
 				return result;
 			}
 
-			if (equalComparing) { // TODO
+			if (equalComparing) {
 				if (equalComparingFullBeans.isEmpty() && equalComparingSignatureOnlyBeans.isEmpty()) {
 					JOptionPane.showMessageDialog(null, "No found equals paths");
 					return result;
 				}
-				JOptionPane.showMessageDialog(null, "full size: " + equalComparingFullBeans.size() + "; sign size: "
-						+ equalComparingSignatureOnlyBeans.size());
+
+				new EqualComparingTable(null, sourceStartPathString, destStartPathString, existsStartPaths, binFolders,
+						equalComparingFullBeans, equalComparingSignatureOnlyBeans);
+
 				return result; // no action for return; means no need update base
 			}
 
@@ -269,9 +283,8 @@ public class CompareFolders {
 
 			ArrayList<String> newerListEqualSize = new ArrayList<String>();
 
-			// from 'newerList' be extracted strings, that contains 'ProgrConst.EQUAL_SIZE';
-			// that is be in result, if in both lists: paths->equals and sizes->equals; but
-			// crc->noEquals and date->newer
+// from 'newerList' will be extracted strings, that contains 'Const.EQUAL_SIZE';
+// that is will be in result, if in both lists: paths->equals and sizes->equals; but crc->noEquals and date->newer
 			divideNewerList(newerList, newerListEqualSize);
 
 			ArrayList<Path> extractPathNewer = new ArrayList<>();
@@ -425,10 +438,10 @@ public class CompareFolders {
 		return beans;
 	}
 
-	// returns MyBean for moving table
+// returns MyBean for moving table
+// with removing equals names and init result MyBean for move table	
 	private MyBean fillBeansForSignature(final String sign, boolean needInitEqualNamesBean, SetStringClass set,
 			List<MyBean> beans) {
-//with removing equals names and init result MyBean for move table
 
 		if (set.sourceSet.isEmpty() || set.destSet.isEmpty()) {
 			return null;
@@ -438,7 +451,7 @@ public class CompareFolders {
 		tmpDestSet.addAll(set.destSet);
 		Map<String, Path> tmpDestNamesPathsMap = new HashMap<>();
 
-//0 - no found yet; 1 - found one equal names variant; 2 and more - error, return null
+//'wasInitEqualNamesBean': 0 - no found yet; 1 - found one equal names variant; 2 and more - error, return null
 		int wasInitEqualNamesBean = needInitEqualNamesBean ? 0 : 2; // for return MyBean for equal move table
 		MyBean equalNamesBean = null;
 
@@ -478,6 +491,7 @@ public class CompareFolders {
 
 			if (tmpDestNamesPathsMap.containsKey(sourceName)) { // init move bean
 				wasInitEqualNamesBean++;
+
 				if (wasInitEqualNamesBean == 1) {
 					Path destPath = tmpDestNamesPathsMap.get(sourceName);
 					if (destPath == null) { // must not be so
@@ -743,7 +757,7 @@ public class CompareFolders {
 					continue;
 				}
 				// equals paths, in lower case, without 'startPath'
-				if (f1ArrLowerCase[i].equals(f2ArrLowerCase[j])) { // TODO
+				if (f1ArrLowerCase[i].equals(f2ArrLowerCase[j])) {
 					fillEqualsLists(startSource, startDest, f1List.get(i), f2List.get(j), newerList, olderList,
 							equalList);
 					f1ArrLowerCase[i] = "";
@@ -771,7 +785,7 @@ public class CompareFolders {
 // extract from no-empty sorted lists (new,old) equal signatures (size,crc) -> move it in equalSignList (created, empty)
 //for 'equalComparing' must be init 2 lists; will be filled 		
 	private void extractDupSignatures(String startSource, String startDest, List<String> fNew, List<String> fOld,
-			List<String> equalSignList) { // TODO
+			List<String> equalSignList) {
 		var fNewCur = 0;
 		var sign = "";
 		var isCaption = false;
@@ -835,7 +849,7 @@ public class CompareFolders {
 		if (equalComparing) {
 			var s = ConverterBinFunc.getPathStringFromBinItem(null, "", binItem, "", null, null, null, null, 0);
 			var bean = new MyBean(sign, ConverterBinFunc.getAppendInf(binItem), source ? s : "", source ? "" : s, "");
-			equalComparingFullBeans.add(bean);
+			equalComparingSignatureOnlyBeans.add(bean);
 			return;
 		}
 		var s = ConverterBinFunc.getPathStringFromBinItem(null, startPath, binItem, "", null, null, null, null, 0);
@@ -903,12 +917,19 @@ public class CompareFolders {
 				var sbDiff = new StringBuilder();
 
 				if (diffAbs < milliSecondRound) {
-					sbDiff.append("equals: less ").append(milliSecondRound);
+					sbDiff.append("equals: less ").append(milliSecondRound).append(" ")
+							.append(ConverterBinFunc.getFileInf(true, arrDateSizeCrc1[0], arrDateSizeCrc1[1]));
 				} else {
 					sbDiff.append(diff);
 					if (diffAbs >= 1000) { // more 'second'
 						sbDiff.append(",").append(CommonLib.getDifferentTimeOrEmpty(diffAbs));
 					}
+					// append inf as 'ConverterBinFunc.getFileInf()' but some modified
+					sbDiff.append(Const.BRACE_START_FIRST_SPACE)
+							.append(CommonLib.dateModifiedToString(arrDateSizeCrc1[0])).append(" - ")
+							.append(CommonLib.dateModifiedToString(arrDateSizeCrc2[0])).append("; ")
+							.append(CommonLib.bytesToKBMB(false, 0, arrDateSizeCrc2[1]))
+							.append(Const.BRACE_END_WITH_SLASH_SPACE);
 				}
 
 				s1 = ConverterBinFunc.getPathStringFromBinItem(null, "", s1, "", null, null, null, null, 0);

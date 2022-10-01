@@ -100,7 +100,7 @@ public class DuplicateTable extends JDialog implements Callable<List<String>> {
 
 				MyBean bean = beans.get(row);
 				if (bean.serviceIntThree % 2 == 0) {
-					c.setBackground(Const.LIGHT_COLOR);
+					c.setBackground(Const.GREY_COLOR);
 				} else {
 					c.setBackground(Color.WHITE);
 				}

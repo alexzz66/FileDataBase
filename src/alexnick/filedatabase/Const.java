@@ -28,7 +28,7 @@ public class Const {
 //by default, id3 will be extracted for NEW added 'mp3' to '*.bin'
 	static final String OPTIONS_ID3_CONFIRM = ";id3confirm;";
 	static final String OPTIONS_ID3_NO = ";id3no;"; // no extract id3 for 'mp3'
-	static final String OPTIONS_RENAME_NO_REMOVE_DBL_SPACES= ";renamenoremovedblspaces;";
+	static final String OPTIONS_RENAME_NO_REMOVE_DBL_SPACES = ";renamenoremovedblspaces;";
 
 	static final String OPTIONS_FINAL_PAUSE = ";finalpause;";
 	static final String OPTIONS_DO_BAK_TO_COPY_MOVE = ";bak;";
@@ -145,14 +145,6 @@ public class Const {
 				: MODE_NO_DEFINED;
 	}
 
-	/*
-	 * method was not needed, as it turned out... public static int
-	 * checkOptions(boolean needModeAuto, int value) { if (value == MODE_AUTO) {
-	 * return needModeAuto ? value : MODE_NO_DEFINED; } return (value ==
-	 * MODE_EXTRACT || value == MODE_PATHSLIST || value == MODE_VIEW || value ==
-	 * MODE_VIEW_TEMP) ? value : checkModeStop(value); }
-	 */
-
 	static final String PATHSLIST_NAME = "PATHS_LIST";
 
 	static final String ALIAS_DATE = "<date>";
@@ -211,6 +203,6 @@ public class Const {
 	static final String OLD_NAME_END = "\""; // need for write rename result in PathsListTable
 	static final String ERROR_OLD_DELETE_ON_MOVING = "errorOldDeleteOnMoving.txt";
 	static final String NOT_CHOSEN = "not chosen";
-	static final Color LIGHT_COLOR = new Color(238, 238, 238);
+	static final Color GREY_COLOR = new Color(238, 238, 238);
 
 }
