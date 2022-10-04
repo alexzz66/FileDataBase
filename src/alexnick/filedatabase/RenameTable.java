@@ -788,7 +788,7 @@ public class RenameTable extends JDialog {
 		cmbLengthLimit.setSelectedIndex(defaultCmbLengthLimitIndex);
 	}
 
-	synchronized private void dragging(int rowDest) {
+	private void dragging(int rowDest) {
 		if (FileDataBase.dragging(rowDest, myTable, beans)) {
 			updating();
 		}

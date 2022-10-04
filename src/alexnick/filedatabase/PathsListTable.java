@@ -155,7 +155,7 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void drop(DropTargetDropEvent dtde) {
+			public synchronized void drop(DropTargetDropEvent dtde) {
 				Point point = dtde.getLocation();
 				dragging(myTable.rowAtPoint(point));
 			}
