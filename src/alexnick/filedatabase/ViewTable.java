@@ -48,11 +48,11 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 
 	private String[] cmbCheckItems = new String[] { "all", "no", "invert", "exist", "no exist", "by BinFolder",
 			"by Start path", "by Modified", "by Result" };
-	// append const indexes from 'cmbCheckItems'
+	// append const indices from 'cmbCheckItems'
 	private final int cmbAppEnabStartIndex = 3;
 	private final int cmbAppEnabEndIndex = 8;
-	private final int cmbAppEnabStartFindColumnIndex = 5; // endFindColumn == cmbAppEnabEndIndex (find column's last in
-															// 'appEnap' indexes) == cmbAppEnabStartFindColumnIndex + 3
+	private final int cmbAppEnabStartFindColumnIndex = 5;
+
 	private String[] cmbCheckItemsApp = new String[] { "only", "add", "sub" };
 
 	private JTextField tfFindColumn;
@@ -634,7 +634,8 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 //!!! copyMode MUST BE '0', because comparing only, without checking start path exists	
 // binPaths: 0, 1: source: startPath,binPath; 2, 3: dest: startPath, binPath
 			var cf = new CompareFolders(false, equalComparing, program, compareLogType, 0, binPaths[0].toString(),
-					binPaths[1], binPaths[2].toString(), binPaths[3], existsStartPaths, binFoldersForConfirmAndEqualTable);
+					binPaths[1], binPaths[2].toString(), binPaths[3], existsStartPaths,
+					binFoldersForConfirmAndEqualTable);
 			if (cf.getIsCheckResult() == Const.MR_NEED_UPDATE_BASE) {
 				isCheckResult = Const.MR_NEED_UPDATE_BASE;
 				pathForUpdate = binPaths[0];

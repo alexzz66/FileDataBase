@@ -16,7 +16,7 @@ public class MyBean {
 	private String fourApp;
 
 	boolean check = false;
-	boolean selectedForSorting = false; //for SORT ONLY
+	boolean selectedForSorting = false; // for SORT ONLY
 	int serviceIntOne = 0;
 	int serviceIntTwo = 0;
 	int serviceIntThree = 0;
@@ -118,15 +118,23 @@ public class MyBean {
 		return withExt ? fourTmp.concat(fourApp).toLowerCase() : fourTmp.toLowerCase();
 	}
 
+	private String getName(boolean toLowerCase, String s) {
+		var pos = s.lastIndexOf(File.separator);
+		String res = pos >= 0 ? s.substring(pos + 1) : s.toLowerCase();
+		return toLowerCase ? res.toLowerCase() : res;
+	}
+
 	/**
 	 * Found last index '\' in 'four'; if finds, return ends 'four' after '\'
 	 * 
 	 * @return
 	 */
 	String getNameFromFour(boolean toLowerCase) {
-		var pos = four.lastIndexOf(File.separator);
-		String res = pos >= 0 ? four.substring(pos + 1) : four.toLowerCase();
-		return toLowerCase ? res.toLowerCase() : res;
+		return getName(toLowerCase, four);
+	}
+
+	String getNameFromThree(boolean toLowerCase) {
+		return getName(toLowerCase, three);
 	}
 
 	int getStartNumberFromFour() {

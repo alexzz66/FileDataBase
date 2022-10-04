@@ -877,7 +877,7 @@ public class CommonLib {
 	 * @param list       if null/empty, return null
 	 * @return array of string, size equals list.size, filled by items from 'list'
 	 */
-	public static String[] getArrayFromListOrNullByIndexes(int startIndex, int endIndex, List<String> list) {
+	public static String[] getArrayFromListOrNullByIndices(int startIndex, int endIndex, List<String> list) {
 		if (nullEmptyList(list) || startIndex < 0 || endIndex >= list.size() || startIndex > endIndex) {
 			return null;
 		}

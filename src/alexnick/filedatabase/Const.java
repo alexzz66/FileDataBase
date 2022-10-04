@@ -204,5 +204,6 @@ public class Const {
 	static final String ERROR_OLD_DELETE_ON_MOVING = "errorOldDeleteOnMoving.txt";
 	static final String NOT_CHOSEN = "not chosen";
 	static final Color GREY_COLOR = new Color(238, 238, 238);
+	static final String DRAG_TIP = "allow row dragging";
 
 }

@@ -29,6 +29,7 @@ public class SortBeans {
 
 	final static int sortThree = 3; // modified
 	final static int sortThreeLowerCase = 30;
+	final static int sortThreeNameLowerCase = 300;// pathName
 	final static int sortThree_Shift_CheckOnly = -3;
 
 	final static int sortFourLowerCase = 40; // path
@@ -121,6 +122,7 @@ public class SortBeans {
 
 		case sortThree -> sortThree(beans);
 		case sortThreeLowerCase -> sortThreeLowerCase(beans);
+		case sortThreeNameLowerCase -> sortThreeNameLowerCase(beans);
 
 		case sortFourLowerCase -> sortFourLowerCase(beans);
 		case sortFourNameLowerCase -> sortFourNameLowerCase(beans);
@@ -170,6 +172,10 @@ public class SortBeans {
 
 	private void sortFourNameLowerCase(List<MyBean> beans) { // by name lower case from four without fourApp
 		beans.sort(Comparator.comparing(bean -> bean.getNameFromFour(true)));
+	}
+
+	private void sortThreeNameLowerCase(List<MyBean> beans) { // by name lower case from three
+		beans.sort(Comparator.comparing(bean -> bean.getNameFromThree(true)));
 	}
 
 	private void sortCheck(List<MyBean> beans) { // by check then four

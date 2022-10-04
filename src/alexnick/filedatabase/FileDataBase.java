@@ -135,11 +135,6 @@ public class FileDataBase {
 
 			if (sbOptions.toString().contains(Const.OPTIONS_TEST_FDB)) { // test methods
 				System.out.println("start 'test_fdb' mode...");
-				
-				
-				
-				
-				
 
 			} else { // normal program start
 				new Program(mode, sbOptions.toString(), parameters);
@@ -439,7 +434,7 @@ public class FileDataBase {
 	 *                          2: sort ignore case;<br>
 	 *                          3: the same as '2' + mode: PATHS_NO_ROOT
 	 * @param set               if null, to list will be saved checked items from
-	 *                          'beans'; else 'beans' indexes will be taken from
+	 *                          'beans'; else 'beans' indices will be taken from
 	 *                          'set'
 	 * @param beans
 	 */

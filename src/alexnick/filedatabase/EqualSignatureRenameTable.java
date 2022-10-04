@@ -232,7 +232,7 @@ public class EqualSignatureRenameTable extends JDialog {
 //RENAMING
 		Set<Integer> errorIdSet = new TreeSet<>();
 
-// for renaming use indexes, no 'id'
+// for renaming use indices, no 'id'
 		Set<Integer> setIndexForRename = new TreeSet<>();
 		Set<Integer> checkSet = new TreeSet<>(); // there's be result also
 
@@ -255,9 +255,9 @@ public class EqualSignatureRenameTable extends JDialog {
 			}
 		}
 
-		checkSet.clear(); // result will be here; indexes, no 'id'
+		checkSet.clear(); // result will be here; indices, no 'id'
 
-//remove 'indexes', if contains in 'errorIdSet		
+//remove 'indices', if contains in 'errorIdSet		
 		if (!setIndexForRename.isEmpty()) {
 			for (int i : setIndexForRename) {
 				// check 'id'

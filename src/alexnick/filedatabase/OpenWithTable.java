@@ -235,7 +235,7 @@ public class OpenWithTable extends JDialog {
 		printCount(null);
 	}
 
-	// 'checkSet' if not null will be cleared and filled by checked indexes
+	// 'checkSet' if not null will be cleared and filled by checked indices
 	private int printCount(Set<Integer> checkSet) {
 		int checkCount = 0;
 		boolean needSet = checkSet != null;

@@ -312,7 +312,7 @@ public class EqualSignatureMoveTable extends JDialog {
 
 //MOVING
 
-// for moving use indexes, no 'id'; 
+// for moving use indices, no 'id'; 
 		Set<Integer> checkSet = new TreeSet<>();
 
 		for (int i = 0; i < beans.size(); i++) {

@@ -48,7 +48,7 @@ public class RenameTable extends JDialog {
 	final private static String[] arRenameResults = { "", "<...stop on error>", "<ERROR>", "<OK>", "<NAME_NO_CHANGED>",
 			"<REGISTER_CHANGED_ONLY>", "<FILE_CHECK_ERROR>" };
 
-//!!!indexes defines position in 'arRenameResults'
+//!!!indices defines position in 'arRenameResults'
 	private static final int INDEX_RENAME_RESULT_NO_DEFINED = 0;
 	private static final int INDEX_RENAME_RESULT_STOP_ON_ERROR = 1;
 	private static final int INDEX_RENAME_RESULT_ERROR = 2;
@@ -559,7 +559,7 @@ public class RenameTable extends JDialog {
 		}
 		int nameLength = name.length();
 
-//DIGIT IN 'one','two' NEED FOR indexes: 1,2,3,4 >> 'from','length'
+//DIGIT IN 'one','two' NEED FOR indices: 1,2,3,4 >> 'from','length'
 		if (index <= 4) { // means 1,2,3,4
 			int length = Integer.valueOf(two);
 
@@ -724,7 +724,7 @@ public class RenameTable extends JDialog {
 				"replaceSourceDest(last)", "replaceSourceDest(all)", "changeToNowDate", "changeToDateModificaton",
 				"changeToRandom5", "changeToRandom6", "changeToRandom7", "changeToRandom8", "changeNameTo" });
 		cmbNameWork.setToolTipText(
-				"name change variants; for 'from' indexes from 0; for 'end...' starts at the end of name");
+				"name change variants; for 'from' indices from 0; for 'end...' starts at the end of name");
 
 		tfNameWorkOne = new JTextField(6);
 		var sb = new StringBuilder();

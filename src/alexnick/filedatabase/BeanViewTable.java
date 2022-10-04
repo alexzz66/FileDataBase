@@ -52,7 +52,7 @@ public class BeanViewTable extends JDialog {
 	private String[] cmbCheckItems = new String[] { "all", "no", "invert", "exist", "no exist", "by BinFolder",
 			"by Signature", "by Modified", "by Path", "textSearch", "remove from table" };// !!! 'remove' must be LAST
 																							// ITEM
-	// append const indexes from 'cmbCheckItems'
+	// append const indices from 'cmbCheckItems'
 	private final int cmbAppEnabStartIndex = 3;
 	private final int cmbAppEnabEndIndex = 9;
 	private final int cmbAppEnabStartFindColumnIndex = 5;
@@ -777,7 +777,7 @@ public class BeanViewTable extends JDialog {
 	}
 
 //'addedInfo' if not null and length == 2, be added info to label	
-//'index' must be null OR as indexes in 'cmbCheckItems', 'cmbCheckItemsApp'
+//'index' must be null OR as indices in 'cmbCheckItems', 'cmbCheckItemsApp'
 	private void updating(int index[], int[] addedInfo) {
 		setStandardTitle();
 		lastSortType = SortBeans.sortNoDefined;

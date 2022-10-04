@@ -70,7 +70,7 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 	private final String[] cmbCheckItems; // init in constructor
 	private String[] cmbCheckItemsApp; // init in constructor
 
-	// append const indexes from 'cmbCheckItems'
+	// append const indices from 'cmbCheckItems'
 	private final int cmbAppEnabStartIndex;
 	private final int cmbAppEnabEndIndex;
 	private final int textSearchIndex; // must be -42 (if not defined) or corrected index in cmbCheckItems
@@ -107,7 +107,7 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 			endIndex -= 4;
 		}
 
-		cmbCheckItems = CommonLib.getArrayFromListOrNullByIndexes(0, endIndex, cmbItemsList);
+		cmbCheckItems = CommonLib.getArrayFromListOrNullByIndices(0, endIndex, cmbItemsList);
 		cmbAppEnabStartIndex = 3;
 		cmbAppEnabEndIndex = 6;
 
@@ -119,7 +119,7 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 			endIndex -= 1;
 		}
 
-		cmbCheckItemsApp = CommonLib.getArrayFromListOrNullByIndexes(0, endIndex, cmbItemsAppList);
+		cmbCheckItemsApp = CommonLib.getArrayFromListOrNullByIndices(0, endIndex, cmbItemsAppList);
 
 		columns = new String[] { "Type / Size", "Name",
 				"Extensions info / Crc,modified" + (viewNoMark ? "" : " **mark"), "Full path" };
@@ -331,7 +331,7 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 			return;
 		}
 
-		if (indexOne == 7 || indexOne == 8) { // last indexes -> to list
+		if (indexOne == 7 || indexOne == 8) { // last indices -> to list
 			// if not 'filesCanExist', no checking on existing files
 			FileDataBase.beansToList(!filesCanExist, indexOne == 8 ? 3 : 2, null, beans);
 			return;
@@ -559,8 +559,8 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 		return y;
 	}
 
-//'addedInfo' if not null and length == 2, be added info to label	
-//'index' must be null OR as indexes in 'cmbCheckItems', 'cmbCheckItemsApp'
+//'addedInfo' if not null and length == 2, will be added info to label	
+//'index' must be null OR as indices in 'cmbCheckItems', 'cmbCheckItemsApp'
 	private void updating(int index[], int[] addedInfo) {
 		setStandardTitle();
 		lastSortType = SortBeans.sortNoDefined;
@@ -571,12 +571,13 @@ public class ExplorerTable extends JDialog implements Callable<Integer> {
 	/**
 	 * @param typeReturn         1:numbers of files; 2: of folders; else (0): return
 	 *                           null
-	 * @param index              must be null OR as indexes in 'cmbCheckItems',
+	 * @param index              must be null OR as indices in 'cmbCheckItems',
 	 *                           'cmbCheckItemsApp'
 	 * @param messageIfNoChecked if true and result count == 0, will be message<br>
 	 *                           NB: for not null 'resultSet', result count be set
 	 *                           as size 'resultSet'
-	 * @param addedInfo          if not null and length == 2, be added info to label
+	 * @param addedInfo          if not null and length == 2, will be added info to
+	 *                           label
 	 * @return null or 'resultSet'
 	 */
 	private Set<Integer> printCount(int typeReturn, int[] index, boolean messageIfNoChecked, int[] addedInfo) {

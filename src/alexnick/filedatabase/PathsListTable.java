@@ -70,7 +70,7 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 	}
 
 	private String standardTitle = "";
-	volatile private int lastSortType = SortBeans.sortNoDefined;
+	private int lastSortType = SortBeans.sortNoDefined;
 	private boolean needCalculateCrc;
 
 	private int renameNumber = 0; // increases before rename/undo
@@ -83,12 +83,12 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 	private String[] cmbCheckItemsApp = new String[] { "only", "add", "sub", "onlyCase", "addCase", "subCase", "TEST" };// TEST_is_last
 	private String[] cmbCheckItemsAppPosition = new String[] { "any", "starts", "ends" };
 
-	private int[] lastIndex = { 0, 0, 0 }; // cmbCheckItems, cmbCheckItemsApp, cmbFindPosition indexes
+	private int[] lastIndex = { 0, 0, 0 }; // cmbCheckItems, cmbCheckItemsApp, cmbFindPosition indices
 
 	private String[] cmbCheckItems = new String[] { "all", "no", "invert", "by Signature", "by Number,result",
 			"by Modified", "by Path", "by Name", "textSearch", "sel->checked" }; // textSearch LAST index
 
-// append const indexes from 'cmbCheckItems'; enabled together cmbCheckItemsApp, cmbFindPosition
+// append const indices from 'cmbCheckItems'; enabled together cmbCheckItemsApp, cmbFindPosition
 	private final int cmbAppEnabStartIndex = 3;
 	private final int cmbAppEnabEndIndex = 7;
 	private final int textSearchIndex = 8; // cmbApp enabled, but cmbAppPos not enabled
@@ -155,7 +155,7 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public synchronized void drop(DropTargetDropEvent dtde) {
+			public void drop(DropTargetDropEvent dtde) {
 				Point point = dtde.getLocation();
 				dragging(myTable.rowAtPoint(point));
 			}
@@ -191,7 +191,7 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 // FILLING JPANEL	
 		JPanel buttons = new JPanel();
 		JCheckBox cbDrag = new JCheckBox("drag");
-		cbDrag.setToolTipText("allow row dragging");
+		cbDrag.setToolTipText(Const.DRAG_TIP);
 
 		cbDrag.addActionListener(new ActionListener() {
 			@Override
@@ -814,7 +814,7 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 		return renameItem(i, ar[0], oldPath, newPath);
 	}
 
-	private String doRename(final String errorInfo, List<Path> renameList) { // TODO need ext to UPPER lower??
+	private String doRename(final String errorInfo, List<Path> renameList) {
 		var renameTable = new RenameTable(this, removeDoubleSpaces, renameList);
 		if (renameTable.getIsCheckResult() != Const.MR_RENAME) {
 			return "";
@@ -965,7 +965,7 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 		}
 	}
 
-	synchronized private void dragging(int rowDest) {
+	private void dragging(int rowDest) {
 		if (FileDataBase.dragging(rowDest, myTable, beans)) {
 			updating(null, null, 0);
 		}
@@ -990,7 +990,7 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 	}
 
 	/**
-	 * @param index       must be as indexes in 'cmbCheck's
+	 * @param index       must be as indices in 'cmbCheck's
 	 * @param addedInfo   if not null and length == 2, be added info to label
 	 * @param needCount   0 (by default): no recount global 'Set' counters
 	 *                    checked/selected;<br>
