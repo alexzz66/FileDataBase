@@ -270,6 +270,7 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 		JComboBox<String> cmbActions = new JComboBox<>(new String[] { "export to list", "remove from table",
 				"copy/move files to", "delete files", "rename files", "undo rename files", "show rename log",
 				"openWithFiles", "openWithFolders", "items to string" });
+
 		cmbActions.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -277,6 +278,8 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 				cbShowRenameLog.setEnabled(index == 4 || index == 5);
 			}
 		});
+
+		cmbActions.setSelectedIndex(4); // "rename" set as default action
 
 		JButton butDoAction = new JButton(">>");
 		butDoAction.setToolTipText("assign the chosen action to checked/selected items");
