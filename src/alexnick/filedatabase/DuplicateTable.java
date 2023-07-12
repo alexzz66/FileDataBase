@@ -34,6 +34,7 @@ public class DuplicateTable extends JDialog implements Callable<List<String>> {
 	private String[] sortedListExts = null;
 	private int lastSortType = SortBeans.sortNoDefined;
 	private String standardTitle;
+	private String lastSortByFinding = "";
 
 	public DuplicateTable(JFrame frame, String caption, List<MyBean> beans0) { // list not null
 		super(frame, caption, true);
@@ -57,8 +58,8 @@ public class DuplicateTable extends JDialog implements Callable<List<String>> {
 		// !!! path must be last string argument (fourCapt)
 		Box contents = new Box(BoxLayout.Y_AXIS);
 
-		myTable = new BeansFourTableDefault(ListSelectionModel.SINGLE_SELECTION, true, true, true, "CRC", "Size",
-				"Modified", "Path", beans);
+		myTable = new BeansFourTableDefault(ListSelectionModel.SINGLE_SELECTION, true, true, true, "CRC",
+				"Size, sort by finding", "Modified", "Path", beans);
 		myTable.addKeyListener(FileDataBase.keyListenerShiftDown);
 
 		myTable.getTableHeader().addMouseListener(new MouseAdapter() {
@@ -244,10 +245,21 @@ public class DuplicateTable extends JDialog implements Callable<List<String>> {
 		setVisible(true);
 	}
 
-//"check", "CRC", "Size", "Modified", "Path": need columnIndex 0,3,4
+//"check", "CRC", "Size, sort by finding", "Modified", "Path": need columnIndex 0,3,4 and 2(sort by finding)
 	private void sorting(int columnIndex) {
 		if (columnIndex < 0 || beans.size() < 2) {
 			return;
+		}
+
+		if (columnIndex == 2) {
+			var inf = new InputTextGUI(this, true, "Enter substring for sorting (no extension)", lastSortByFinding);
+			if (inf.result == null) {
+				return;
+			}
+			lastSortByFinding = inf.result;
+			if (lastSortByFinding.isEmpty()) {
+				return;
+			} // TODO need maximum length check?
 		}
 
 		int sortType = SortBeans.sortNoDefined;
@@ -257,6 +269,9 @@ public class DuplicateTable extends JDialog implements Callable<List<String>> {
 		if (columnIndex == 0) {
 			sortType = SortBeans.sortServiceIntThreeThenCheck;
 			sortCaption = "Check -> Path";
+		} else if (columnIndex == 2) {
+			sortType = SortBeans.sortServiceIntThreeThenSortCaption;
+			sortCaption = lastSortByFinding;
 		} else if (columnIndex == 3) {
 			sortType = SortBeans.sortServiceIntThreeThenThree;
 			sortCaption = "Modified";
@@ -354,6 +369,8 @@ public class DuplicateTable extends JDialog implements Callable<List<String>> {
 //first == true -> check all, except first; first == false -> check all, except second
 	private void checkingGroup(boolean first, int minSize) {
 		String curCrc = "";
+		int curGroup = -1; // additional verification
+
 		int unCheckInd = -1;
 		boolean needUpdate = false;
 
@@ -373,12 +390,14 @@ public class DuplicateTable extends JDialog implements Callable<List<String>> {
 
 			boolean skipExt = FileDataBase.getSkipExt(b, sortedListExtSkipped, sortedListExts);
 
-			if (!b.getOne().equals(curCrc)) {
+			if (!b.getOne().equals(curCrc) || (b.serviceIntThree != curGroup)) {
 				curCrc = b.getOne();
+				curGroup = b.serviceIntThree;
 				unCheckInd = first ? x : x + 1;
 			}
 
 			boolean needCheck = !skipExt && (x != unCheckInd);
+
 			if (b.check != needCheck) {
 				if (!needUpdate) {
 					needUpdate = true;

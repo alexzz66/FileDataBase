@@ -544,9 +544,22 @@ public class CopyMove {
 				var tmpLog = writeSourceListBeforeCopying > 1 ? log : null;
 				CommonLib.addLog(CommonLib.ADDLOG_SEP, onConsole, tmpLog);
 				CommonLib.addLog("Files in path list:" + CommonLib.NEW_LINE_UNIX, onConsole, tmpLog);
+
+				final int maxLimit = 200; // must be more 0
+				int limit = !onConsole ? 0 : maxLimit + 1;
+				int dif = !onConsole ? 0 : (sourceList.size() - maxLimit);
+
 				for (var path : sourceList) {
-					CommonLib.addLog(path.toString(), onConsole, tmpLog);
+					if (limit > 0) { // need write on console
+						limit--;
+						if (limit == 0 && dif > 0) {
+							System.out.println("...and other elements: " + dif);
+						}
+					}
+
+					CommonLib.addLog(path.toString(), limit > 0, tmpLog);
 				}
+
 				CommonLib.addLog(CommonLib.ADDLOG_SEP, onConsole, tmpLog);
 			}
 
