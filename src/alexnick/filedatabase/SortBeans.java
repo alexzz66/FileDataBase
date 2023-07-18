@@ -46,14 +46,19 @@ public class SortBeans {
 	final static int sortServiceIntOne = 5001;
 	final static int sortServiceIntTwo = 5002;
 
-	final static int sortServiceIntThree = 5003;
-	final static int sortServiceIntThreeThenCheck = 5004;
-	final static int sortServiceIntThreeThenBinPathNoCheckForNull = 5005;
-	final static int sortServiceIntThreeThenThree = 5006;
-	final static int sortServiceIntThreeThenSortCaption = 5007;
-
-	final static int sortServiceStringOneNoCheckForNull = 5011;
-	final static int sortServiceStringTwoNoCheckForNull = 5012;
+	final static int sortServiceIntThreeThenFour = 5003;
+	final static int sortServiceIntThreeThenFourInverse = 5004;
+	final static int sortServiceIntThreeThenCheck = 5005;
+	final static int sortServiceIntThreeThenCheckInverse = 5006;
+	final static int sortServiceIntThreeThenBinPathNoCheckForNull = 5007;
+	final static int sortServiceIntThreeThenThree = 5008;
+	final static int sortServiceIntThreeThenThreeInverse = 5009;
+	final static int sortServiceIntThreeFindThenCheck = 5010;
+	final static int sortServiceIntThreeFindThenCheckInverse = 5011;
+	final static int sortServiceIntThreeFindThenFour = 5012;
+	final static int sortServiceIntThreeFindThenFourInverse = 5013;
+	final static int sortServiceStringOneNoCheckForNull = 5014;
+	final static int sortServiceStringTwoNoCheckForNull = 5015;
 
 	final static int sortBinPathNoCheckForNull = 6000; // in lower case
 	final static int sortSelectedIfNoEmpty = 7000;
@@ -141,11 +146,21 @@ public class SortBeans {
 		case sortServiceIntOne -> sortServiceIntOne(beans);
 		case sortServiceIntTwo -> sortServiceIntTwo(beans);
 
-		case sortServiceIntThree -> sortServiceIntThree(beans);
-		case sortServiceIntThreeThenCheck -> sortServiceIntThreeThenCheck(beans);
+		case sortServiceIntThreeThenFour -> sortServiceIntThreeThenFour(beans);
+		case sortServiceIntThreeThenFourInverse -> sortServiceIntThreeThenFourInverse(beans);
+
+		case sortServiceIntThreeThenCheck -> sortServiceIntThreeThenCheckBoth(false, beans);
+		case sortServiceIntThreeThenCheckInverse -> sortServiceIntThreeThenCheckBoth(true, beans);
+
 		case sortServiceIntThreeThenBinPathNoCheckForNull -> sortServiceIntThreeThenBinPathNoCheckForNull(beans);
 		case sortServiceIntThreeThenThree -> sortServiceIntThreeThenThree(beans);
-		case sortServiceIntThreeThenSortCaption -> sortServiceIntThreeThenSortCaption(sortCaption, beans);
+		case sortServiceIntThreeThenThreeInverse -> sortServiceIntThreeThenThreeInverse(beans);
+
+		case sortServiceIntThreeFindThenCheck -> sortServiceIntThreeFindThenCheckBoth(false, sortCaption, beans);
+		case sortServiceIntThreeFindThenCheckInverse -> sortServiceIntThreeFindThenCheckBoth(true, sortCaption, beans);
+
+		case sortServiceIntThreeFindThenFour -> sortServiceIntThreeFindThenFourBoth(false, sortCaption, beans);
+		case sortServiceIntThreeFindThenFourInverse -> sortServiceIntThreeFindThenFourBoth(true, sortCaption, beans);
 
 		case sortServiceLong -> sortServiceLong(beans);
 		case sortServiceStringOneNoCheckForNull -> sortServiceStringOneNoCheckForNull(beans);
@@ -503,7 +518,7 @@ public class SortBeans {
 		});
 	}
 
-	private void sortServiceIntThree(List<MyBean> beans) { // by serviceIntThree then four
+	private void sortServiceIntThreeThenFour(List<MyBean> beans) { // by serviceIntThree then four
 		beans.sort(new Comparator<MyBean>() {
 			@Override
 			public int compare(MyBean o1, MyBean o2) {
@@ -515,7 +530,23 @@ public class SortBeans {
 		});
 	}
 
-	private void sortServiceIntThreeThenCheck(List<MyBean> beans) { // by serviceIntThree then check
+	private void sortServiceIntThreeThenFourInverse(List<MyBean> beans) { // by serviceIntThree then four inverse
+		beans.sort(new Comparator<MyBean>() {
+			@Override
+			public int compare(MyBean o1, MyBean o2) {
+				if (o1.serviceIntThree == o2.serviceIntThree) {
+					return o2.getFourLowerCase(false, false).compareTo(o1.getFourLowerCase(false, false));
+				}
+				return o1.serviceIntThree - o2.serviceIntThree;
+			}
+		});
+	}
+
+	private void sortServiceIntThreeThenCheckBoth(boolean inverse, List<MyBean> beans) { // by serviceIntThree then
+		// check
+		final int oneReturn = inverse ? 1 : -1;
+		final int twoReturn = inverse ? -1 : 1;
+
 		beans.sort(new Comparator<MyBean>() {
 			@Override
 			public int compare(MyBean o1, MyBean o2) {
@@ -524,34 +555,78 @@ public class SortBeans {
 					if (o1Check == o2.getCheck()) {
 						return sortFourLowerCase(o1, o2);
 					}
-					return o1Check ? -1 : 1;
+					return o1Check ? oneReturn : twoReturn;
 				}
 				return o1.serviceIntThree - o2.serviceIntThree;
 			}
 		});
 	}
 
-	private void sortServiceIntThreeThenSortCaption(String sortCaption, List<MyBean> beans) { // by serviceIntThree then
-																								// sortCaption
+	private void sortServiceIntThreeFindThenCheckBoth(boolean inverse, String sortCaption, List<MyBean> beans) {
+		// by serviceIntThree then sortCaption then check then path, "FIND (forward)
+		// then FLAGS"
 		if (CommonLib.nullEmptyString(sortCaption)) {
 			return;
 		}
+
+		final int oneReturn = inverse ? 1 : -1;
+		final int twoReturn = inverse ? -1 : 1;
 
 		beans.sort(new Comparator<MyBean>() {
 			@Override
 			public int compare(MyBean o1, MyBean o2) {
 				if (o1.serviceIntThree == o2.serviceIntThree) {
-					var p1 = o1.getFourLowerCase(false, false); // without extension, because standard sort by path the
-																// same
+					var p1 = o1.getFourLowerCase(false, false); // without_extension,_because_standard_sort_by_path_the_same
 					var p2 = o2.getFourLowerCase(false, false);
 
-					boolean o1Check = p1.contains(sortCaption);
-					boolean o2Check = p2.contains(sortCaption);
+					boolean o1Find = p1.contains(sortCaption);
+					boolean o2Find = p2.contains(sortCaption);
 
-					if (o1Check == o2Check) {
-						return p1.compareTo(p2);
+//one found >> UP				
+//both found >> sort by flags->paths (inverse if need)
+//both NO found >> sort by flags->paths (inverse if need)
+
+					if (o1Find != o2Find) { // one found
+						return o1Find ? -1 : 1; // found UP
 					}
-					return o1Check ? -1 : 1;
+
+					boolean o1Check = o1.getCheck();
+
+					if (o1Check == o2.getCheck()) {// both found or both NO found
+						return sortFourLowerCase(o1, o2);
+					}
+
+					return o1Check ? oneReturn : twoReturn;
+				}
+
+				return o1.serviceIntThree - o2.serviceIntThree;
+			}
+		});
+	}
+
+	private void sortServiceIntThreeFindThenFourBoth(boolean inverse, String sortCaption, List<MyBean> beans) {
+		// by serviceIntThree then sortCaption then path, "FIND then PATHS"
+		if (CommonLib.nullEmptyString(sortCaption)) {
+			return;
+		}
+
+		final int oneReturn = inverse ? 1 : -1;
+		final int twoReturn = inverse ? -1 : 1;
+
+		beans.sort(new Comparator<MyBean>() {
+			@Override
+			public int compare(MyBean o1, MyBean o2) {
+				if (o1.serviceIntThree == o2.serviceIntThree) {
+					var p1 = o1.getFourLowerCase(false, false); // without_extension,_because_standard_sort_by_path_the_same
+					var p2 = o2.getFourLowerCase(false, false);
+
+					boolean o1Find = p1.contains(sortCaption);
+					boolean o2Find = p2.contains(sortCaption);
+
+					if (o1Find == o2Find) {
+						return inverse ? p2.compareTo(p1) : p1.compareTo(p2);
+					}
+					return o1Find ? oneReturn : twoReturn;
 				}
 				return o1.serviceIntThree - o2.serviceIntThree;
 			}
@@ -599,6 +674,23 @@ public class SortBeans {
 						return sortFourLowerCase(o1, o2);
 					}
 					return s1.compareTo(s2);
+				}
+				return o1.serviceIntThree - o2.serviceIntThree;
+			}
+		});
+	}
+
+	private void sortServiceIntThreeThenThreeInverse(List<MyBean> beans) { // by serviceIntThree then three Inverse
+		beans.sort(new Comparator<MyBean>() {
+			@Override
+			public int compare(MyBean o1, MyBean o2) {
+				if (o1.serviceIntThree == o2.serviceIntThree) {
+					var s1 = o1.getThree();
+					var s2 = o2.getThree();
+					if (s1.equals(s2)) {
+						return sortFourLowerCase(o1, o2);
+					}
+					return s2.compareTo(s1);
 				}
 				return o1.serviceIntThree - o2.serviceIntThree;
 			}

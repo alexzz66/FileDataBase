@@ -58,8 +58,8 @@ public class DuplicateTable extends JDialog implements Callable<List<String>> {
 		// !!! path must be last string argument (fourCapt)
 		Box contents = new Box(BoxLayout.Y_AXIS);
 
-		myTable = new BeansFourTableDefault(ListSelectionModel.SINGLE_SELECTION, true, true, true, "CRC",
-				"Size, sort by finding", "Modified", "Path", beans);
+		myTable = new BeansFourTableDefault(ListSelectionModel.SINGLE_SELECTION, true, true, true, "CRC, find->flags",
+				"Size, find->path", "Modified", "Path", beans);
 		myTable.addKeyListener(FileDataBase.keyListenerShiftDown);
 
 		myTable.getTableHeader().addMouseListener(new MouseAdapter() {
@@ -237,7 +237,7 @@ public class DuplicateTable extends JDialog implements Callable<List<String>> {
 		butCancel.addKeyListener(FileDataBase.keyListenerShiftDown);
 		butToList.addKeyListener(FileDataBase.keyListenerShiftDown);
 
-		new SortBeans(SortBeans.sortServiceIntThree, "", beans);
+		new SortBeans(SortBeans.sortServiceIntThreeThenFour, "", beans);
 		var t = Toolkit.getDefaultToolkit().getScreenSize();
 		setBounds(0, 0, t.width - 200, t.height - 200);
 
@@ -245,46 +245,86 @@ public class DuplicateTable extends JDialog implements Callable<List<String>> {
 		setVisible(true);
 	}
 
-//"check", "CRC", "Size, sort by finding", "Modified", "Path": need columnIndex 0,3,4 and 2(sort by finding)
+//"check up?down", "CRC, find->check up?down", "Size, find->path", "Modified", "Path"
 	private void sorting(int columnIndex) {
 		if (columnIndex < 0 || beans.size() < 2) {
 			return;
 		}
 
-		if (columnIndex == 2) {
-			var inf = new InputTextGUI(this, true, "Enter substring for sorting (no extension)", lastSortByFinding);
-			if (inf.result == null) {
+		var inverse = false;
+
+		if (columnIndex <= 2) { // 0,1,2
+			String caption = (columnIndex == 0) ? "FLAGS" : (columnIndex == 1) ? "FIND then FLAGS" : "FIND then PATHS";
+			String postMessage = null;
+
+			if (columnIndex == 1 || columnIndex == 2) { // define string for finding
+				int maxLength = 100;
+				var inf = new InputTextGUI(this, true,
+						"Enter substring for sorting (no extension, no more " + maxLength + " symb)",
+						lastSortByFinding);
+				if (inf.result == null) {
+					return;
+				}
+
+				lastSortByFinding = inf.result;
+				if (lastSortByFinding.isEmpty()) {
+					return;
+				}
+
+				if (lastSortByFinding.length() > maxLength) {
+					lastSortByFinding = lastSortByFinding.substring(0, maxLength);
+				}
+
+				postMessage = "Find by string: " + lastSortByFinding;
+			}
+
+			String message = CommonLib.formatConfirmYesNoMessage("Group sort '" + caption + "', choose:",
+					"forward sorting", "inverse sorting", postMessage);
+
+			var confirm = JOptionPane.showConfirmDialog(null, message, "Equals signatures",
+					JOptionPane.YES_NO_CANCEL_OPTION);
+
+			if (confirm == JOptionPane.YES_OPTION || confirm == JOptionPane.NO_OPTION) {
+				inverse = (confirm == JOptionPane.NO_OPTION);
+			} else {
 				return;
 			}
-			lastSortByFinding = inf.result;
-			if (lastSortByFinding.isEmpty()) {
-				return;
-			} // TODO need maximum length check?
+
 		}
 
 		int sortType = SortBeans.sortNoDefined;
 		String sortCaption;
-		boolean noDubleSort = false;
 
 		if (columnIndex == 0) {
-			sortType = SortBeans.sortServiceIntThreeThenCheck;
-			sortCaption = "Check -> Path";
-		} else if (columnIndex == 2) {
-			sortType = SortBeans.sortServiceIntThreeThenSortCaption;
+			sortType = inverse ? SortBeans.sortServiceIntThreeThenCheckInverse : SortBeans.sortServiceIntThreeThenCheck;
+			sortCaption = inverse ? "Check (inverse) -> Path" : "Check -> Path";
+		} else if (columnIndex == 1) { // FIND then FLAGS
+			sortType = inverse ? SortBeans.sortServiceIntThreeFindThenCheckInverse
+					: SortBeans.sortServiceIntThreeFindThenCheck;
+			sortCaption = lastSortByFinding;
+		} else if (columnIndex == 2) { // FIND then PATHS
+			sortType = inverse ? SortBeans.sortServiceIntThreeFindThenFourInverse
+					: SortBeans.sortServiceIntThreeFindThenFour;
 			sortCaption = lastSortByFinding;
 		} else if (columnIndex == 3) {
-			sortType = SortBeans.sortServiceIntThreeThenThree;
-			sortCaption = "Modified";
-			noDubleSort = true;
-		} else if (columnIndex == 4) {
-			sortType = SortBeans.sortServiceIntThree;
-			sortCaption = "Path";
-			noDubleSort = true;
-		} else {
-			return;
-		}
+			if (lastSortType == SortBeans.sortServiceIntThreeThenThree) {
+				sortCaption = "Modified (inverse) -> Path";
+				sortType = SortBeans.sortServiceIntThreeThenThreeInverse;
+			} else {
+				sortCaption = "Modified -> Path";
+				sortType = SortBeans.sortServiceIntThreeThenThree;
+			}
 
-		if (sortType == lastSortType && noDubleSort) {
+		} else if (columnIndex == 4) {
+			if (lastSortType == SortBeans.sortServiceIntThreeThenFour) {
+				sortCaption = "Path (inverse)";
+				sortType = SortBeans.sortServiceIntThreeThenFourInverse;
+			} else {
+				sortCaption = "Path";
+				sortType = SortBeans.sortServiceIntThreeThenFour;
+			}
+
+		} else {
 			return;
 		}
 
@@ -295,7 +335,18 @@ public class DuplicateTable extends JDialog implements Callable<List<String>> {
 			return;
 		}
 
-		setNewTitle(standardTitle.concat(sortBeans.getAppendCaption()));
+		var sb = new StringBuilder(standardTitle);
+		sb.append(sortBeans.getAppendCaption());
+
+		if ((columnIndex == 1) || (columnIndex == 2)) {
+			sb.append(", '");
+			sb.append(columnIndex == 1 ? "FIND (forward) then FLAGS" : "FIND then PATHS");
+			sb.append("'");
+			if (inverse) {
+				sb.append(" (inverse)");
+			}
+		}
+		setNewTitle(sb.toString());
 	}
 
 	private void setStandardTitle() {
