@@ -237,7 +237,7 @@ public class DuplicateTable extends JDialog implements Callable<List<String>> {
 		butCancel.addKeyListener(FileDataBase.keyListenerShiftDown);
 		butToList.addKeyListener(FileDataBase.keyListenerShiftDown);
 
-		new SortBeans(SortBeans.sortServiceIntThreeThenFour, "", beans);
+		sorting(4);
 		var t = Toolkit.getDefaultToolkit().getScreenSize();
 		setBounds(0, 0, t.width - 200, t.height - 200);
 

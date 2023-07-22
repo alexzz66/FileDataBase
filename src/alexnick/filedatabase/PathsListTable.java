@@ -122,8 +122,9 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 			}
 		});
 
-//INIT BEANS		
-		var countFilesFolders = initBeans(listFullPaths);
+//INIT BEANS	
+		var setAllCheck = options.contains(Const.OPTIONS_PATHSLIST_SET_ALL_CHECK);
+		var countFilesFolders = initBeans(setAllCheck, listFullPaths);
 		countFiles = countFilesFolders[0];
 		countFolders = countFilesFolders[1];
 		setNewStandardTitle();
@@ -1195,7 +1196,7 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 		setStandardTitle();
 	}
 
-	private int[] initBeans(List<File> listFullPaths) {
+	private int[] initBeans(boolean setAllCheck, List<File> listFullPaths) {
 		int[] countFilesFolders = new int[2];
 		Arrays.fill(countFilesFolders, 0);
 		beans = new ArrayList<MyBean>();
@@ -1262,6 +1263,9 @@ public class PathsListTable extends JFrame implements Callable<Integer> {
 				bean.serviceIntTwo = count;
 				bean.serviceLong = fileLength; // for sort by file length
 				bean.binPath = file.toPath();
+				if (setAllCheck) {
+					bean.check = true;
+				}
 				beans.add(bean);
 
 			} catch (Exception e) {

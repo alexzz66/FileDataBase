@@ -45,7 +45,8 @@ public class Const {
 	static final String OPTIONS_PATHSLIST_SINGLE_ONLY = ";plsingleonly;";
 	static final String OPTIONS_PATHSLIST_SET_MULTI = ";plsetmulti;";
 	static final String OPTIONS_PATHSLIST_SET_DRAG = ";plsetdrag;";
-
+	static final String OPTIONS_PATHSLIST_SET_ALL_CHECK = ";plsetallcheck;";
+	
 	static final String OPTIONS_VIEW_NO_ID3 = ";viewnoid3;";
 	static final String OPTIONS_VIEW_NO_MARK = ";viewnomark;";
 

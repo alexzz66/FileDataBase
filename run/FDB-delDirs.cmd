@@ -24,7 +24,7 @@ start /b /high java alexnick.filedatabase.FileDataBase -dd:finalPause;  %*
 
 :FOR PathListTable >>
 :"plCrcYes;" ";plCrcNo;" if one only defined, be or not be calculate crc in 'PathsListTable', column 'Signature'
-:"plSingleOnly;" ";plSetMulti;" ";plSetDrag;" -> defines components settings on start show 'PathsListTable'
+:"plSingleOnly;" ";plSetMulti;" ";plSetDrag;" "plSetAllCheck;" -> defines components settings on start show 'PathsListTable'
 :"plOneFileYes;" "plOneFileNo;" if ONE parameter and not directory -> by default be confirmation, need read paths from this, or show in table; You may define answer
 :"plOneFolderYes;" "plOneFolderNo;" if ONE parameter and it's directory -> by default be confirmation, search in this folder (analog mode '-1' with setting 'modeOnePlYes'), or show in table; You may define answer
 :"renameNoRemoveDblSpaces;" by default, after renaming will be replaced '  ' on ' '. Set this options to disable that replacing
