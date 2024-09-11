@@ -42,6 +42,10 @@ public class BinFinder {
 	private Map<String, String> getRealBinDir(boolean needWindowsDisk) throws IOException {
 		Map<String, String> realBinDir = new HashMap<String, String>();
 		for (var root : File.listRoots()) {
+			if (!root.isDirectory()) {
+				continue;
+			}
+			
 			if (needWindowsDisk && !CommonLib.correctWindowsStartPath(root.toString())) {
 				continue;
 			}

@@ -57,6 +57,7 @@ public class Const {
 	static final String OPTIONS_TEST_FDB = ";test_fdb;";
 
 	static final String OPTIONS_COMPARETWOBIN_NOFULLPATHS = ";comparetwobinnofullpaths;";
+	static final String OPTIONS_COMPARETWOBIN_CONSOLE_QUERY_SAVE_RESULT = ";comparetwobinconsolequerysaveresult;";
 
 	static final String OPTIONS_ONE_PATHSLIST_YES = ";modeoneplyes;"; // query to open 'PathsListTable' for
 																		// MODE_STOP_ONE

@@ -633,7 +633,7 @@ public class ViewTable extends JFrame implements Callable<Integer> {
 
 //!!! copyMode MUST BE '0', because comparing only, without checking start path exists	
 // binPaths: 0, 1: source: startPath,binPath; 2, 3: dest: startPath, binPath
-			var cf = new CompareFolders(false, equalComparing, program, compareLogType, 0, binPaths[0].toString(),
+			var cf = new CompareFolders(program.getOptions().contains(Const.OPTIONS_COMPARETWOBIN_CONSOLE_QUERY_SAVE_RESULT), equalComparing, program, compareLogType, 0, binPaths[0].toString(),
 					binPaths[1], binPaths[2].toString(), binPaths[3], existsStartPaths,
 					binFoldersForConfirmAndEqualTable);
 			if (cf.getIsCheckResult() == Const.MR_NEED_UPDATE_BASE) {

@@ -341,12 +341,12 @@ public class CompareFolders {
 				&& sourceStartPathString.charAt(1) == ':'
 				&& sourceStartPathString.substring(1).equalsIgnoreCase(destStartPathString.substring(1)));
 
-		result = showEqualSignTable(needInitBeansForMove, pathLog);
+		result = showEqualSignTable(querySavingResult, needInitBeansForMove, pathLog);
 		return result;
 	}
 
 	// 'pathLog' there will be append rename result
-	private int showEqualSignTable(boolean needInitBeansForMove, Path pathLog) {
+	private int showEqualSignTable(boolean querySavingResult, boolean needInitBeansForMove, Path pathLog) {
 		var result = Const.MR_NO_CHOOSED;
 
 		List<MyBean> equalNamesBeans = needInitBeansForMove ? new ArrayList<MyBean>() : null;
@@ -410,7 +410,7 @@ public class CompareFolders {
 		if (result == Const.MR_NEED_UPDATE_BASE && compareLog != null && pathLog != null
 				&& CommonLib.notNullEmptyList(resultList)) {
 			compareLog.addAll(resultList);
-			CommonLib.saveAndShowList(false, false, 1, pathLog, compareLog);
+			CommonLib.saveAndShowList(false, false, querySavingResult ? 3 : 1, pathLog, compareLog);
 		}
 
 		return result;

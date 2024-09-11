@@ -1,7 +1,7 @@
 @echo off
 cd /d %~d0%~p0
 cd ../bin
-start /b /high java alexnick.filedatabase.FileDataBase -a:autoNoExtract;finalPause;extractSaveYes;cmdCp-cp866;plCrcNo; %*
+start /b /high java alexnick.filedatabase.FileDataBase -a:autoNoExtract;finalPause;extractSaveYes;cmdCp-cp866;plCrcNo;compareTwoBinConsoleQuerySaveResult; %*
 
 :mode -s (sync, syncBin) synchronize OWN repository with a repository on ANOTHER disk; option can be 'finalPause' only; another options no matter
 
@@ -33,6 +33,7 @@ start /b /high java alexnick.filedatabase.FileDataBase -a:autoNoExtract;finalPau
 :"viewnoid3;" if defined, while mode 'view', not be showed information in table column 'BinFolder, ID3, mark'
 :"viewnomark;" if defined, while mode 'view', not be showed information in table column 'BinFolder, ID3, mark', and will not be button 'mark' for set mark
 :"compareTwoBinNoFullpaths;" by default, comparing folders on click 'CompareTwoBin', will be generated file with full paths (with adding start path); if this option defined, start path won't be added
+:"compareTwoBinConsoleQuerySaveResult;" set if you don't need to save the result to disk, there will be a request in the console 
 
 :FOR -e (-extract) >>
 :"extractSaveYes;" if defined, after extracting be saving result without confirmation

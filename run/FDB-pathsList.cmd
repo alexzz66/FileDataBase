@@ -34,6 +34,7 @@ start /b /high java alexnick.filedatabase.FileDataBase -p:temp;tempYes;bigSize;p
 :"viewnoid3;" if defined, while mode 'view', not be showed information in table column 'BinFolder, ID3, mark'
 :"viewnomark;" if defined, while mode 'view', not be showed information in table column 'BinFolder, ID3, mark', and will not be button 'mark' for set mark
 :"compareTwoBinNoFullpaths;" by default, comparing folders on click 'CompareTwoBin', will be generated file with full paths (with adding start path); if this option defined, start path won't be added
+:"compareTwoBinConsoleQuerySaveResult;" set if you don't need to save the result to disk, there will be a request in the console 
 
 :FOR -e (-extract) >>
 :"extractSaveYes;" if defined, after extracting be saving result without confirmation
